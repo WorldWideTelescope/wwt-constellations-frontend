@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
+    <client-only>
+      <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
+    </client-only>
   </div>
 </template>
 
