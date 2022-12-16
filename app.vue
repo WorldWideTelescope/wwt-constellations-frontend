@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <client-only>
+      <Feed id="feed"/>
       <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
     </client-only>
     <button @click="test">BUTTON</button>
@@ -28,9 +29,10 @@ export default defineNuxtComponent({
 
 <style lang="less">
 #app {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   margin: 0;
+  overflow: hidden;
 
   .wwtelescope-component {
     width: 100vw;
@@ -41,5 +43,12 @@ export default defineNuxtComponent({
     padding: 0;
   }
 
+}
+
+#feed {
+  position: absolute;
+  overflow: scroll;
+  z-index: 10;
+  height: 100%;
 }
 </style>
