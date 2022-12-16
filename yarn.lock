@@ -1171,7 +1171,7 @@
   resolved "https://registry.yarnpkg.com/@wwtelescope/astro/-/astro-0.2.2.tgz#d2f7e6bbd74ca11202602612b0446f7d79ed2df4"
   integrity sha512-HQg0CWMkV4J6xbc1gmi5wBfQG/q3SllSoQEUrAtyaDETUI/rvbm9p/jnq/PS/rhMcJUuiS9UAIA2slqR8e4Idw==
 
-"@wwtelescope/engine-helpers@>=0.8.0":
+"@wwtelescope/engine-helpers@>=0.8.0", "@wwtelescope/engine-helpers@^0.8.3":
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/@wwtelescope/engine-helpers/-/engine-helpers-0.8.3.tgz#846e6035f6074c54c5e1e2ee9007455039f773a6"
   integrity sha512-VC6/meamr/Zj+D0nbnjVWF25pk5lznJzrGTT8ymcyNIeweJTUB9D8w2KMOVrSyDs5NNFrv/94prgpD9t1O/saw==
@@ -1192,7 +1192,7 @@
     pinia "^2.0.22"
     vue "^3"
 
-"@wwtelescope/engine-types@>=0.6.0", "@wwtelescope/engine-types@>=0.6.3":
+"@wwtelescope/engine-types@>=0.6.0", "@wwtelescope/engine-types@>=0.6.3", "@wwtelescope/engine-types@^0.6.4":
   version "0.6.4"
   resolved "https://registry.yarnpkg.com/@wwtelescope/engine-types/-/engine-types-0.6.4.tgz#954b81e829f2627c350f847b6ec3f6fe075e0ca8"
   integrity sha512-0LMYkysuLniCg3NRLdts9raqNxDgezzRHwbDtKlPnZiUthZ3K6qk13M/rpYdsLqKsQsAjhzumP22rRbQq+XwHw==

@@ -3,8 +3,32 @@
     <client-only>
       <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
     </client-only>
+    <button @click="test">BUTTON</button>
   </div>
 </template>
+
+<script lang="ts">
+import { defineComponent, markRaw } from 'vue'
+import { mapActions } from 'pinia';
+import { WWTInstance } from '@wwtelescope/engine-helpers';
+
+export default defineNuxtComponent({
+  created() {
+    if (process.client) {
+      console.log("created client");
+    } else {
+      console.log("created server");
+    }
+  },
+  methods: {
+    test() {
+      const store = this.$engineStore(this.$pinia);
+      store.gotoRADecZoom({raRad: 10, decRad: 10, zoomDeg: 60, instant: false});
+    }
+  }
+});
+</script>
+
 
 <style lang="less">
 #app {
