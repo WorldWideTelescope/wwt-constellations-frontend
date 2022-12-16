@@ -8,10 +8,6 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw } from 'vue'
-import { mapActions } from 'pinia';
-import { WWTInstance } from '@wwtelescope/engine-helpers';
-
 export default defineNuxtComponent({
   created() {
     if (process.client) {
