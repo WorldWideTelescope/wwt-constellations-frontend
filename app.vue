@@ -1,8 +1,11 @@
 <template>
   <div id="app">
     <client-only>
-      <Feed id="feed"/>
-      <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
+      <Feed id="feed" ref="feed" :wwt-ready="wwtReady"/>
+      <WorldWideTelescope
+        wwt-namespace="wwt-constellations"
+        @hook:mounted="(() => { logReady(); wwtReady = true; })()"
+        ></WorldWideTelescope>
     </client-only>
     <button @click="test">BUTTON</button>
   </div>
@@ -17,11 +20,20 @@ export default defineNuxtComponent({
       console.log("created server");
     }
   },
+  data() {
+    return {
+      wwtReady: false
+    };
+  },
+  mounted() {
+    console.log(this);
+  },
   methods: {
     test() {
       const store = this.$engineStore(this.$pinia);
       store.gotoRADecZoom({raRad: 10, decRad: 10, zoomDeg: 60, instant: false});
-    }
+    },
+    logReady() { console.log("Ready!"); }
   }
 });
 </script>
@@ -50,5 +62,6 @@ export default defineNuxtComponent({
   overflow: scroll;
   z-index: 10;
   height: 100%;
+  max-width: 20%;
 }
 </style>
