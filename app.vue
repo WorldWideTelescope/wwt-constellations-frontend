@@ -1,7 +1,12 @@
 <template>
   <div id="app">
     <client-only>
-      <Feed id="feed" ref="feed" :wwt-ready="wwtReady"/>
+      <Feed
+        id="feed"
+        ref="feed"
+        :wwt-ready="wwtReady"
+        :horizontal="mobile"
+        />
       <WorldWideTelescope
         wwt-namespace="wwt-constellations"
         @hook:mounted="(() => { logReady(); wwtReady = true; })()"
@@ -22,18 +27,26 @@ export default defineNuxtComponent({
   },
   data() {
     return {
-      wwtReady: false
+      wwtReady: false,
+      mobile: false
     };
   },
   mounted() {
-    console.log(this);
+    window.addEventListener("resize", this.onResize);
+    this.onResize();
   },
   methods: {
     test() {
       const store = this.$engineStore(this.$pinia);
       store.gotoRADecZoom({raRad: 10, decRad: 10, zoomDeg: 60, instant: false});
     },
-    logReady() { console.log("Ready!"); }
+    logReady() { console.log("Ready!"); },
+    onResize() {
+
+      // Very primitive way, we should improve this
+      this.mobile = window.innerWidth < 600;
+      console.log(`Mobile: ${this.mobile}`);
+    }
   }
 });
 </script>
@@ -62,6 +75,15 @@ export default defineNuxtComponent({
   overflow: scroll;
   z-index: 10;
   height: 100%;
-  max-width: 20%;
+  max-width: 15%;
+  min-width: 200px;
+}
+
+@media(max-width: 600px) {
+  #feed {
+    top: 80%;
+    max-width: 100%;
+    max-height: 20%;
+  }
 }
 </style>

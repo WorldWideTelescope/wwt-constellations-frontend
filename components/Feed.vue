@@ -3,8 +3,11 @@
     <div class="feed">
       <Splide
         :options="splideOptions"
-        @splide:click="(_event: MouseEvent, splideData: object) => {
+        @splide:click="(_event, splideData) => {
           $refs.splide.go(splideData.index);
+        }"
+        @splide:move="(_event, newIndex, _oldIndex) => {
+          itemSelected(items[newIndex]);
         }"
         ref="splide"
       >
@@ -14,7 +17,7 @@
         >
           <div
             class="feed-item"
-            @click="goToItem(item)"
+            @click="itemSelected(item)"
             >
               <img
                 class="thumbnail"
@@ -35,7 +38,7 @@
       :is-initial="true"
       class="loader"
     >
-      <template #no-more><div>ALL DONE</div></template>
+      <template #no-more><div></div></template>
     </VueEternalLoading>
   </div>
 </template>
@@ -43,9 +46,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
-import { Place } from '@wwtelescope/engine';
+import { ImageSetLayer, Place } from '@wwtelescope/engine';
+import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
+import { FadeType } from '@wwtelescope/engine-types';
 
 const D2R = Math.PI / 180.0;
+const D2H = Math.PI / 15.0;
 
 interface Item {
   place: Place;
@@ -64,22 +70,30 @@ export default defineComponent({
         direction: 'ttb',
         heightRatio: 5,
         perMove: 1,
+        arrows: false,
         pagination: false,
         lazyLoad: 'nearby',
         gap: "30px",
-        updateOnMove: true
-      }
+        updateOnMove: true,
+      },
+      layer: null as (ImageSetLayer | null)
     };
   },
   props: {
     wwtReady: {
       type: Boolean,
       default: false
+    },
+    horizontal: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
+    log(x: any) { console.log(x); },
     async loadItems(page: number): Promise<Item[]> {
-      const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
+      //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
+      const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       console.log(url);
       const store = this.$engineStore(this.$pinia);
       const folder = await store.loadImageCollection({
@@ -92,11 +106,11 @@ export default defineComponent({
               continue;
           }
           const imageset = place.get_studyImageset();
+          console.log(imageset?.get_url());
           if (imageset) {
               const isetUrl = imageset.get_url();
               result.push({ place, url: isetUrl });
           }
-          //result.push({place, url});
       }
       return result;
     },
@@ -107,34 +121,51 @@ export default defineComponent({
       this.page += 1;
       loaded(loadedItems.length, this.pageSize);
     },
-    async goToItem(item: Item) {
+    async itemSelected(item: Item) {
       const store = this.$engineStore(this.$pinia);
+      console.log(store);
       const place = item.place;
-      const iset = place.get_studyImageset();
-      console.log(place);
-      console.log(iset);
+      const studyImageset = place.get_studyImageset();
+      if (studyImageset == null) {
+        return;
+      }
+      const name = studyImageset.get_name();
+      const iset = store.lookupImageset(name);
       if (iset !== null) {
-        const layer = await store.addImageSetLayer({
+        if (this.layer) {
+          //@ts-ignore
+          applyImageSetLayerSetting(this.layer, ["fadeType", FadeType.fadeOut]);
+          applyImageSetLayerSetting(this.layer, ["fadeSpan", 10000]);
+          this.layer.set_endTime(new Date(new Date().getTime() + 500));
+
+          const guidToDelete = this.layer.id;
+          if (guidToDelete) {
+            setTimeout(() => {
+              store.deleteLayer(guidToDelete);
+              console.log("Deleted!");
+            }, 11000);
+          }
+        }
+        console.log("Here");
+        this.layer = await store.addImageSetLayer({
           url: item.url,
-          name: place.get_name(),
+          name: name,
           mode: "preloaded",
           goto: true
         });
-        console.log(layer);
-        console.log(place.get_name());
-        console.log(item.url);
+        // store.gotoRADecZoom({
+        //   raRad: D2R * place.get_RA(),
+        //   decRad: D2H * place.get_dec(),
+        //   zoomDeg: place.get_zoomLevel(),
+        //   instant: true
+        // });
+        console.log(this.layer);
       }
-      store.gotoRADecZoom({
-        raRad: D2R * place.get_RA(),
-        decRad: D2R * place.get_dec(),
-        zoomDeg: place.get_zoomLevel(),
-        instant: false
-      });
     }
   },
   watch: {
     '$refs.splide.index': function(index) {
-      this.goToItem(this.items[index]);
+      this.itemSelected(this.items[index]);
     },
     wwtReady: async function(ready) {
       console.log(`wwtReady: ${ready}`);
@@ -148,6 +179,11 @@ export default defineComponent({
           console.log("No!")
         }
       }
+    },
+    horizontal: function(horizontal) {
+      console.log("Horizontal:", horizontal);
+      const direction = horizontal ? 'ltr' : 'ttb';
+      this.splideOptions = { ...this.splideOptions, direction };
     }
   }
 });
@@ -157,13 +193,12 @@ export default defineComponent({
 
 #feed-root {
   height: 100%;
-  background: black;
 }
 
 .feed {
-  background: black;
   height: 100%;
   padding: 10px;
+  background: black;
 }
 
 .feed-item {
@@ -171,6 +206,7 @@ export default defineComponent({
   background: black;
   border: 1px solid white;
   border-radius: 5px;
+  margin-left: 10px;
 
   img {
     margin: auto;
@@ -187,16 +223,23 @@ export default defineComponent({
   box-shadow: 0px 0px 10px white;
 }
 
-.splide__slide.is-prev .feed-item {
+.splide__slide:not(.is-active) .feed-item {
   filter: brightness(0.5);
 }
 
-.splide__slide.is-next .feed-item {
-  filter: brightness(0.5);
-}
+// .splide__slide.is-prev .feed-item {
+// }
 
-.splide, .splide__track {
+// .splide__slide.is-next .feed-item {
+// }
+
+.splide {
   height: 100%;
+  overflow: hidden;
+}
+
+:deep(.splide__track) {
+  height: 100% !important;
   overflow: hidden;
 }
 </style>
