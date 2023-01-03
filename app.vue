@@ -12,7 +12,6 @@
         @hook:mounted="(() => { logReady(); wwtReady = true; })()"
         ></WorldWideTelescope>
     </client-only>
-    <button @click="test">BUTTON</button>
   </div>
 </template>
 
@@ -34,6 +33,7 @@ export default defineNuxtComponent({
   mounted() {
     window.addEventListener("resize", this.onResize);
     this.onResize();
+    this.$el.dispatchEvent(new CustomEvent("scroll"));
   },
   methods: {
     test() {
@@ -75,7 +75,7 @@ export default defineNuxtComponent({
   overflow: scroll;
   z-index: 10;
   height: 100%;
-  max-width: 15%;
+  max-width: 12%;
   min-width: 200px;
 }
 

@@ -36,6 +36,7 @@
     <VueEternalLoading
       :load="load"
       :is-initial="true"
+      position="left"
       class="loader"
     >
       <template #no-more><div></div></template>
@@ -88,6 +89,9 @@ export default defineComponent({
       type: Boolean,
       default: false
     }
+  },
+  mounted() {
+    console.log(this);
   },
   methods: {
     log(x: any) { console.log(x); },
@@ -146,7 +150,6 @@ export default defineComponent({
             }, 11000);
           }
         }
-        console.log("Here");
         this.layer = await store.addImageSetLayer({
           url: item.url,
           name: name,
@@ -159,8 +162,10 @@ export default defineComponent({
         //   zoomDeg: place.get_zoomLevel(),
         //   instant: true
         // });
-        console.log(this.layer);
       }
+    },
+    async loadAndAdd(page: number) {
+      this.items.push(...(await this.loadItems(page)));
     }
   },
   watch: {
