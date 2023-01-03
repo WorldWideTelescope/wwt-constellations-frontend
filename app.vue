@@ -33,7 +33,6 @@ export default defineNuxtComponent({
   mounted() {
     window.addEventListener("resize", this.onResize);
     this.onResize();
-    this.$el.dispatchEvent(new CustomEvent("scroll"));
   },
   methods: {
     test() {
@@ -75,7 +74,7 @@ export default defineNuxtComponent({
   overflow: scroll;
   z-index: 10;
   height: 100%;
-  max-width: 12%;
+  max-width: 15%;
   min-width: 200px;
 }
 

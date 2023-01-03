@@ -26,7 +26,7 @@
               
               <h3 class="name"> {{ item.place.get_name() }}</h3>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
               </p>
           </div>
         </SplideSlide>
@@ -35,7 +35,7 @@
 
     <VueEternalLoading
       :load="load"
-      :is-initial="true"
+      :is-initial="false"
       position="left"
       class="loader"
     >
@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
 import { ImageSetLayer, Place } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
@@ -67,7 +67,7 @@ export default defineComponent({
       items: [] as Item[],
       splideOptions: {
         focus: 'center',
-        perPage: 3,
+        perPage: 5,
         direction: 'ttb',
         heightRatio: 5,
         perMove: 1,
@@ -76,6 +76,7 @@ export default defineComponent({
         lazyLoad: 'nearby',
         gap: "30px",
         updateOnMove: true,
+        wheel: true
       },
       layer: null as (ImageSetLayer | null)
     };
@@ -92,6 +93,10 @@ export default defineComponent({
   },
   mounted() {
     console.log(this);
+    nextTick(() => {
+      this.loadInitialItems();
+      console.log("Loaded first set of items");
+    });
   },
   methods: {
     log(x: any) { console.log(x); },
@@ -100,6 +105,7 @@ export default defineComponent({
       const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       console.log(url);
       const store = this.$engineStore(this.$pinia);
+      console.log(store);
       const folder = await store.loadImageCollection({
           url: url,
           loadChildFolders: false
@@ -163,27 +169,33 @@ export default defineComponent({
         //   instant: true
         // });
       }
+      store.gotoRADecZoom({
+        raRad: D2R * place.get_RA(),
+        decRad: D2R * place.get_dec(),
+        zoomDeg: place.get_zoomLevel(),
+        instant: false
+      });
     },
-    async loadAndAdd(page: number) {
-      this.items.push(...(await this.loadItems(page)));
+    async loadInitialItems() {
+      this.items = await this.loadItems(this.page);
+      this.page += 1;
+    },
+    async onWWTReady() {
+      this.loadInitialItems();
     }
   },
   watch: {
     '$refs.splide.index': function(index) {
       this.itemSelected(this.items[index]);
     },
-    wwtReady: async function(ready) {
-      console.log(`wwtReady: ${ready}`);
-      if (ready) {
-        try {
-          console.log(this);
-          console.log(this.page);
-          this.items = await this.loadItems(this.page);
-          this.page += 1;
-        } catch {
-          console.log("No!")
+    '$engineStore': {
+      handler(wwt) {
+        console.log(`wwtReady: ${wwt}`);
+        if (wwt) {
+         this.onWWTReady();
         }
-      }
+      },
+      deep: true
     },
     horizontal: function(horizontal) {
       console.log("Horizontal:", horizontal);
