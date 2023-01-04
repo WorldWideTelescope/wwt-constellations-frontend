@@ -7,6 +7,7 @@
           $refs.splide.go(splideData.index);
         }"
         @splide:move="(_event, newIndex, _oldIndex) => {
+          loadIfNeeded(newIndex);
           itemSelected(items[newIndex]);
         }"
         ref="splide"
@@ -50,6 +51,7 @@ import { LoadAction } from "@ts-pro/vue-eternal-loading";
 import { ImageSetLayer, Place } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
 import { FadeType } from '@wwtelescope/engine-types';
+import { Splide } from "@splidejs/vue-splide";
 
 const D2R = Math.PI / 180.0;
 const D2H = Math.PI / 15.0;
@@ -66,6 +68,7 @@ export default defineComponent({
       pageSize: 10,
       items: [] as Item[],
       splideOptions: {
+        start: 2,
         focus: 'center',
         perPage: 5,
         direction: 'ttb',
@@ -92,7 +95,10 @@ export default defineComponent({
     }
   },
   mounted() {
-    console.log(this);
+    console.log(this.$refs.splide);
+
+    // We need to do this during nextTick,
+    // otherwise the WWTInstance hasn't yet been set
     nextTick(() => {
       this.loadInitialItems();
       console.log("Loaded first set of items");
@@ -101,11 +107,9 @@ export default defineComponent({
   methods: {
     log(x: any) { console.log(x); },
     async loadItems(page: number): Promise<Item[]> {
-      //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
-      const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
-      console.log(url);
+      const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
+      //const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
-      console.log(store);
       const folder = await store.loadImageCollection({
           url: url,
           loadChildFolders: false
@@ -116,7 +120,6 @@ export default defineComponent({
               continue;
           }
           const imageset = place.get_studyImageset();
-          console.log(imageset?.get_url());
           if (imageset) {
               const isetUrl = imageset.get_url();
               result.push({ place, url: isetUrl });
@@ -124,16 +127,24 @@ export default defineComponent({
       }
       return result;
     },
-    async load({ loaded }: LoadAction): Promise<void> {
-      console.log(`Loading: page = ${this.page}`);
+    async loadNextPage(): Promise<Item[]> {
       const loadedItems = await this.loadItems(this.page);
       this.items.push(...loadedItems);
-      this.page += 1;
+      this.page += 1; 
+      return loadedItems;
+    },
+    async loadIfNeeded(index: number) {
+      if (index >= (this.page - 2) * this.pageSize) {
+        this.loadNextPage();
+      }
+    },
+    async load({ loaded }: LoadAction): Promise<void> {
+      console.log(`Loading: page = ${this.page}`);
+      const loadedItems = await this.loadNextPage();
       loaded(loadedItems.length, this.pageSize);
     },
     async itemSelected(item: Item) {
       const store = this.$engineStore(this.$pinia);
-      console.log(store);
       const place = item.place;
       const studyImageset = place.get_studyImageset();
       if (studyImageset == null) {
@@ -162,43 +173,22 @@ export default defineComponent({
           mode: "preloaded",
           goto: true
         });
-        // store.gotoRADecZoom({
-        //   raRad: D2R * place.get_RA(),
-        //   decRad: D2H * place.get_dec(),
-        //   zoomDeg: place.get_zoomLevel(),
-        //   instant: true
-        // });
+        console.log(this.layer);
       }
-      store.gotoRADecZoom({
-        raRad: D2R * place.get_RA(),
-        decRad: D2R * place.get_dec(),
-        zoomDeg: place.get_zoomLevel(),
-        instant: false
-      });
+      // store.gotoRADecZoom({
+      //   raRad: D2R * place.get_RA(),
+      //   decRad: D2R * place.get_dec(),
+      //   zoomDeg: place.get_zoomLevel(),
+      //   instant: false
+      // });
     },
     async loadInitialItems() {
-      this.items = await this.loadItems(this.page);
-      this.page += 1;
-    },
-    async onWWTReady() {
-      this.loadInitialItems();
+      this.loadNextPage();
+      (this.$refs.splide as typeof Splide).index = 2;
     }
   },
   watch: {
-    '$refs.splide.index': function(index) {
-      this.itemSelected(this.items[index]);
-    },
-    '$engineStore': {
-      handler(wwt) {
-        console.log(`wwtReady: ${wwt}`);
-        if (wwt) {
-         this.onWWTReady();
-        }
-      },
-      deep: true
-    },
     horizontal: function(horizontal) {
-      console.log("Horizontal:", horizontal);
       const direction = horizontal ? 'ltr' : 'ttb';
       this.splideOptions = { ...this.splideOptions, direction };
     }

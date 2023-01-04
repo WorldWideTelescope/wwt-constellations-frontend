@@ -4,8 +4,9 @@ export default defineNuxtConfig({
   css: ["~/assets/main.less"],
   build: {
     transpile: [
-      "@wwtelescope/engine-pinia"
+      "@wwtelescope/engine-pinia",
+      "@wwtelescope/engine"
     ],
   },
-  builder: "webpack"
+  builder: "webpack",
 });
