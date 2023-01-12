@@ -52,6 +52,7 @@ import { ImageSetLayer, Place } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
 import { FadeType } from '@wwtelescope/engine-types';
 import { Splide } from "@splidejs/vue-splide";
+import { tween } from "femtotween";
 
 const D2R = Math.PI / 180.0;
 const D2H = Math.PI / 15.0;
@@ -61,7 +62,7 @@ interface Item {
   url: string;
 }
 
-export default defineComponent({
+export default defineNuxtComponent({
   data() {
     return {
       page: 1,
@@ -107,8 +108,8 @@ export default defineComponent({
   methods: {
     log(x: any) { console.log(x); },
     async loadItems(page: number): Promise<Item[]> {
-      const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
-      //const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
+      //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
+      const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
       const folder = await store.loadImageCollection({
           url: url,
@@ -152,20 +153,20 @@ export default defineComponent({
       }
       const name = studyImageset.get_name();
       const iset = store.lookupImageset(name);
+      const setLayerOpacity = (layer: ImageSetLayer | null, value: number) => {
+        if (layer !== null) {
+          applyImageSetLayerSetting(layer, ["opacity", value]);
+          //console.log(`Layer: ${layer}, opacity: ${value}`);
+        }
+      };
       if (iset !== null) {
-        if (this.layer) {
-          //@ts-ignore
-          applyImageSetLayerSetting(this.layer, ["fadeType", FadeType.fadeOut]);
-          applyImageSetLayerSetting(this.layer, ["fadeSpan", 10000]);
-          this.layer.set_endTime(new Date(new Date().getTime() + 500));
-
-          const guidToDelete = this.layer.id;
-          if (guidToDelete) {
-            setTimeout(() => {
-              store.deleteLayer(guidToDelete);
-              console.log("Deleted!");
-            }, 11000);
-          }
+        if (this.layer !== null) {
+          const oldLayer = this.layer;
+          const tweenOptions = {
+            time: 1500,
+            done: () => store.deleteLayer(oldLayer)
+          };
+          tween(1, 0, (value) => setLayerOpacity(oldLayer, value), tweenOptions);
         }
         this.layer = await store.addImageSetLayer({
           url: item.url,
@@ -173,14 +174,38 @@ export default defineComponent({
           mode: "preloaded",
           goto: true
         });
-        console.log(this.layer);
-      }
+
+      // If we use this block, set goto: false in the addImageSetLayer call above
+        // if (this.layer !== null) {
+        //     applyImageSetLayerSetting(this.layer, ["opacity", 0]);
+        // }
+      //   store.gotoRADecZoom({
+      //     raRad: D2R * iset.get_centerX(),
+      //     decRad: D2R * iset.get_centerY(),
+      //     zoomDeg: place.get_zoomLevel(),
+      //     instant: false
+      //   })
+      //   .then(() => {
+      //     if (this.layer !== null) {
+      //       const tweenOptions = {
+      //         time: 1500,
+      //         // ease: (t: number) => {
+      //         //   if (t < 2/3) { return 0; }
+      //         //   return Math.pow(3*(t-(2/3)), 4);
+      //         // }
+      //       };
+      //       tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
+      //     }
+      //   });
+      // }
       // store.gotoRADecZoom({
       //   raRad: D2R * place.get_RA(),
       //   decRad: D2R * place.get_dec(),
       //   zoomDeg: place.get_zoomLevel(),
       //   instant: false
       // });
+
+      }
     },
     async loadInitialItems() {
       this.loadNextPage();
