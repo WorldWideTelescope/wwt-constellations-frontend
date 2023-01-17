@@ -11,8 +11,11 @@
 <script lang="ts">
 export default defineNuxtComponent({
   props: {
-    wtmlUrl: String,
-    default: null
+    wtmlUrl: {
+      type: String,
+      default: null,
+      required: false
+    }
   }
 });
 </script>

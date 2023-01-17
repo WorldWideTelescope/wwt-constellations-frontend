@@ -1,13 +1,15 @@
 <template>
-  <div id="app">
+  <div id="page-root">
     <FeedContainer/>
-    <WTMLViewSSR/>
+    <!-- <WTMLViewSSR/> -->
   </div>
 </template>
   
 <script lang="ts">
 export default defineNuxtComponent({
+  
   created() {
+    console.log(this);
     if (process.client) {
       console.log("created client");
     } else {
@@ -37,23 +39,6 @@ export default defineNuxtComponent({
   
   
 <style lang="less">
-#app {
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  overflow: hidden;
-
-  .wwtelescope-component {
-    width: 100vw;
-    height: 100vh;
-    border-style: none;
-    border-width: 0;
-    margin: 0;
-    padding: 0;
-  }
-
-}
-
 #feed {
   position: absolute;
   overflow: scroll;
