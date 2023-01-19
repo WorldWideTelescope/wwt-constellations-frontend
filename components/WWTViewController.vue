@@ -1,41 +1,20 @@
 <template>
-  <div></div>
+  <div class="vc-root"></div>
 </template>
 
 <script lang="ts">
-import { ImageSetLayer, Place } from '@wwtelescope/engine';
+import { Place } from '@wwtelescope/engine';
 
 export default defineNuxtComponent({
-  props: {
-    wtmlUrl: {
-      type: String,
-      default: null,
-      required: false
-    }
-  },
-  watch: {
-    wtmlUrl(_url: string) {
-      this.setupForWtml();
-    }
-  },
-  data() {
-    return {
-      layer: null as (ImageSetLayer | null),
-      place: null as (Place | null)
-    }
-  },
-  async mounted() {
-    this.setupForWtml();
-  },
   methods: {
-    async setupForWtml(): Promise<void> {
+    async setupForWtml(url: string): Promise<void> {
       console.log("In setupForWtml");
-      if (this.wtmlUrl == null) {
+      if (url == null) {
         return;
       }
       const store = this.$engineStore(this.$pinia);
       const folder = await store.loadImageCollection({
-        url: this.wtmlUrl,
+        url: url,
         loadChildFolders: false
       });
 
@@ -52,7 +31,7 @@ export default defineNuxtComponent({
       }
       const imageset = item.get_studyImageset() ?? item.get_backgroundImageset();
       if (imageset !== null) {
-        this.layer = await store.addImageSetLayer({
+        store.addImageSetLayer({
           url: imageset.get_url(),
           name: imageset.get_name(),
           mode: "autodetect",
@@ -71,3 +50,9 @@ export default defineNuxtComponent({
   }
 });
 </script>
+
+<style>
+#vc-root {
+  display: none;
+}
+</style>

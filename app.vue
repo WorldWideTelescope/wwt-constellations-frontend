@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <WTMLViewSSR ref="wwt"/>
+    <WWTViewSSR ref="wwt"/>
     <NuxtPage class="page"/>
   </div>
 </template>

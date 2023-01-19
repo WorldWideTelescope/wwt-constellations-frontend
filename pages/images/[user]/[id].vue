@@ -1,26 +1,24 @@
 <template>
 <div id="image-page-root">
   <NuxtLink to="/" id="home-link"></NuxtLink>
+  <WTMLViewSSR :wtml-url="wtmlUrl" />
 </div>
 </template>
 
 <script lang="ts">
 export default defineNuxtComponent({
-  inject: ["wwtView"],
-  
   created() {
     console.log("In specific page created")
     const params = this.$route.params;
     this.user = params.user as string;
     this.id = params.id as string;
     this.wtmlUrl = `http://localhost:8000/item/${this.user}/{this.id}`;
-    console.log(this.wwtView);
   },
   data() {
     return {
       user: "",
       id: "",
-      wtmlUrl: null as string | null
+      wtmlUrl: undefined as string | undefined
     }
   }
 });
