@@ -18,7 +18,6 @@
         >
           <div
             class="feed-item"
-            @click="itemSelected(item)"
             >
               <img
                 class="thumbnail"
@@ -46,16 +45,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from 'vue'
+import { nextTick } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
-import { ImageSetLayer, Place } from '@wwtelescope/engine';
+import { ImageSetLayer, Place, Guid } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
-import { FadeType } from '@wwtelescope/engine-types';
 import { Splide } from "@splidejs/vue-splide";
 import { tween } from "femtotween";
 
 const D2R = Math.PI / 180.0;
-const D2H = Math.PI / 15.0;
+const D2H = 15.0 / 180.0;
+const H2D = 180.0 / 15.0;
+const H2R = Math.PI / 15.0;
 
 interface Item {
   place: Place;
@@ -159,57 +159,98 @@ export default defineNuxtComponent({
           //console.log(`Layer: ${layer}, opacity: ${value}`);
         }
       };
+      
+      // @ts-ignore
+      window.store = store;
+      // @ts-ignore
+      window.lm = store.$wwt.inst.lm;
+      const makeGuid = (string: string) => { return Guid.fromString(string); }
+      // @ts-ignore
+      window.makeGuid = makeGuid;
+
       if (iset !== null) {
-        if (this.layer !== null) {
-          const oldLayer = this.layer;
-          const tweenOptions = {
-            time: 1500,
-            done: () => store.deleteLayer(oldLayer)
-          };
-          tween(1, 0, (value) => setLayerOpacity(oldLayer, value), tweenOptions);
-        }
+
+        this.layer = null;
+
+        const raDecZoom = {
+          raRad: D2R * iset.get_centerX(),
+          decRad: D2R * iset.get_centerY(),
+          zoomDeg: place.get_zoomLevel()
+        };
+        const moveTime = store.timeToRADecZoom(raDecZoom) * 1000;
+        const minMoveTime = 2000;
+        const useFade = moveTime > minMoveTime;
+
+        Object.keys(store.imagesetLayers).forEach((id) => {
+          const layer = store.imagesetLayerById(id);
+          if (layer === null) {
+            return;
+          }
+
+          if (useFade) {
+
+            // If the layer is already at partial opacity,
+            // we can make the fadeout that much quicker
+            const tweenTime = layer.opacity * minMoveTime;
+            const tweenOptions = {
+              time: tweenTime,
+              done: () => store.deleteLayer(id)
+            };
+            tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
+          } else {
+            store.deleteLayer(id);
+          }
+        });
+
         this.layer = await store.addImageSetLayer({
           url: item.url,
           name: name,
           mode: "preloaded",
-          goto: true
+          goto: false
         });
 
-      // If we use this block, set goto: false in the addImageSetLayer call above
-        // if (this.layer !== null) {
-        //     applyImageSetLayerSetting(this.layer, ["opacity", 0]);
-        // }
-      //   store.gotoRADecZoom({
-      //     raRad: D2R * iset.get_centerX(),
-      //     decRad: D2R * iset.get_centerY(),
-      //     zoomDeg: place.get_zoomLevel(),
-      //     instant: false
-      //   })
-      //   .then(() => {
-      //     if (this.layer !== null) {
-      //       const tweenOptions = {
-      //         time: 1500,
-      //         // ease: (t: number) => {
-      //         //   if (t < 2/3) { return 0; }
-      //         //   return Math.pow(3*(t-(2/3)), 4);
-      //         // }
-      //       };
-      //       tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
-      //     }
-      //   });
-      // }
-      // store.gotoRADecZoom({
-      //   raRad: D2R * place.get_RA(),
-      //   decRad: D2R * place.get_dec(),
-      //   zoomDeg: place.get_zoomLevel(),
-      //   instant: false
-      // });
+        // If we use this block, set goto: false in the addImageSetLayer call above
+        if (this.layer !== null) {
+            applyImageSetLayerSetting(this.layer, ["opacity", 0]);
+        }
 
+        store.gotoRADecZoom({
+          ...raDecZoom,
+          instant: false
+        });
+        if (this.layer !== null) {
+
+          if (useFade) {
+            const t0 = (moveTime - minMoveTime) / moveTime;
+            const A = 1/(1-t0);
+            const tweenOptions = {
+              time: moveTime,
+              ease: (t: number) => {
+                if (t < t0) { return 0; }
+                return Math.pow(A*(t-t0), 1);
+              }
+            };
+            tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
+          } else {
+            setLayerOpacity(this.layer, 1);
+          }
+        }
+      } else {
+        store.gotoRADecZoom({
+          raRad: D2R * place.get_RA(),
+          decRad: H2R * place.get_dec(),
+          zoomDeg: place.get_zoomLevel(),
+          instant: false
+        });
       }
+
     },
     async loadInitialItems() {
-      this.loadNextPage();
-      (this.$refs.splide as typeof Splide).index = 2;
+      this.loadNextPage().then(() => {
+        (this.$refs.splide as typeof Splide).index = 0;
+        this.itemSelected(this.items[0]);
+      });
+      
     }
   },
   watch: {

@@ -5,11 +5,18 @@
 <script lang="ts">
 import { ImageSetLayer, Place } from '@wwtelescope/engine';
 
+const D2R = Math.PI / 180.0;
+
 export default defineNuxtComponent({
   props: {
     wtmlUrl: {
       type: String,
       default: null,
+      required: false
+    },
+    instant: {
+      type: Boolean,
+      default: true,
       required: false
     }
   },
@@ -56,8 +63,16 @@ export default defineNuxtComponent({
           url: imageset.get_url(),
           name: imageset.get_name(),
           mode: "autodetect",
-          goto: true
+          goto: !this.instant
         });
+        if (this.instant) {
+          store.gotoRADecZoom({
+            raRad: D2R * imageset.get_centerX(),
+            decRad: D2R * imageset.get_centerY(),
+            zoomDeg: item.get_zoomLevel(),
+            instant: true,
+          });
+        }
       } else {
         store.gotoRADecZoom({
           raRad: item.get_RA(),

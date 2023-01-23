@@ -1085,23 +1085,23 @@
   resolved "https://registry.npmjs.org/@wwtelescope/astro/-/astro-0.2.2.tgz"
   integrity sha512-HQg0CWMkV4J6xbc1gmi5wBfQG/q3SllSoQEUrAtyaDETUI/rvbm9p/jnq/PS/rhMcJUuiS9UAIA2slqR8e4Idw==
 
-"@wwtelescope/engine-helpers@>=0.8.0", "@wwtelescope/engine-helpers@^0.8.3":
-  version "0.8.3"
-  resolved "https://registry.npmjs.org/@wwtelescope/engine-helpers/-/engine-helpers-0.8.3.tgz"
-  integrity sha512-VC6/meamr/Zj+D0nbnjVWF25pk5lznJzrGTT8ymcyNIeweJTUB9D8w2KMOVrSyDs5NNFrv/94prgpD9t1O/saw==
+"@wwtelescope/engine-helpers@>=0.9.0", "@wwtelescope/engine-helpers@^0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@wwtelescope/engine-helpers/-/engine-helpers-0.9.0.tgz#e4a8148d18bd25e1c97a6c19112a24bc1883301e"
+  integrity sha512-z4feLOmbzEFlWeO3yCcn4S4/NSRwaSt7tQGOfk+7l51mTmCy3vhuvDmf0C44lT9Eyjk51Oypy4KUdPt+gjuU3Q==
   dependencies:
     "@wwtelescope/astro" ">=0.1.0"
-    "@wwtelescope/engine" "^7.14.0"
+    "@wwtelescope/engine" "^7.18.0"
     "@wwtelescope/engine-types" ">=0.6.0"
 
-"@wwtelescope/engine-pinia@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.npmjs.org/@wwtelescope/engine-pinia/-/engine-pinia-0.1.0.tgz"
-  integrity sha512-UWtitU4L6fENF1+Bwdi8BhhMbX1Br0IjyPfziCggWzPRXFlSO26h/J4MKQhF5o+QJaeFiUs0ZCQf9SX9nZ4Kdg==
+"@wwtelescope/engine-pinia@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@wwtelescope/engine-pinia/-/engine-pinia-0.2.0.tgz#a5d76f19921514e55ba3fd5abd8e07283e795219"
+  integrity sha512-TF5NuzRwH7eFTUkUNFOynzZOMjpxEwQzWv9sLFNhbROZ8lBwFYEQw/l88qhoJJEIfQE1jQRarWvT0yP62n5lYA==
   dependencies:
     "@wwtelescope/astro" ">=0.2.2"
-    "@wwtelescope/engine" "^7.17.0"
-    "@wwtelescope/engine-helpers" ">=0.8.0"
+    "@wwtelescope/engine" "^7.18.0"
+    "@wwtelescope/engine-helpers" ">=0.9.0"
     "@wwtelescope/engine-types" ">=0.6.3"
     pinia "^2.0.22"
     vue "^3"
@@ -1111,10 +1111,10 @@
   resolved "https://registry.npmjs.org/@wwtelescope/engine-types/-/engine-types-0.6.4.tgz"
   integrity sha512-0LMYkysuLniCg3NRLdts9raqNxDgezzRHwbDtKlPnZiUthZ3K6qk13M/rpYdsLqKsQsAjhzumP22rRbQq+XwHw==
 
-"@wwtelescope/engine@^7.14.0", "@wwtelescope/engine@^7.17.0":
-  version "7.17.2"
-  resolved "https://registry.npmjs.org/@wwtelescope/engine/-/engine-7.17.2.tgz"
-  integrity sha512-n/+cBUAQTww5OhUowMun2XCuMmIQLjLOvLKuw9z0pdXTLTqcFs5Qa+3bDVRtqK/oDjpSHQAXLK4oqBoyO8A31Q==
+"@wwtelescope/engine@^7.18.0":
+  version "7.18.0"
+  resolved "https://registry.yarnpkg.com/@wwtelescope/engine/-/engine-7.18.0.tgz#9a6495a63704e770911413606932ec5fde2ce37a"
+  integrity sha512-CfgoHv6fm4z64oGBdp0qilCVemXXaB28vJ+sCC/l1/DptUMtHF+GITlxCslI6MfLF4Xhn+Q8ndbM1aBKp9rVgA==
   dependencies:
     "@wwtelescope/engine-types" ">=0.6.0"
     pako "^1.0.11"

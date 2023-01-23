@@ -39,6 +39,10 @@ export default defineNuxtComponent({
   
   
 <style lang="less">
+#page-root {
+  pointer-events: none;
+}
+
 #feed {
   position: absolute;
   overflow: scroll;
@@ -46,6 +50,7 @@ export default defineNuxtComponent({
   height: 100%;
   max-width: 12%;
   min-width: 200px;
+  pointer-events: auto;
 }
 
 @media(max-width: 600px) {
