@@ -51,6 +51,7 @@ import { ImageSetLayer, Place, Guid } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
 import { Splide } from "@splidejs/vue-splide";
 import { tween } from "femtotween";
+import { link } from 'fs';
 
 const D2R = Math.PI / 180.0;
 const D2H = 15.0 / 180.0;
@@ -82,7 +83,9 @@ export default defineNuxtComponent({
         updateOnMove: true,
         wheel: true
       },
-      layer: null as (ImageSetLayer | null)
+      layer: null as (ImageSetLayer | null),
+      tweenIn: null as Function | null,
+      tweenOut: null as Function | null
     };
   },
   props: {
@@ -171,6 +174,12 @@ export default defineNuxtComponent({
       if (iset !== null) {
 
         this.layer = null;
+        if (this.tweenIn) {
+          this.tweenIn();
+        }
+        if (this.tweenOut) {
+          this.tweenOut();
+        }
 
         const raDecZoom = {
           raRad: D2R * iset.get_centerX(),
@@ -179,7 +188,6 @@ export default defineNuxtComponent({
         };
         const moveTime = store.timeToRADecZoom(raDecZoom) * 1000;
         const minMoveTime = 2000;
-        const useFade = moveTime > minMoveTime;
 
         Object.keys(store.imagesetLayers).forEach((id) => {
           const layer = store.imagesetLayerById(id);
@@ -187,53 +195,44 @@ export default defineNuxtComponent({
             return;
           }
 
-          if (useFade) {
-
-            // If the layer is already at partial opacity,
-            // we can make the fadeout that much quicker
-            const tweenTime = layer.opacity * minMoveTime;
-            const tweenOptions = {
-              time: tweenTime,
-              done: () => store.deleteLayer(id)
-            };
-            tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
-          } else {
-            store.deleteLayer(id);
-          }
+          // If the layer is already at partial opacity,
+          // we can make the fadeout that much quicker
+          const tweenTime = layer.opacity * minMoveTime;
+          const tweenOptions = {
+            time: tweenTime,
+            done: () => store.deleteLayer(id)
+          };
+          this.tweenOut = tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
         });
 
-        this.layer = await store.addImageSetLayer({
+        await store.addImageSetLayer({
           url: item.url,
           name: name,
           mode: "preloaded",
           goto: false
+        }).then((layer) => {
+          this.layer = layer;
+          applyImageSetLayerSetting(layer, ["opacity", 0]);
+          return layer;
         });
 
         // If we use this block, set goto: false in the addImageSetLayer call above
-        if (this.layer !== null) {
-            applyImageSetLayerSetting(this.layer, ["opacity", 0]);
-        }
-
         store.gotoRADecZoom({
           ...raDecZoom,
           instant: false
         });
-        if (this.layer !== null) {
 
-          if (useFade) {
-            const t0 = (moveTime - minMoveTime) / moveTime;
-            const A = 1/(1-t0);
-            const tweenOptions = {
-              time: moveTime,
-              ease: (t: number) => {
-                if (t < t0) { return 0; }
-                return Math.pow(A*(t-t0), 1);
-              }
-            };
-            tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
-          } else {
-            setLayerOpacity(this.layer, 1);
-          }
+        if (this.layer !== null) {
+          const t0 = Math.max((moveTime - minMoveTime) / moveTime, 0);
+          const A = 1/(1-t0);
+          const tweenOptions = {
+            time: moveTime,
+            ease: (t: number) => {
+              if (t < t0) { return 0; }
+              return Math.pow(A*(t-t0), 1);
+            }
+          };
+          this.tweenIn = tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
         }
       } else {
         store.gotoRADecZoom({
@@ -242,12 +241,14 @@ export default defineNuxtComponent({
           zoomDeg: place.get_zoomLevel(),
           instant: false
         });
-      }
+       }
+
+       console.log("============");
 
     },
     async loadInitialItems() {
       this.loadNextPage().then(() => {
-        (this.$refs.splide as typeof Splide).index = 0;
+        //(this.$refs.splide as typeof Splide).index = 0
         this.itemSelected(this.items[0]);
       });
       
