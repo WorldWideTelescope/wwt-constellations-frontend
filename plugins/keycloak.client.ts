@@ -1,4 +1,7 @@
-import Keycloak, { KeycloakConfig, KeycloakInitOptions } from "keycloak-js";
+import { wwtPinia } from "@wwtelescope/engine-pinia";
+import Keycloak, { KeycloakConfig, KeycloakInitOptions, KeycloakLoginOptions } from "keycloak-js";
+
+import { useConstellationsStore } from "~/stores/constellations";
 
 export default defineNuxtPlugin(nuxtApp => {
 
@@ -8,12 +11,19 @@ export default defineNuxtPlugin(nuxtApp => {
     clientId: "constellations-app",
   };
 
+  // See the example of silent SSO checking at
+// https://www.keycloak.org/docs/latest/securing_apps/index.html#_javascript_adapter
   const initOptions: KeycloakInitOptions = {
-    onLoad: "login-required"
+    onLoad: 'check-sso',
+    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso'
   };
 
   const keycloak = new Keycloak(config);
-  //keycloak.init(initOptions); // causes a state refresh
+  keycloak.loginRequired = false;
+  keycloak.init(initOptions).then((auth) => {
+    const store = useConstellationsStore(wwtPinia);
+    store.$state.loggedIn = auth;
+  });
   nuxtApp.provide("keycloak", keycloak);
 
 //   keycloak.init(initOptions).then((auth) => {

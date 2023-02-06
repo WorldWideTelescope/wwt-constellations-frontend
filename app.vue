@@ -5,6 +5,14 @@
   </div>
 </template>
 
+<script>
+export default defineNuxtComponent({
+  created() {
+    console.log(this);
+  }
+});
+</script>
+
 <style lang="less">
 #app {
   width: 100vw;
@@ -30,5 +38,11 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+#login {
+  position: fixed;
+  top: 3px;
+  right: 3px;
 }
 </style>
