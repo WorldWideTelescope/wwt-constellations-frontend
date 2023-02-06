@@ -197,8 +197,8 @@ export default defineNuxtComponent({
 
           // If the layer is already at partial opacity,
           // we can make the fadeout that much quicker
-          const tweenTime = layer.opacity * minMoveTime;
-          const tweenOptions = {
+          const tweenTime = layer.opacity * moveTime;
+          const tweenOptions = {  
             time: tweenTime,
             done: () => store.deleteLayer(id)
           };
@@ -223,6 +223,12 @@ export default defineNuxtComponent({
         });
 
         if (this.layer !== null) {
+
+          // The tweening takes place over a "time" interval from 0 to 1
+          // t0 represents the "time" at which the animation will start
+          // (i.e. the easing function is 0 before t0)
+          // In actual clock time, t0 represents the fraction that we are
+          // through the motion when the animation starts
           const t0 = Math.max((moveTime - minMoveTime) / moveTime, 0);
           const A = 1/(1-t0);
           const tweenOptions = {
@@ -242,8 +248,6 @@ export default defineNuxtComponent({
           instant: false
         });
        }
-
-       console.log("============");
 
     },
     async loadInitialItems() {
