@@ -2,13 +2,22 @@
   <div id="app">
     <WWTViewSSR ref="wwt"/>
     <NuxtPage class="page"/>
+    <button @click="logout" id="logout">Logout</button>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default defineNuxtComponent({
   created() {
     console.log(this);
+  },
+
+  methods: {
+    logout() {
+      this.$keycloak.logout({
+        redirectUri: window.location.href
+      });
+    }
   }
 });
 </script>
@@ -40,7 +49,7 @@ export default defineNuxtComponent({
   left: 0;
 }
 
-#login {
+#logout {
   position: fixed;
   top: 3px;
   right: 3px;

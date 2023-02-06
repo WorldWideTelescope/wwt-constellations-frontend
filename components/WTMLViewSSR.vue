@@ -1,10 +1,13 @@
 <template>
   <div>
-    <client-only>
+    <ClientOnly>
       <WTMLView
         :wtml-url="wtmlUrl"
       />
-    </client-only>
+      <template #fallback>
+        <div>WorldWide Telescope component</div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
 

@@ -1,8 +1,8 @@
 <template>
-<div id="image-page-root">
-  <NuxtLink to="/" id="home-link">Home</NuxtLink>
-  <WTMLViewSSR :wtml-url="wtmlUrl" />
-</div>
+  <div id="image-page-root">
+    <NuxtLink to="/" id="home-link">Home</NuxtLink>
+    <WTMLViewSSR :wtml-url="wtmlUrl" />
+  </div>
 </template>
 
 <script lang="ts">
