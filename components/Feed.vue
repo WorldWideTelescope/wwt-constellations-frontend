@@ -171,50 +171,50 @@ export default defineNuxtComponent({
       // @ts-ignore
       window.makeGuid = makeGuid;
 
-      if (iset !== null) {
+      if (iset === null) {
+        return;
+      }
 
-        this.layer = null;
-        if (this.tweenIn) {
-          this.tweenIn();
-        }
-        if (this.tweenOut) {
-          this.tweenOut();
+      this.layer = null;
+      if (this.tweenIn) {
+        this.tweenIn();
+      }
+      if (this.tweenOut) {
+        this.tweenOut();
+      }
+
+      const raDecZoom = {
+        raRad: D2R * iset.get_centerX(),
+        decRad: D2R * iset.get_centerY(),
+        zoomDeg: place.get_zoomLevel()
+      };
+      const moveTime = store.timeToRADecZoom(raDecZoom) * 1000;
+      const minMoveTime = 2000;
+
+      Object.keys(store.imagesetLayers).forEach((id) => {
+        const layer = store.imagesetLayerById(id);
+        if (layer === null) {
+          return;
         }
 
-        const raDecZoom = {
-          raRad: D2R * iset.get_centerX(),
-          decRad: D2R * iset.get_centerY(),
-          zoomDeg: place.get_zoomLevel()
+        // If the layer is already at partial opacity,
+        // we can make the fadeout that much quicker
+        const tweenTime = layer.opacity * Math.min(moveTime, minMoveTime);
+        const tweenOptions = {  
+          time: tweenTime,
+          done: () => store.deleteLayer(id)
         };
-        const moveTime = store.timeToRADecZoom(raDecZoom) * 1000;
-        const minMoveTime = 2000;
+        this.tweenOut = tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
+      });
 
-        Object.keys(store.imagesetLayers).forEach((id) => {
-          const layer = store.imagesetLayerById(id);
-          if (layer === null) {
-            return;
-          }
-
-          // If the layer is already at partial opacity,
-          // we can make the fadeout that much quicker
-          const tweenTime = layer.opacity * moveTime;
-          const tweenOptions = {  
-            time: tweenTime,
-            done: () => store.deleteLayer(id)
-          };
-          this.tweenOut = tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
-        });
-
-        await store.addImageSetLayer({
-          url: item.url,
-          name: name,
-          mode: "preloaded",
-          goto: false
-        }).then((layer) => {
-          this.layer = layer;
-          applyImageSetLayerSetting(layer, ["opacity", 0]);
-          return layer;
-        });
+      store.addImageSetLayer({
+        url: item.url,
+        name: name,
+        mode: "preloaded",
+        goto: false
+      }).then((layer) => {
+        this.layer = layer;
+        applyImageSetLayerSetting(layer, ["opacity", 0]);
 
         // If we use this block, set goto: false in the addImageSetLayer call above
         store.gotoRADecZoom({
@@ -239,16 +239,16 @@ export default defineNuxtComponent({
             }
           };
           this.tweenIn = tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
+        } else {
+          store.gotoRADecZoom({
+            raRad: D2R * place.get_RA(),
+            decRad: H2R * place.get_dec(),
+            zoomDeg: place.get_zoomLevel(),
+            instant: false
+          });
         }
-      } else {
-        store.gotoRADecZoom({
-          raRad: D2R * place.get_RA(),
-          decRad: H2R * place.get_dec(),
-          zoomDeg: place.get_zoomLevel(),
-          instant: false
-        });
-       }
-
+        
+      });
     },
     async loadInitialItems() {
       this.loadNextPage().then(() => {
