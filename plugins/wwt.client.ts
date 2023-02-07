@@ -1,4 +1,4 @@
-import { engineStore, wwtPinia, WWTComponent } from "@wwtelescope/engine-pinia";
+import { engineStore, WWTComponent, wwtPinia } from "@wwtelescope/engine-pinia";
 
 export default defineNuxtPlugin(nuxtApp => {
   nuxtApp.vueApp.component("WorldWideTelescope", WWTComponent);

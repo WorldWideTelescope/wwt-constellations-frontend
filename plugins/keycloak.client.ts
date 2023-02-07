@@ -23,6 +23,7 @@ export default defineNuxtPlugin(nuxtApp => {
   keycloak.init(initOptions).then((auth) => {
     const store = useConstellationsStore(wwtPinia);
     store.$state.loggedIn = auth;
+    console.log("Initialized Keycloak");
   });
   nuxtApp.provide("keycloak", keycloak);
 

@@ -2,7 +2,9 @@
   <div id="app">
     <WWTViewSSR ref="wwt"/>
     <NuxtPage class="page"/>
-    <button @click="logout" id="logout">Logout</button>
+    <button @click="logInOut" id="logout">
+      {{ loggedIn ? 'Log out' : 'Log in' }}
+    </button>
   </div>
 </template>
 
@@ -12,11 +14,32 @@ export default defineNuxtComponent({
     console.log(this);
   },
 
+  data() {
+    return {
+      loggedIn: false
+    }
+  },
+
   methods: {
-    logout() {
-      this.$keycloak.logout({
-        redirectUri: window.location.href
-      });
+    logInOut() {
+      if (this.loggedIn) {
+        this.$keycloak.logout({
+          redirectUri: window.location.href
+        }).then(() => {
+          this.loggedIn = false;
+        }).catch((error: Error) => {
+          console.log(`Error logging out: ${error.message}`);
+        });
+      } else {
+        this.$keycloak.login({
+          redirectUri: window.location.href,
+          prompt: 'login'
+        }).then(() => {
+          this.loggedIn = true;
+        }).catch((error: Error) => {
+          console.log(`Error logging in: ${error.message}`);
+        });
+      }
     }
   }
 });
