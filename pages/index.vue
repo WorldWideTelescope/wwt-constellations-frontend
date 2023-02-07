@@ -22,16 +22,16 @@ export default defineNuxtComponent({
     };
   },
   mounted() {
-    window.addEventListener("resize", this.onResize);
-    this.onResize();
+    //window.addEventListener("resize", this.onResize);
+    //this.onResize();
   },
   methods: {
     logReady() { console.log("Ready!"); },
     onResize() {
 
       // Very primitive way, we should improve this
-      this.mobile = window.innerWidth < 600;
-      console.log(`Mobile: ${this.mobile}`);
+      // this.mobile = window.innerWidth < 600;
+      // console.log(`Mobile: ${this.mobile}`);
     }
   }
 });
