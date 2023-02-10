@@ -8,7 +8,51 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { useConstellationsStore } from './stores/constellations';
+import { storeToRefs } from 'pinia';
+
+const constellationsStore = useConstellationsStore();
+const { loggedIn } = storeToRefs(constellationsStore);
+
+const { $keycloak } = useNuxtApp();
+
+onMounted(() => {
+  $keycloak.init({
+    onLoad: 'check-sso',
+    silentCheckSsoRedirectUri: '/silent-check-sso'
+  }).then(() => {
+    loggedIn.value = $keycloak.authenticated ?? false;
+  });
+});
+
+function logInOut() {
+  if (!process.client) {
+    return;
+  }
+
+  if (loggedIn.value) {
+    $keycloak.logout({
+      redirectUri: window.location.href
+    }).then(() => {
+      loggedIn.value = false;
+    }).catch((error: Error) => {
+      console.log(`Error logging out: ${error.message}`);
+    });
+  } else {
+    $keycloak.login({
+      redirectUri: window.location.href,
+      prompt: 'login'
+    }).then(() => {
+      loggedIn.value = true;
+    }).catch((error: Error) => {
+      console.log(`Error logging in: ${error.message}`);
+    });
+  }
+}
+</script>
+
+<!-- <script lang="ts">
 import { mapWritableState } from 'pinia';
 import { useConstellationsStore } from './stores/constellations';
 
@@ -68,7 +112,7 @@ export default defineNuxtComponent({
     }
   }
 });
-</script>
+</script> -->
 
 <style lang="less">
 #app {

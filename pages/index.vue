@@ -1,11 +1,7 @@
 <template>
   <div id="page-root">
     <ClientOnly>
-      <Feed
-        id="feed"
-        ref="feed"
-        :horizontal="mobile"
-        />
+      <FeedContainer/>
     </ClientOnly>
     <!-- <WTMLViewSSR/> -->
   </div>
