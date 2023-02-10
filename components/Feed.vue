@@ -49,9 +49,7 @@ import { nextTick } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
 import { ImageSetLayer, Place, Guid } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
-import { Splide } from "@splidejs/vue-splide";
 import { tween } from "femtotween";
-import { link } from 'fs';
 
 const D2R = Math.PI / 180.0;
 const D2H = 15.0 / 180.0;

@@ -9,10 +9,32 @@
 </template>
 
 <script lang="ts">
+import { mapWritableState } from 'pinia';
+import { useConstellationsStore } from './stores/constellations';
+
 export default defineNuxtComponent({
   created() {
     console.log(this);
   },
+
+  mounted() {
+    this.$keycloak.init({
+      onLoad: 'check-sso',
+      silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso'
+    }).then(() => {
+      // console.log("Initialized keycloak");
+      // console.dir(JSON.stringify(this.$keycloak));
+      // console.log(this.$keycloak.authenticated);
+      this.loggedIn = this.$keycloak.authenticated;
+      //console.log(this.loggedIn);
+    });
+  },
+
+  // computed: {
+  //   ...mapWritableState(useConstellationsStore, {
+  //     loggedIn: 'userLoggedIn'
+  //   })
+  // },
 
   data() {
     return {
@@ -22,6 +44,9 @@ export default defineNuxtComponent({
 
   methods: {
     logInOut() {
+      if (!process.client) {
+        return
+      }
       if (this.loggedIn) {
         this.$keycloak.logout({
           redirectUri: window.location.href
@@ -35,7 +60,7 @@ export default defineNuxtComponent({
           redirectUri: window.location.href,
           prompt: 'login'
         }).then(() => {
-          this.loggedIn = true;
+           this.loggedIn = true;
         }).catch((error: Error) => {
           console.log(`Error logging in: ${error.message}`);
         });

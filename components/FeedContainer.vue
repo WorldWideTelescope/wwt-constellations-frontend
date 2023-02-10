@@ -1,12 +1,12 @@
 <template>
   <div>
-    <client-only>
+    <ClientOnly>
       <Feed
         id="feed"
         ref="feed"
         :horizontal="mobile"
       />
-    </client-only>
+    </ClientOnly>
   </div>
 </template>
 

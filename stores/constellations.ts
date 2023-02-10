@@ -1,11 +1,11 @@
 import { defineStore } from "pinia"
 
 export interface WWTConstellationsPiniaState {
-  loggedIn: boolean;
+  userLoggedIn: boolean;
 };
 
 export const useConstellationsStore = defineStore('wwt-constellations', {
   state: (): WWTConstellationsPiniaState => ({
-    loggedIn: false
+    userLoggedIn: false
   })
 });

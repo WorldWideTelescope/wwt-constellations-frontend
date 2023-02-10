@@ -20,11 +20,11 @@ export default defineNuxtPlugin(nuxtApp => {
 
   const keycloak = new Keycloak(config);
   keycloak.loginRequired = false;
-  keycloak.init(initOptions).then((auth) => {
-    const store = useConstellationsStore(wwtPinia);
-    store.$state.loggedIn = auth;
-    console.log("Initialized Keycloak");
-  });
+  // keycloak.init(initOptions).then((auth) => {
+  //   const store = useConstellationsStore(wwtPinia);
+  //   store.$state.loggedIn = auth;
+  //   console.log("Initialized Keycloak");
+  // });
   nuxtApp.provide("keycloak", keycloak);
 
 //   keycloak.init(initOptions).then((auth) => {
