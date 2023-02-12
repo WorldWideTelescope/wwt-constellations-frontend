@@ -6,12 +6,21 @@
       <span>Scene Name:</span>
       <input v-model="sceneName"/>
     </div>
+    <div>
+      <button @click="submit">Submit</button>
+    </div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
 const { params } = useRoute();
+const { $engineStore, $pinia } = useNuxtApp();
+
+let store: ReturnType<typeof $engineStore> | null;
+if (process.client) {
+  store = $engineStore();
+}
 
 // If no parameter is given
 // (e.g. the route is /scene-editor/),
@@ -22,17 +31,21 @@ const id = ref(params.id || null);
 const sceneName = ref("");
 
 function create() {
+  if (store === null) {
+    return;
+  }
   const scene = {
-    name: sceneName,
+    name: sceneName.value,
     imageIDs: [],
     user: "",
     place: {
-      raRad: 0,
-      decRad: 0,
-      zoomDeg: 60,
-      rollRad: 0
+      raRad: store.raRad,
+      decRad: store.decRad,
+      zoomDeg: store.zoomDeg,
+      rollRad: store.rollRad
     }
-  }
+  };
+  console.log(scene);
 }
 
 function update() {
@@ -40,10 +53,10 @@ function update() {
 }
 
 function submit() {
-  if (id === null) {
+  if (id.value === null) {
     create();
   } else {
-    submit();
+    update();
   }
 }
 
@@ -74,6 +87,7 @@ function submit() {
 }
 
 #editing-panel {
+  pointer-events: auto;
   position: fixed;
   left: 2%;
   top: 5%;
