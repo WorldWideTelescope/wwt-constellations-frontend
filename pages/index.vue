@@ -7,39 +7,6 @@
   </div>
 </template>
   
-<script lang="ts">
-export default defineNuxtComponent({
-  
-  created() {
-    console.log(this);
-    if (process.client) {
-      console.log("created client");
-    } else {
-      console.log("created server");
-    }
-  },
-  data() {
-    return {
-      mobile: false
-    };
-  },
-  mounted() {
-    //window.addEventListener("resize", this.onResize);
-    //this.onResize();
-  },
-  methods: {
-    logReady() { console.log("Ready!"); },
-    onResize() {
-
-      // Very primitive way, we should improve this
-      // this.mobile = window.innerWidth < 600;
-      // console.log(`Mobile: ${this.mobile}`);
-    }
-  }
-});
-</script>
-  
-  
 <style lang="less">
 #page-root {
   pointer-events: none;

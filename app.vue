@@ -24,6 +24,7 @@ onMounted(() => {
   }).then(() => {
     loggedIn.value = $keycloak.authenticated ?? false;
   });
+
 });
 
 function logInOut() {

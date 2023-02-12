@@ -24,7 +24,7 @@ export default defineNuxtComponent({
 });
 </script>
 
-<style lang="less">
+<style scoped lang="less">
 #image-page-root {
   pointer-events: none;
 }

@@ -23,6 +23,7 @@ export default defineNuxtPlugin(nuxtApp => {
   //   console.log("Initialized Keycloak");
   // });
   console.log("Provided keycloak");
+  console.log(keycloak);
 
 //   keycloak.init(initOptions).then((auth) => {
 //     if (!auth) {
