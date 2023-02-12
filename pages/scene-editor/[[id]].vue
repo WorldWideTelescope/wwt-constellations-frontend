@@ -15,7 +15,8 @@
 
 <script setup lang="ts">
 const { params } = useRoute();
-const { $engineStore, $pinia } = useNuxtApp();
+const { $engineStore } = useNuxtApp();
+import { Scene } from "~/utils/types";
 
 let store: ReturnType<typeof $engineStore> | null;
 if (process.client) {
@@ -30,33 +31,37 @@ if (process.client) {
 const id = ref(params.id || null);
 const sceneName = ref("");
 
-function create() {
-  if (store === null) {
-    return;
-  }
-  const scene = {
+function getScene(): Scene {
+  return {
     name: sceneName.value,
     imageIDs: [],
     user: "",
     place: {
-      raRad: store.raRad,
-      decRad: store.decRad,
-      zoomDeg: store.zoomDeg,
-      rollRad: store.rollRad
+      raRad: store?.raRad ?? 0,
+      decRad: store?.decRad ?? 0,
+      zoomDeg: store?.zoomDeg ?? 360,
+      rollRad: store?.rollRad ?? 0
     }
-  };
-  console.log(scene);
+  }
 }
 
-function update() {
+function create(scene: Scene) {
+}
+
+function update(scene: Record<string,any>) {
 
 }
 
 function submit() {
+  if (store === null) {
+    return;
+  }
+  const scene = getScene();
+
   if (id.value === null) {
-    create();
+    create(scene);
   } else {
-    update();
+    update(scene);
   }
 }
 
