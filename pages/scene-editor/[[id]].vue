@@ -48,7 +48,7 @@
 const { params } = useRoute();
 const { $engineStore } = useNuxtApp();
 import { OptionalFields } from "~/utils/type-helpers";
-import { Scene } from "~/utils/types";
+import { ImagesetDetails, Scene } from "~/utils/types";
 import { API_URL } from "~/utils/constants";
 
 import { Imageset } from "@wwtelescope/engine";
@@ -68,6 +68,7 @@ const idStr = typeof params.id === 'object' ? params.id.join(",") : (params.id |
 const id = ref(idStr);
 const sceneName = ref("");
 const selectedImagesets = reactive([] as Imageset[]);
+const layerIDs = reactive({} as Record<string, string>);
 
 const imagesets = reactive([] as Imageset[]);
 
@@ -108,7 +109,12 @@ onMounted(() => {
 function getScene(): Scene {
   return {
     name: sceneName.value,
-    imageIDs: selectedImagesets.map((iset) => `${iset.get_imageSetID()}`),
+    imagesets: selectedImagesets.map((iset) => {
+      return {
+        url: iset.get_url(),
+        name: iset.get_name()
+      }
+    }),
     user: "",
     place: {
       raRad: store?.raRad ?? 0,
@@ -119,15 +125,23 @@ function getScene(): Scene {
   }
 }
 
-function onThumbnailClick(iset: Imageset) {;
+function onThumbnailClick(iset: Imageset) {
   const index = selectedImagesets.indexOf(iset);
   console.log(index);
   if (index > -1) {
     selectedImagesets.splice(index, 1);
+    store?.deleteLayer(layerIDs[iset.get_url()]);
   } else {
     selectedImagesets.push(iset);
+    store?.addImageSetLayer({
+      mode: "autodetect",
+      url: iset.get_url(),
+      name: iset.get_name(),
+      goto: true
+    }).then((layer) => {
+      layerIDs[iset.get_url()] = layer.id.toString();
+    });
   }
-  console.log(selectedImagesets);
 }
 
 async function queryForScene(id: string): Promise<Scene> {
