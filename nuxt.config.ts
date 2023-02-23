@@ -11,6 +11,5 @@ export default defineNuxtConfig({
       "@wwtelescope/astro"
     ],
   },
-  builder: "webpack",
-  
+  builder: "webpack"
 });
