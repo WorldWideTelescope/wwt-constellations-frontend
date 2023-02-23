@@ -47,7 +47,7 @@
 <script lang="ts">
 import { nextTick } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
-import { ImageSetLayer, Place, Guid } from '@wwtelescope/engine';
+import { Imageset, ImageSetLayer, Folder, Place, Guid } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
 import { tween } from "femtotween";
 
@@ -112,21 +112,29 @@ export default defineNuxtComponent({
       //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
       const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
+      console.log(store);
       const folder = await store.loadImageCollection({
-          url: url,
-          loadChildFolders: false
+        url: url,
+        loadChildFolders: false
       });
       const result = [];
-      for (const place of folder.get_children() ?? []) {
-          if (!(place instanceof Place)) {
-              continue;
-          }
-          const imageset = place.get_studyImageset();
-          if (imageset) {
-              const isetUrl = imageset.get_url();
-              result.push({ place, url: isetUrl });
-          }
+      console.log(Place);
+      console.log(Folder);
+      for (const child of folder.get_children() ?? []) {
+        console.log(child.constructor);
+        if (!(child instanceof Place)) {
+          continue;
+        }
+        console.log(child instanceof Imageset);
+        const place = child as Place;
+        const imageset = place.get_studyImageset();
+        console.log(imageset);
+        if (imageset !== null) {
+          const isetUrl = imageset.get_url();
+          result.push({ place, url: isetUrl });
+        }
       }
+      console.log(result);
       return result;
     },
     async loadNextPage(): Promise<Item[]> {
@@ -146,6 +154,7 @@ export default defineNuxtComponent({
       loaded(loadedItems.length, this.pageSize);
     },
     async itemSelected(item: Item) {
+      console.log(item);
       const store = this.$engineStore(this.$pinia);
       const place = item.place;
       const studyImageset = place.get_studyImageset();
@@ -251,6 +260,7 @@ export default defineNuxtComponent({
     async loadInitialItems() {
       this.loadNextPage().then(() => {
         //(this.$refs.splide as typeof Splide).index = 0
+        console.log(this.items);
         this.itemSelected(this.items[0]);
       });
       

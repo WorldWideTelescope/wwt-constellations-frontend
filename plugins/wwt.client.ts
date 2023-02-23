@@ -6,6 +6,7 @@ export default defineNuxtPlugin(nuxtApp => {
   return {
     provide: {
       engineStore,
+      wwtPinia
     }
   };
 });

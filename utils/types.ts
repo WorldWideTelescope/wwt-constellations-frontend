@@ -1,11 +1,11 @@
-export interface Place {
+export interface PlaceDetails {
   raRad: number;
   decRad: number;
   zoomDeg: number;
   rollRad?: number;
 }
 
-export function isPlace(item: any): item is Place {
+export function isPlace(item: any): item is PlaceDetails {
   return typeof item.raRad === "number" &&
          typeof item.decRad === "number" &&
          typeof item.zoomDeg === "number" &&
@@ -14,9 +14,9 @@ export function isPlace(item: any): item is Place {
 
 export interface Scene {
   name: string;
-  imageIDs: string[]; // Relative?
+  imageIDs: string[];
   user: string;
-  place: Place;
+  place: PlaceDetails;
 }
 
 export function isScene(item: any): item is Scene {
