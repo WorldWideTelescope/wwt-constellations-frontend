@@ -25,6 +25,7 @@
     "less": "^4.1.3",
     "less-loader": "^11.1.0",
     "pinia": "^2.0.32",
+    "vue-slider-component": "^4.1.0-beta.7",
     "vue3-popper": "^1.5.0"
   }
 }

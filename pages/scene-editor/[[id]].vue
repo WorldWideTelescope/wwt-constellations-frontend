@@ -21,7 +21,7 @@
             <img
               v-for="image in imagesets"
               :key="image.get_imageSetID()"
-              :class="selectedImagesets.includes(image) ? 'selected' : ''"
+              :class="layers.map(l => l.get_imageSet()).includes(image) ? 'selected' : ''"
               :src="image.get_thumbnailUrl()"
               :alt="image.get_name()"
               @click="onThumbnailClick(image)"
@@ -31,15 +31,17 @@
       </Popper>
     </ClientOnly>
     <div id="image-layer-controls">
-      <img
-        v-for="image in selectedImagesets"
-        :key="image.get_imageSetID()"
-        :src="image.get_thumbnailUrl()"
-        :alt="image.get_name()"
-      />
+      <ClientOnly>
+        <imageset-item
+          v-for="layer in layers"
+          :layer="layer"
+          :key="layer.id.toString()"
+        />
+      </ClientOnly>
     </div>
     <div>
       <button @click="submit">Submit</button>
+      <div v-show="submitMessage">{{ submitMessage }}</div>
     </div>
   </div>
 </div>
@@ -47,7 +49,7 @@
 
 <script setup lang="ts">
 const { params } = useRoute();
-const { $engineStore } = useNuxtApp();
+const { $engineStore, $keycloak } = useNuxtApp();
 import { OptionalFields } from "~/utils/type-helpers";
 import { ImagesetDetails, Scene } from "~/utils/types";
 import { API_URL } from "~/utils/constants";
@@ -57,25 +59,6 @@ import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 type SceneUpdates = OptionalFields<Scene>;
 
 let store: ReturnType<typeof $engineStore> | null;
-
-const currentScene = computed((): Scene => {
-  return {
-    name: sceneName.value,
-    imagesets: selectedImagesets.map((iset) => {
-      return {
-        url: iset.get_url(),
-        name: iset.get_name()
-      }
-    }),
-    user: "",
-    place: {
-      raRad: store?.raRad ?? 0,
-      decRad: store?.decRad ?? 0,
-      zoomDeg: store?.zoomDeg ?? 360,
-      rollRad: store?.rollRad ?? 0
-    }
-  }
-});
 let lastSubmittedScene: Scene | null = null;
 
 // If no parameter is given
@@ -86,9 +69,9 @@ let lastSubmittedScene: Scene | null = null;
 const idStr = typeof params.id === 'object' ? params.id.join(",") : (params.id || null);
 const id = ref(idStr);
 const sceneName = ref("");
-const selectedImagesets = reactive([] as Imageset[]);
-const layerIDs = reactive({} as Record<string, string>);
+const layers = reactive([] as ImageSetLayer[]);
 const imagesets = reactive([] as Imageset[]);
+const submitMessage = ref("");
 
 const showImagePopper = ref(false);
 
@@ -126,22 +109,22 @@ onMounted(() => {
 async function sceneSetup(id: string) {
   const scene = await queryForScene(id);
   sceneName.value = scene.name;
-  const layerProms = scene.imagesets.map((iset: ImagesetDetails) => {
+  const layerProms = scene.imagesetLayers.map((iset: ImagesetDetails) => {
     return store?.addImageSetLayer({
       mode: "autodetect",
       url: iset.url,
       name: iset.name,
       goto: false
     }).then((layer) => {
-      layerIDs[iset.url] = layer.id.toString();
+      layer.set_opacity(iset.opacity)
       return layer;
     });
   });
 
-  Promise.all(layerProms).then(layers => {
-    layers.forEach((layer: ImageSetLayer | undefined) => {
+  Promise.all(layerProms).then(added => {
+    added.forEach((layer: ImageSetLayer | undefined) => {
       if (layer) {
-        selectedImagesets.push(layer?.get_imageSet());
+        layers.push(layer);
       }
     });
   });
@@ -152,19 +135,18 @@ async function sceneSetup(id: string) {
 }
 
 function onThumbnailClick(iset: Imageset) {
-  const index = selectedImagesets.indexOf(iset);
+  const index = layers.map(layer => layer.get_imageSet()).indexOf(iset);
   if (index > -1) {
-    selectedImagesets.splice(index, 1);
-    store?.deleteLayer(layerIDs[iset.get_url()]);
+    store?.deleteLayer(layers[index].id.toString());
+    layers.splice(index, 1);
   } else {
-    selectedImagesets.push(iset);
     store?.addImageSetLayer({
       mode: "autodetect",
       url: iset.get_url(),
       name: iset.get_name(),
       goto: true
     }).then((layer) => {
-      layerIDs[iset.get_url()] = layer.id.toString();
+      layers.push(layer);
     });
   }
 }
@@ -187,30 +169,67 @@ function sceneUpdates(scene: Scene): SceneUpdates {
   return updates;
 }
 
+function getCurrentScene(): Scene {
+  return {
+    name: sceneName.value,
+    imagesetLayers: layers.map((layer) => {
+      const iset = layer.get_imageSet();
+      return {
+        url: iset.get_url(),
+        name: iset.get_name(),
+        opacity: layer.get_opacity()
+      }
+    }),
+    user: $keycloak.subject ?? "",
+    place: {
+      raRad: store?.raRad ?? 0,
+      decRad: store?.decRad ?? 0,
+      zoomDeg: store?.zoomDeg ?? 360,
+      rollRad: store?.rollRad ?? 0
+    }
+  }
+};
+
+type SubmitMessageClass = 'good' | 'neutral' | 'bad';
+function showSubmitMessage(message: string, type: SubmitMessageClass) {
+  submitMessage.value = message;
+  setTimeout(() => {
+    submitMessage.value = "";
+  }, 3000);
+}
+
 async function submit() {
   if (store === null) {
     return;
   }
 
-  const scene = currentScene.value;
+  const scene = getCurrentScene();
   if (id.value === null) {
-    const { data } = await useFetch(`${API_URL}/scenes/create`, {
+    useFetch(`${API_URL}/scenes/create`, {
       method: 'POST',
       body: { scene }
-    }) as { data: any };
-    if (data.value.created) {
-      navigateTo(`/scene-editor/${data.value.id}`);
-    }
+    }).then((res: { data: any }) => {
+      if (res.data.value.created) {
+        lastSubmittedScene = scene;
+        navigateTo(`/scene-editor/${res.data.value.id}`);
+      }
+    });
   } else {
-    useFetch(`${API_URL}/scenes/update/${id.value}:update`, {
+    useFetch(`${API_URL}/scenes/${id.value}:update`, {
       method: 'POST',
       body: {
         id: id.value,
         updates: sceneUpdates(scene)
       }
+    }).then((res: { data: any }) => {
+      if (res.data.value.updated) {
+        showSubmitMessage("Scene successfully updated", 'good');
+      } else {
+        showSubmitMessage("There was an error while updating your scene", 'bad');
+      }
     });
+    
   }
-  lastSubmittedScene = scene;
 }
 
 </script>

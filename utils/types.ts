@@ -12,18 +12,21 @@ export function isPlaceDetails(item: any): item is PlaceDetails {
          item.rollRad === undefined || typeof item.rollRad === "number";
 }
 
-export interface ImagesetDetails {
+export interface ImagesetLayerDetails {
   url: string;
   name: string;
+  opacity: number;
 }
 
-export function isImagesetDetails(item: any): item is ImagesetDetails {
-  return typeof item.url === "string" && typeof item.name === "string";
+export function isImagesetLayerDetails(item: any): item is ImagesetLayerDetails {
+  return typeof item.url === "string" &&
+         typeof item.name === "string" &&
+         typeof item.opacity === "number";
 }
 
 export interface Scene {
   name: string;
-  imagesets: ImagesetDetails[];
+  imagesetLayers: ImagesetLayerDetails[];
   user: string;
   place: PlaceDetails;
 }
@@ -37,5 +40,10 @@ export function isScene(item: any): item is Scene {
       return false;
     }
 
-  return item.imagesets.every(isImagesetDetails);
+  return item.imagesets.every(isImagesetLayerDetails);
+}
+
+export interface FitsColorMaps {
+  wwt: string;
+  desc: string;
 }
