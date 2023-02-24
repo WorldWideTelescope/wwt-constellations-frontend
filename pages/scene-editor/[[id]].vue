@@ -2,8 +2,9 @@
 <div id="scene-editor-root">
   <NuxtLink to="/" id="home-link">Home</NuxtLink>
   <div id="editing-panel">
+    <h2>Scene Editor</h2>
     <div>
-      <span>Scene Name:</span>
+      <div>Scene Name:</div>
       <input v-model="sceneName"/>
     </div>
     <ClientOnly>
@@ -29,7 +30,7 @@
         </template>
       </Popper>
     </ClientOnly>
-    <div>
+    <div id="image-layer-controls">
       <img
         v-for="image in selectedImagesets"
         :key="image.get_imageSetID()"
@@ -57,6 +58,24 @@ type SceneUpdates = OptionalFields<Scene>;
 
 let store: ReturnType<typeof $engineStore> | null;
 
+const currentScene = computed((): Scene => {
+  return {
+    name: sceneName.value,
+    imagesets: selectedImagesets.map((iset) => {
+      return {
+        url: iset.get_url(),
+        name: iset.get_name()
+      }
+    }),
+    user: "",
+    place: {
+      raRad: store?.raRad ?? 0,
+      decRad: store?.decRad ?? 0,
+      zoomDeg: store?.zoomDeg ?? 360,
+      rollRad: store?.rollRad ?? 0
+    }
+  }
+});
 let lastSubmittedScene: Scene | null = null;
 
 // If no parameter is given
@@ -69,7 +88,6 @@ const id = ref(idStr);
 const sceneName = ref("");
 const selectedImagesets = reactive([] as Imageset[]);
 const layerIDs = reactive({} as Record<string, string>);
-
 const imagesets = reactive([] as Imageset[]);
 
 const showImagePopper = ref(false);
@@ -133,25 +151,6 @@ async function sceneSetup(id: string) {
   }
 }
 
-function getScene(): Scene {
-  return {
-    name: sceneName.value,
-    imagesets: selectedImagesets.map((iset) => {
-      return {
-        url: iset.get_url(),
-        name: iset.get_name()
-      }
-    }),
-    user: "",
-    place: {
-      raRad: store?.raRad ?? 0,
-      decRad: store?.decRad ?? 0,
-      zoomDeg: store?.zoomDeg ?? 360,
-      rollRad: store?.rollRad ?? 0
-    }
-  }
-}
-
 function onThumbnailClick(iset: Imageset) {
   const index = selectedImagesets.indexOf(iset);
   if (index > -1) {
@@ -192,8 +191,8 @@ async function submit() {
   if (store === null) {
     return;
   }
-  const scene = getScene();
 
+  const scene = currentScene.value;
   if (id.value === null) {
     const { data } = await useFetch(`${API_URL}/scenes/create`, {
       method: 'POST',
@@ -241,6 +240,9 @@ async function submit() {
 }
 
 #editing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   pointer-events: auto;
   position: fixed;
   left: 2%;
@@ -251,6 +253,30 @@ async function submit() {
   border-radius: 10px;
   padding: 5px;
   color: white;
+
+  input {
+    width: auto;
+    margin: 2px;
+  }
+
+  button {
+    background-color: transparent;
+    outline: none;
+    color: white;
+    border: solid 2px white;
+    font-size: 13pt;
+    border-radius: 5px;
+
+    &:hover {
+      cursor: pointer;
+      background-color: black;
+    }
+  }
+}
+
+#image-layer-controls {
+  display: flex;
+  flex-direction: column;
 }
 
 #imageset-chooser {
