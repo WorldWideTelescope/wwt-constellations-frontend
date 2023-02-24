@@ -51,7 +51,7 @@ import { OptionalFields } from "~/utils/type-helpers";
 import { ImagesetDetails, Scene } from "~/utils/types";
 import { API_URL } from "~/utils/constants";
 
-import { Imageset } from "@wwtelescope/engine";
+import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 
 type SceneUpdates = OptionalFields<Scene>;
 
@@ -74,11 +74,6 @@ const imagesets = reactive([] as Imageset[]);
 
 const showImagePopper = ref(false);
 
-if (id.value !== null) {
-  const scene = await queryForScene(id.value);
-  sceneName.value = scene.name;
-}
-
 // We only want to run this client-side
 onMounted(() => {
   store = $engineStore();
@@ -86,7 +81,7 @@ onMounted(() => {
   // If we don't wrap this in nextTick,
   // the WWT instance hasn't been linked yet
   // (for some reason)
-  nextTick(() => {
+  nextTick(async () => {
     if (store === null) {
       return;
     }
@@ -103,8 +98,40 @@ onMounted(() => {
         }
       });
     });
+
+    if (id.value !== null) {
+      sceneSetup(id.value);
+    }
   });
 });
+
+async function sceneSetup(id: string) {
+  const scene = await queryForScene(id);
+  sceneName.value = scene.name;
+  const layerProms = scene.imagesets.map((iset: ImagesetDetails) => {
+    return store?.addImageSetLayer({
+      mode: "autodetect",
+      url: iset.url,
+      name: iset.name,
+      goto: false
+    }).then((layer) => {
+      layerIDs[iset.url] = layer.id.toString();
+      return layer;
+    });
+  });
+
+  Promise.all(layerProms).then(layers => {
+    layers.forEach((layer: ImageSetLayer | undefined) => {
+      if (layer) {
+        selectedImagesets.push(layer?.get_imageSet());
+      }
+    });
+  });
+
+  if (isPlaceDetails(scene.place)) {
+    store?.gotoRADecZoom({...scene.place, instant: false});
+  }
+}
 
 function getScene(): Scene {
   return {
@@ -127,7 +154,6 @@ function getScene(): Scene {
 
 function onThumbnailClick(iset: Imageset) {
   const index = selectedImagesets.indexOf(iset);
-  console.log(index);
   if (index > -1) {
     selectedImagesets.splice(index, 1);
     store?.deleteLayer(layerIDs[iset.get_url()]);
