@@ -1,10 +1,12 @@
 <template>
   <div>
-    <client-only>
-      <WWTView />
+    <ClientOnly>
+      <WorldWideTelescope
+        wwt-namespace="wwt-constellations"
+      ></WorldWideTelescope>
       <template #fallback>
         <div>WorldWide Telescope component</div>
       </template>
-    </client-only>
+    </ClientOnly>
   </div>
 </template>
