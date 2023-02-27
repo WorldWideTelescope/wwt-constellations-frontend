@@ -33,23 +33,22 @@
       </Splide>
     </div>
 
-    <VueEternalLoading
+    <!-- <VueEternalLoading
       :load="load"
       :is-initial="false"
       position="left"
       class="loader"
     >
       <template #no-more><div></div></template>
-    </VueEternalLoading>
+    </VueEternalLoading> -->
   </div>
 </template>
 
 <script lang="ts">
 import { nextTick } from 'vue'
 import { LoadAction } from "@ts-pro/vue-eternal-loading";
-import { Imageset, ImageSetLayer, Folder, Place, Guid } from '@wwtelescope/engine';
+import { ImageSetLayer, Place } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
-import { tween } from "femtotween";
 
 const D2R = Math.PI / 180.0;
 const D2H = 15.0 / 180.0;
@@ -83,7 +82,7 @@ export default defineNuxtComponent({
       },
       layer: null as (ImageSetLayer | null),
       tweenIn: null as Function | null,
-      tweenOut: null as Function | null
+      tweensOut: [] as Function[]
     };
   },
   props: {
@@ -112,29 +111,23 @@ export default defineNuxtComponent({
       //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
       const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
-      console.log(store);
       const folder = await store.loadImageCollection({
         url: url,
         loadChildFolders: false
       });
       const result = [];
-      console.log(Place);
-      console.log(Folder);
       for (const child of folder.get_children() ?? []) {
-        console.log(child.constructor);
         if (!(child instanceof Place)) {
           continue;
         }
-        console.log(child instanceof Imageset);
         const place = child as Place;
         const imageset = place.get_studyImageset();
-        console.log(imageset);
         if (imageset !== null) {
           const isetUrl = imageset.get_url();
           result.push({ place, url: isetUrl });
         }
       }
-      console.log(result);
+
       return result;
     },
     async loadNextPage(): Promise<Item[]> {
@@ -154,7 +147,6 @@ export default defineNuxtComponent({
       loaded(loadedItems.length, this.pageSize);
     },
     async itemSelected(item: Item) {
-      console.log(item);
       const store = this.$engineStore(this.$pinia);
       const place = item.place;
       const studyImageset = place.get_studyImageset();
@@ -163,21 +155,6 @@ export default defineNuxtComponent({
       }
       const name = studyImageset.get_name();
       const iset = store.lookupImageset(name);
-      const setLayerOpacity = (layer: ImageSetLayer | null, value: number) => {
-        if (layer !== null) {
-          applyImageSetLayerSetting(layer, ["opacity", value]);
-          //console.log(`Layer: ${layer}, opacity: ${value}`);
-        }
-      };
-      
-      // @ts-ignore
-      window.store = store;
-      // @ts-ignore
-      window.lm = store.$wwt.inst.lm;
-      const makeGuid = (string: string) => { return Guid.fromString(string); }
-      // @ts-ignore
-      window.makeGuid = makeGuid;
-
       if (iset === null) {
         return;
       }
@@ -186,18 +163,12 @@ export default defineNuxtComponent({
       if (this.tweenIn) {
         this.tweenIn();
       }
-      if (this.tweenOut) {
-        this.tweenOut();
-      }
+      this.tweensOut.forEach(t => t());
 
-      const raDecZoom = {
-        raRad: D2R * iset.get_centerX(),
-        decRad: D2R * iset.get_centerY(),
-        zoomDeg: place.get_zoomLevel()
-      };
-      const moveTime = store.timeToRADecZoom(raDecZoom) * 1000;
+      const moveTime = timeToImageset(iset, place.get_zoomLevel());
       const minMoveTime = 2000;
 
+      this.tweensOut = [];
       Object.keys(store.imagesetLayers).forEach((id) => {
         const layer = store.imagesetLayerById(id);
         if (layer === null) {
@@ -207,11 +178,7 @@ export default defineNuxtComponent({
         // If the layer is already at partial opacity,
         // we can make the fadeout that much quicker
         const tweenTime = layer.opacity * Math.min(moveTime, minMoveTime);
-        const tweenOptions = {  
-          time: tweenTime,
-          done: () => store.deleteLayer(id)
-        };
-        this.tweenOut = tween(layer.opacity, 0, (value) => setLayerOpacity(layer, value), tweenOptions);
+        this.tweensOut.push(tweenLayerOutToDelete(layer, tweenTime));
       });
 
       store.addImageSetLayer({
@@ -223,34 +190,17 @@ export default defineNuxtComponent({
         this.layer = layer;
         applyImageSetLayerSetting(layer, ["opacity", 0]);
 
-        // If we use this block, set goto: false in the addImageSetLayer call above
         store.gotoRADecZoom({
-          ...raDecZoom,
+          ...raDecForImageset(iset),
+          zoomDeg: place.get_zoomLevel(),
           instant: false
         });
 
         if (this.layer !== null) {
-
-          // The tweening takes place over a "time" interval from 0 to 1
-          // t0 represents the "time" at which the animation will start
-          // (i.e. the easing function is 0 before t0)
-          // In actual clock time, t0 represents the fraction that we are
-          // through the motion when the animation starts
-          const t0 = Math.max((moveTime - minMoveTime) / moveTime, 0);
-          const A = 1/(1-t0);
-          const tweenOptions = {
-            time: moveTime,
-            ease: (t: number) => {
-              if (t < t0) { return 0; }
-              return Math.pow(A*(t-t0), 1);
-            }
-          };
-          this.tweenIn = tween(0, 1, (value) => setLayerOpacity(this.layer, value), tweenOptions);
+          this.tweenIn = tweenLayerInForGoto(this.layer, place.get_zoomLevel());
         } else {
           store.gotoRADecZoom({
-            raRad: D2R * place.get_RA(),
-            decRad: H2R * place.get_dec(),
-            zoomDeg: place.get_zoomLevel(),
+            ...raDecZoomForPlace(place),
             instant: false
           });
         }
@@ -260,7 +210,7 @@ export default defineNuxtComponent({
     async loadInitialItems() {
       this.loadNextPage().then(() => {
         //(this.$refs.splide as typeof Splide).index = 0
-        console.log(this.items);
+        //console.log(this.items);
         this.itemSelected(this.items[0]);
       });
       
