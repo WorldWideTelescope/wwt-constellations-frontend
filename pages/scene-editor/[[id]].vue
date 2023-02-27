@@ -39,6 +39,18 @@
         />
       </ClientOnly>
     </div>
+    <!-- <div>
+      <span>Background imagery:</span>
+      <select v-model="curBackgroundImagesetName">
+        <option
+          v-for="bg in backgroundImagesets"
+          v-bind:value="bg.imagesetName"
+          v-bind:key="bg.imagesetName"
+        >
+          {{ bg.displayName }}
+        </option>
+      </select>
+    </div> -->
     <div>
       <button @click="submit">Submit</button>
       <div v-show="submitMessage">{{ submitMessage }}</div>
@@ -51,7 +63,7 @@
 const { params } = useRoute();
 const { $engineStore, $keycloak } = useNuxtApp();
 import { OptionalFields } from "~/utils/type-helpers";
-import { ImagesetDetails, Scene } from "~/utils/types";
+import { ImagesetLayerDetails, Scene } from "~/utils/types";
 import { API_URL } from "~/utils/constants";
 
 import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
@@ -71,6 +83,8 @@ const id = ref(idStr);
 const sceneName = ref("");
 const layers = reactive([] as ImageSetLayer[]);
 const imagesets = reactive([] as Imageset[]);
+const curBackgroundImagesetName = ref("");
+const backgroundImagesets = reactive(SKY_BACKGROUND_IMAGESETS);
 const submitMessage = ref("");
 
 const showImagePopper = ref(false);
@@ -94,7 +108,6 @@ onMounted(() => {
       const children = folder?.get_children() ?? [];
       children.forEach((child) => {
         if (child instanceof Imageset) {
-          console.log(child);
           imagesets.push(child);
         }
       });
@@ -109,7 +122,7 @@ onMounted(() => {
 async function sceneSetup(id: string) {
   const scene = await queryForScene(id);
   sceneName.value = scene.name;
-  const layerProms = scene.imagesetLayers.map((iset: ImagesetDetails) => {
+  const layerProms = scene.imagesetLayers.map((iset: ImagesetLayerDetails) => {
     return store?.addImageSetLayer({
       mode: "autodetect",
       url: iset.url,
@@ -195,7 +208,7 @@ function showSubmitMessage(message: string, type: SubmitMessageClass) {
   submitMessage.value = message;
   setTimeout(() => {
     submitMessage.value = "";
-  }, 3000);
+  }, 5000);
 }
 
 async function submit() {
@@ -300,7 +313,7 @@ async function submit() {
 
 #imageset-chooser {
   background: black;
-  padding: 5px;
+  padding: 10px;
   border: 2px solid white;
   border-radius: 3px;
   height: calc(3 * 45px + 10px); // Thumbnails are 96x45

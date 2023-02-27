@@ -47,3 +47,13 @@ export interface FitsColorMaps {
   wwt: string;
   desc: string;
 }
+
+export class BackgroundImageset {
+  public imagesetName: string;
+  public displayName: string;
+
+  constructor(displayName: string, imagesetName: string) {
+    this.displayName = displayName;
+    this.imagesetName = imagesetName;
+  }
+}
