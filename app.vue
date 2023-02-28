@@ -20,11 +20,10 @@ const { $keycloak } = useNuxtApp();
 onMounted(() => {
   $keycloak.init({
     onLoad: 'check-sso',
-    silentCheckSsoRedirectUri: '/silent-check-sso'
+    silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso`
   }).then(() => {
     loggedIn.value = $keycloak.authenticated ?? false;
   });
-
 });
 
 function logInOut() {
