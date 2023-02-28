@@ -101,11 +101,8 @@ export default defineNuxtComponent({
     // We need to do this during nextTick,
     // otherwise the WWTInstance hasn't yet been set
     nextTick(() => {
-      const store = getEngineStore();
-      store.waitForReady().then(() => {
-        this.loadInitialItems();
-        console.log("Loaded first set of items");
-      });
+      this.loadInitialItems();
+      console.log("Loaded first set of items");
     });
   },
   methods: {
