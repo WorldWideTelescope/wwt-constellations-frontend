@@ -39,8 +39,8 @@
         />
       </ClientOnly>
     </div>
-    <!-- <div>
-      <span>Background imagery:</span>
+    <div>
+      <div>Background imagery:</div>
       <select v-model="curBackgroundImagesetName">
         <option
           v-for="bg in backgroundImagesets"
@@ -50,7 +50,7 @@
           {{ bg.displayName }}
         </option>
       </select>
-    </div> -->
+    </div>
     <div>
       <button @click="submit">Submit</button>
       <div v-show="submitMessage">{{ submitMessage }}</div>
@@ -70,7 +70,8 @@ import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 
 type SceneUpdates = OptionalFields<Scene>;
 
-let store: ReturnType<typeof $engineStore> | null;
+const store: ReturnType<typeof $engineStore> | null = getStore();
+console.log(store);
 let lastSubmittedScene: Scene | null = null;
 
 // If no parameter is given
@@ -83,16 +84,21 @@ const id = ref(idStr);
 const sceneName = ref("");
 const layers = reactive([] as ImageSetLayer[]);
 const imagesets = reactive([] as Imageset[]);
-const curBackgroundImagesetName = ref("");
 const backgroundImagesets = reactive(SKY_BACKGROUND_IMAGESETS);
 const submitMessage = ref("");
-
 const showImagePopper = ref(false);
+let curBackgroundImagesetName = computed({
+  get() {
+    return store?.backgroundImageset?.get_name() ?? "";
+  },
+  set(name: string) {
+    store?.setBackgroundImageByName(name);
+  }
+});
+
 
 // We only want to run this client-side
 onMounted(() => {
-  store = $engineStore();
-
   // If we don't wrap this in nextTick,
   // the WWT instance hasn't been linked yet
   // (for some reason)
@@ -100,12 +106,14 @@ onMounted(() => {
     if (store === null) {
       return;
     }
+    await store.waitForReady();
     store.loadImageCollection({
       url: `${API_URL}/images?page=1&size=100`,
       loadChildFolders: false
     }).then((folder) => {
       console.log(folder);
       const children = folder?.get_children() ?? [];
+      console.log(children.length);
       children.forEach((child) => {
         if (child instanceof Imageset) {
           imagesets.push(child);
