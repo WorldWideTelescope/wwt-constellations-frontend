@@ -70,7 +70,7 @@ import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 
 type SceneUpdates = OptionalFields<Scene>;
 
-const store: ReturnType<typeof $engineStore> | null = getStore();
+const store: ReturnType<typeof $engineStore> | null = getEngineStore();
 console.log(store);
 let lastSubmittedScene: Scene | null = null;
 

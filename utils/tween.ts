@@ -1,7 +1,7 @@
 import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { tween } from "femtotween";
-import { getStore, raDecForImageset } from "./helpers";
+import { getEngineStore, raDecForImageset } from "./helpers";
 
 const MIN_MOVE_TIME = 2000;
 
@@ -12,7 +12,7 @@ interface TweenOptions {
 }
 
 export function timeToImageset(imageset: Imageset, zoomDeg: number): number {
-  const store = getStore();
+  const store = getEngineStore();
   const raDecZoom = raDecForImageset(imageset);
   return store.timeToRADecZoom({ ...raDecZoom, zoomDeg }) * 1000;
 }
@@ -48,7 +48,7 @@ export function tweenLayerInForGoto(layer: ImageSetLayer, zoomDeg: number, minMo
 }
 
 export function tweenLayerOutToDelete(layer: ImageSetLayer, duration: number): Function {
-  const store = getStore();
+  const store = getEngineStore();
   const tweenOptions = {  
     time: duration,
     done: () => store.deleteLayer(layer.id)

@@ -1,6 +1,6 @@
 import { Imageset, Place } from "@wwtelescope/engine";
 
-export function getStore() {
+export function getEngineStore() {
   const { $engineStore, $wwtPinia } = useNuxtApp();
   return $engineStore($wwtPinia);
 }
