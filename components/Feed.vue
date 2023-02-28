@@ -199,12 +199,8 @@ export default defineNuxtComponent({
         if (this.layer !== null) {
           this.tweenIn = tweenLayerInForGoto(this.layer, place.get_zoomLevel());
         } else {
-          store.gotoRADecZoom({
-            ...raDecZoomForPlace(place),
-            instant: false
-          });
+          this.tweenIn = null;
         }
-        
       });
     },
     async loadInitialItems() {
