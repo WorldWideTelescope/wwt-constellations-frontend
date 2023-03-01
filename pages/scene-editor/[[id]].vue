@@ -71,7 +71,6 @@ import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 type SceneUpdates = OptionalFields<Scene>;
 
 const store: ReturnType<typeof $engineStore> | null = getEngineStore();
-console.log(store);
 let lastSubmittedScene: Scene | null = null;
 
 // If no parameter is given
@@ -111,9 +110,7 @@ onMounted(() => {
       url: `${API_URL}/images?page=1&size=100`,
       loadChildFolders: false
     }).then((folder) => {
-      console.log(folder);
       const children = folder?.get_children() ?? [];
-      console.log(children.length);
       children.forEach((child) => {
         if (child instanceof Imageset) {
           imagesets.push(child);
