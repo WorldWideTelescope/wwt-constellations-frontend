@@ -130,6 +130,7 @@ onMounted(() => {
 async function sceneSetup(id: string) {
   const scene = await queryForScene(id);
   sceneName.value = scene.name;
+  curBackgroundImagesetName.value = scene.background;
   const layerProms = scene.imagesetLayers.map((iset: ImagesetLayerDetails) => {
     return store?.addImageSetLayer({
       mode: "autodetect",
@@ -201,6 +202,7 @@ function getCurrentScene(): Scene {
         opacity: layer.get_opacity()
       }
     }),
+    background: curBackgroundImagesetName.value,
     user: $keycloak.subject ?? "",
     place: {
       raRad: store?.raRad ?? 0,
