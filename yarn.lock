@@ -1846,6 +1846,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wwtelescope/constellations-frontend@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@wwtelescope/constellations-frontend@workspace:."
+  dependencies:
+    "@nuxt/webpack-builder": 3.2.0
+    "@pinia/nuxt": ^0.4.7
+    "@splidejs/vue-splide": ^0.6.12
+    "@types/xml": ^1.0.8
+    "@wwtelescope/astro": ^0.2.2
+    "@wwtelescope/engine": ^7.21.0
+    "@wwtelescope/engine-helpers": ^0.11.1
+    "@wwtelescope/engine-pinia": ^0.3.1
+    "@wwtelescope/engine-types": ^0.6.4
+    femtotween: ^2.0.3
+    keycloak-js: ^21.0.0
+    less: ^4.1.3
+    less-loader: ^11.1.0
+    nuxt: ^3.2.2
+    pinia: ^2.0.32
+    vue-slider-component: ^4.1.0-beta.7
+    vue3-popper: ^1.5.0
+  languageName: unknown
+  linkType: soft
+
 "@wwtelescope/engine-helpers@npm:>=0.11.0, @wwtelescope/engine-helpers@npm:^0.11.1":
   version: 0.11.1
   resolution: "@wwtelescope/engine-helpers@npm:0.11.1"
@@ -6638,30 +6662,6 @@ __metadata:
   checksum: 9473eb7e7ffdb74c8e01e813eccb2e81e86cd429aea4705c424a5369845bedd871e715347a53be04a157f8febb99a8e502c124b896141e06d94fb86d6e121721
   languageName: node
   linkType: hard
-
-"root-workspace-0b6124@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root-workspace-0b6124@workspace:."
-  dependencies:
-    "@nuxt/webpack-builder": 3.2.0
-    "@pinia/nuxt": ^0.4.7
-    "@splidejs/vue-splide": ^0.6.12
-    "@types/xml": ^1.0.8
-    "@wwtelescope/astro": ^0.2.2
-    "@wwtelescope/engine": ^7.21.0
-    "@wwtelescope/engine-helpers": ^0.11.1
-    "@wwtelescope/engine-pinia": ^0.3.1
-    "@wwtelescope/engine-types": ^0.6.4
-    femtotween: ^2.0.3
-    keycloak-js: ^21.0.0
-    less: ^4.1.3
-    less-loader: ^11.1.0
-    nuxt: ^3.2.2
-    pinia: ^2.0.32
-    vue-slider-component: ^4.1.0-beta.7
-    vue3-popper: ^1.5.0
-  languageName: unknown
-  linkType: soft
 
 "run-async@npm:^2.4.0":
   version: 2.4.1

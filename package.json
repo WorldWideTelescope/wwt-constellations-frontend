@@ -27,5 +27,7 @@
     "pinia": "^2.0.32",
     "vue-slider-component": "^4.1.0-beta.7",
     "vue3-popper": "^1.5.0"
-  }
+  },
+  "name": "@wwtelescope/constellations-frontend",
+  "version": "0.0.0-dev.0"
 }
