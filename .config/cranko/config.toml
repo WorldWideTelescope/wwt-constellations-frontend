@@ -1,0 +1,9 @@
+[repo]
+upstream_urls = [
+    'git@github.com:WorldWideTelescope/wwt-constellations-frontend.git',
+    'https://github.com/WorldWideTelescope/wwt-constellations-frontend.git',
+]
+
+[npm]
+
+[projects]
