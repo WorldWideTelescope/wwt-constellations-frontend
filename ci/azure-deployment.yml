@@ -24,6 +24,8 @@ jobs:
     steps:
     - template: azure-job-setup.yml
 
+    # Custom startup command needed to work around module-loading issue related
+    # to disappearance of symlinks in the Zip-based package
     - task: AzureWebApp@1
       displayName: Deploy app to dev environment
       inputs:
@@ -32,7 +34,7 @@ jobs:
         appName: wwtdev-cxfe
         runtimeStack: 'NODE|18-lts'
         package: $(Pipeline.Workspace)/app-package/app-package-$(Build.BuildId).zip
-        startUpCommand: yarn start
+        startUpCommand: node node_modules/nuxt/bin/nuxt.mjs start
 
 # Deployment jobs that should only happen on updates to `rc`, i.e.
 # primary releases.
