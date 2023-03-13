@@ -25,9 +25,10 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "generate": "nuxt build && nuxt export",
     "postinstall": "nuxt prepare",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "start": "nuxt start"
   },
   "version": "0.0.0-dev.0"
 }
