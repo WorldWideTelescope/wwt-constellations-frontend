@@ -11,5 +11,8 @@ export default defineNuxtConfig({
       "@wwtelescope/astro"
     ],
   },
-  builder: "webpack"
+  builder: "webpack",
+  runtimeConfig: {
+    keycloakUrl: "http://localhost:8080/"
+  }
 });
