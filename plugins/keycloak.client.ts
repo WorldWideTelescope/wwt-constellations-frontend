@@ -1,9 +1,10 @@
 import Keycloak, { KeycloakConfig } from "keycloak-js";
 
 export default defineNuxtPlugin(_nuxtApp => {
+  const nuxtConfig = useRuntimeConfig();
 
   const config: KeycloakConfig = {
-    url: "http://localhost:8080/",
+    url: nuxtConfig.keycloakUrl,
     realm: "constellations",
     clientId: "constellations-app",
   };

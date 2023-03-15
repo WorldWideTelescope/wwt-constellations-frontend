@@ -40,3 +40,9 @@ npm run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Configuration
+
+Environment variables:
+
+- `NUXT_KEYCLOAK_URL` to set the URL to the Keycloak instance
