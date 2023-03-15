@@ -13,6 +13,8 @@ export default defineNuxtConfig({
   },
   builder: "webpack",
   runtimeConfig: {
-    keycloakUrl: "http://localhost:8080/"
+    public: {
+      keycloakUrl: "http://localhost:8080/"
+    }
   }
 });
