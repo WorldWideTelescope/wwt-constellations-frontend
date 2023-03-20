@@ -1,62 +1,45 @@
 <template>
-<div id="scene-editor-root">
-  <NuxtLink to="/" id="home-link">Home</NuxtLink>
-  <div id="editing-panel">
-    <h2>Scene Editor</h2>
-    <div>
-      <div>Scene Name:</div>
-      <input v-model="sceneName"/>
-    </div>
-    <ClientOnly>
-      <Popper>
-        <button
-          @click="showImagePopper = !showImagePopper"
-        >
-          Select images
-        </button>
-        <template #content>
-          <div
-            id="imageset-chooser"
-          >
-            <img
-              v-for="image in imagesets"
-              :key="image.get_imageSetID()"
-              :class="layers.map(l => l.get_imageSet()).includes(image) ? 'selected' : ''"
-              :src="image.get_thumbnailUrl()"
-              :alt="image.get_name()"
-              @click="onThumbnailClick(image)"
-            />
-          </div>
-        </template>
-      </Popper>
-    </ClientOnly>
-    <div id="image-layer-controls">
+  <div id="scene-editor-root">
+    <NuxtLink to="/" id="home-link">Home</NuxtLink>
+    <div id="editing-panel">
+      <h2>Scene Editor</h2>
+      <div>
+        <div>Scene Name:</div>
+        <input v-model="sceneName" />
+      </div>
       <ClientOnly>
-        <imageset-item
-          v-for="layer in layers"
-          :layer="layer"
-          :key="layer.id.toString()"
-        />
+        <Popper>
+          <button @click="showImagePopper = !showImagePopper">
+            Select images
+          </button>
+          <template #content>
+            <div id="imageset-chooser">
+              <img v-for="image in imagesets" :key="image.get_imageSetID()"
+                :class="layers.map(l => l.get_imageSet()).includes(image) ? 'selected' : ''"
+                :src="image.get_thumbnailUrl()" :alt="image.get_name()" @click="onThumbnailClick(image)" />
+            </div>
+          </template>
+        </Popper>
       </ClientOnly>
-    </div>
-    <div>
-      <div>Background imagery:</div>
-      <select v-model="curBackgroundImagesetName">
-        <option
-          v-for="bg in backgroundImagesets"
-          v-bind:value="bg.imagesetName"
-          v-bind:key="bg.imagesetName"
-        >
-          {{ bg.displayName }}
-        </option>
-      </select>
-    </div>
-    <div>
-      <button @click="submit">Submit</button>
-      <div v-show="submitMessage">{{ submitMessage }}</div>
+      <div id="image-layer-controls">
+        <ClientOnly>
+          <imageset-item v-for="layer in layers" :layer="layer" :key="layer.id.toString()" />
+        </ClientOnly>
+      </div>
+      <div>
+        <div>Background imagery:</div>
+        <select v-model="curBackgroundImagesetName">
+          <option v-for="bg in backgroundImagesets" v-bind:value="bg.imagesetName" v-bind:key="bg.imagesetName">
+            {{ bg.displayName }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <button @click="submit">Submit</button>
+        <div v-show="submitMessage">{{ submitMessage }}</div>
+      </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -149,7 +132,7 @@ async function sceneSetup(id: string) {
   });
 
   if (isPlaceDetails(scene.place)) {
-    store?.gotoRADecZoom({...scene.place, instant: false});
+    store?.gotoRADecZoom({ ...scene.place, instant: false });
   }
 }
 
@@ -179,9 +162,9 @@ function sceneUpdates(scene: Scene): SceneUpdates {
   const updates = { ...scene };
   let key: keyof Scene;
   for (key in updates) {
-    if (updates[key] === undefined || 
-        (lastSubmittedScene !== null) && (updates[key] === lastSubmittedScene[key])
-       ) {
+    if (updates[key] === undefined ||
+      (lastSubmittedScene !== null) && (updates[key] === lastSubmittedScene[key])
+    ) {
       delete updates[key];
     }
   }
@@ -248,7 +231,6 @@ async function submit() {
         showSubmitMessage("There was an error while updating your scene", 'bad');
       }
     });
-    
   }
 }
 
