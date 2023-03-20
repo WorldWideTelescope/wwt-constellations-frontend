@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   builder: "webpack",
   runtimeConfig: {
     public: {
+      apiUrl: "http://localhost:7000",
       keycloakUrl: "http://localhost:8080/"
     }
   }

@@ -1,62 +1,45 @@
 <template>
-<div id="scene-editor-root">
-  <NuxtLink to="/" id="home-link">Home</NuxtLink>
-  <div id="editing-panel">
-    <h2>Scene Editor</h2>
-    <div>
-      <div>Scene Name:</div>
-      <input v-model="sceneName"/>
-    </div>
-    <ClientOnly>
-      <Popper>
-        <button
-          @click="showImagePopper = !showImagePopper"
-        >
-          Select images
-        </button>
-        <template #content>
-          <div
-            id="imageset-chooser"
-          >
-            <img
-              v-for="image in imagesets"
-              :key="image.get_imageSetID()"
-              :class="layers.map(l => l.get_imageSet()).includes(image) ? 'selected' : ''"
-              :src="image.get_thumbnailUrl()"
-              :alt="image.get_name()"
-              @click="onThumbnailClick(image)"
-            />
-          </div>
-        </template>
-      </Popper>
-    </ClientOnly>
-    <div id="image-layer-controls">
+  <div id="scene-editor-root">
+    <NuxtLink to="/" id="home-link">Home</NuxtLink>
+    <div id="editing-panel">
+      <h2>Scene Editor</h2>
+      <div>
+        <div>Scene Name:</div>
+        <input v-model="sceneName" />
+      </div>
       <ClientOnly>
-        <imageset-item
-          v-for="layer in layers"
-          :layer="layer"
-          :key="layer.id.toString()"
-        />
+        <Popper>
+          <button @click="showImagePopper = !showImagePopper">
+            Select images
+          </button>
+          <template #content>
+            <div id="imageset-chooser">
+              <img v-for="image in imagesets" :key="image.get_imageSetID()"
+                :class="layers.map(l => l.get_imageSet()).includes(image) ? 'selected' : ''"
+                :src="image.get_thumbnailUrl()" :alt="image.get_name()" @click="onThumbnailClick(image)" />
+            </div>
+          </template>
+        </Popper>
       </ClientOnly>
-    </div>
-    <div>
-      <div>Background imagery:</div>
-      <select v-model="curBackgroundImagesetName">
-        <option
-          v-for="bg in backgroundImagesets"
-          v-bind:value="bg.imagesetName"
-          v-bind:key="bg.imagesetName"
-        >
-          {{ bg.displayName }}
-        </option>
-      </select>
-    </div>
-    <div>
-      <button @click="submit">Submit</button>
-      <div v-show="submitMessage">{{ submitMessage }}</div>
+      <div id="image-layer-controls">
+        <ClientOnly>
+          <imageset-item v-for="layer in layers" :layer="layer" :key="layer.id.toString()" />
+        </ClientOnly>
+      </div>
+      <div>
+        <div>Background imagery:</div>
+        <select v-model="curBackgroundImagesetName">
+          <option v-for="bg in backgroundImagesets" v-bind:value="bg.imagesetName" v-bind:key="bg.imagesetName">
+            {{ bg.displayName }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <button @click="submit">Submit</button>
+        <div v-show="submitMessage">{{ submitMessage }}</div>
+      </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -64,11 +47,12 @@ const { params } = useRoute();
 const { $engineStore, $keycloak } = useNuxtApp();
 import { OptionalFields } from "~/utils/type-helpers";
 import { ImagesetLayerDetails, Scene } from "~/utils/types";
-import { API_URL } from "~/utils/constants";
 
 import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 
 type SceneUpdates = OptionalFields<Scene>;
+
+const nuxtConfig = useRuntimeConfig();
 
 const store: ReturnType<typeof $engineStore> | null = getEngineStore();
 let lastSubmittedScene: Scene | null = null;
@@ -107,7 +91,7 @@ onMounted(() => {
     }
     await store.waitForReady();
     store.loadImageCollection({
-      url: `${API_URL}/images?page=1&size=100`,
+      url: `${nuxtConfig.apiUrl}/images?page=1&size=100`,
       loadChildFolders: false
     }).then((folder) => {
       const children = folder?.get_children() ?? [];
@@ -149,7 +133,7 @@ async function sceneSetup(id: string) {
   });
 
   if (isPlaceDetails(scene.place)) {
-    store?.gotoRADecZoom({...scene.place, instant: false});
+    store?.gotoRADecZoom({ ...scene.place, instant: false });
   }
 }
 
@@ -171,7 +155,7 @@ function onThumbnailClick(iset: Imageset) {
 }
 
 async function queryForScene(id: string): Promise<Scene> {
-  const { data } = await useFetch(`${API_URL}/scenes/${id}`) as { data: any };
+  const { data } = await useFetch(`${nuxtConfig.apiUrl}/scenes/${id}`) as { data: any };
   return data.value;
 }
 
@@ -179,9 +163,9 @@ function sceneUpdates(scene: Scene): SceneUpdates {
   const updates = { ...scene };
   let key: keyof Scene;
   for (key in updates) {
-    if (updates[key] === undefined || 
-        (lastSubmittedScene !== null) && (updates[key] === lastSubmittedScene[key])
-       ) {
+    if (updates[key] === undefined ||
+      (lastSubmittedScene !== null) && (updates[key] === lastSubmittedScene[key])
+    ) {
       delete updates[key];
     }
   }
@@ -225,7 +209,7 @@ async function submit() {
 
   const scene = getCurrentScene();
   if (id.value === null) {
-    useFetch(`${API_URL}/scenes/create`, {
+    useFetch(`${nuxtConfig.apiUrl}/scenes/create`, {
       method: 'POST',
       body: { scene }
     }).then((res: { data: any }) => {
@@ -235,7 +219,7 @@ async function submit() {
       }
     });
   } else {
-    useFetch(`${API_URL}/scenes/${id.value}:update`, {
+    useFetch(`${nuxtConfig.apiUrl}/scenes/${id.value}:update`, {
       method: 'POST',
       body: {
         id: id.value,
@@ -248,7 +232,6 @@ async function submit() {
         showSubmitMessage("There was an error while updating your scene", 'bad');
       }
     });
-    
   }
 }
 
