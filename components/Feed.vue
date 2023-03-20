@@ -1,33 +1,21 @@
 <template>
   <div id="feed-root">
     <div class="feed">
-      <Splide
-        :options="splideOptions"
-        @splide:click="(_event, splideData) => {
-          $refs.splide.go(splideData.index);
-        }"
-        @splide:move="(_event, newIndex, _oldIndex) => {
-          loadIfNeeded(newIndex);
-          itemSelected(items[newIndex]);
-        }"
-        ref="splide"
-      >
-        <SplideSlide
-          v-for="(item, index) in items"
-          :key="index"
-        >
-          <div
-            class="feed-item"
-            >
-              <img
-                class="thumbnail"
-                :src="item.place.get_thumbnailUrl()"
-              />
-              
-              <h3 class="name"> {{ item.place.get_name() }}</h3>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
+      <Splide :options="splideOptions" @splide:click="(_event, splideData) => {
+        $refs.splide.go(splideData.index);
+      }" @splide:move="(_event, newIndex, _oldIndex) => {
+  loadIfNeeded(newIndex);
+  itemSelected(items[newIndex]);
+}" ref="splide">
+        <SplideSlide v-for="(item, index) in items" :key="index">
+          <div class="feed-item">
+            <img class="thumbnail" :src="item.place.get_thumbnailUrl()" />
+
+            <h3 class="name"> {{ item.place.get_name() }}</h3>
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+              dolore magna aliqua.
+            </p>
           </div>
         </SplideSlide>
       </Splide>
@@ -133,7 +121,7 @@ export default defineNuxtComponent({
     async loadNextPage(): Promise<Item[]> {
       const loadedItems = await this.loadItems(this.page);
       this.items.push(...loadedItems);
-      this.page += 1; 
+      this.page += 1;
       return loadedItems;
     },
     async loadIfNeeded(index: number) {
@@ -209,11 +197,11 @@ export default defineNuxtComponent({
         //console.log(this.items);
         this.itemSelected(this.items[0]);
       });
-      
+
     }
   },
   watch: {
-    horizontal: function(horizontal) {
+    horizontal: function (horizontal) {
       const direction = horizontal ? 'ltr' : 'ttb';
       this.splideOptions = { ...this.splideOptions, direction };
     }
@@ -222,7 +210,6 @@ export default defineNuxtComponent({
 </script>
 
 <style scoped lang="less">
-
 #feed-root {
   height: 100%;
 }
@@ -244,7 +231,8 @@ export default defineNuxtComponent({
     margin: auto;
   }
 
-  .name, p {
+  .name,
+  p {
     color: white;
     font-size: 10pt;
     margin: auto;
