@@ -47,11 +47,12 @@ const { params } = useRoute();
 const { $engineStore, $keycloak } = useNuxtApp();
 import { OptionalFields } from "~/utils/type-helpers";
 import { ImagesetLayerDetails, Scene } from "~/utils/types";
-import { API_URL } from "~/utils/constants";
 
 import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 
 type SceneUpdates = OptionalFields<Scene>;
+
+const nuxtConfig = useRuntimeConfig();
 
 const store: ReturnType<typeof $engineStore> | null = getEngineStore();
 let lastSubmittedScene: Scene | null = null;
@@ -90,7 +91,7 @@ onMounted(() => {
     }
     await store.waitForReady();
     store.loadImageCollection({
-      url: `${API_URL}/images?page=1&size=100`,
+      url: `${nuxtConfig.apiUrl}/images?page=1&size=100`,
       loadChildFolders: false
     }).then((folder) => {
       const children = folder?.get_children() ?? [];
@@ -154,7 +155,7 @@ function onThumbnailClick(iset: Imageset) {
 }
 
 async function queryForScene(id: string): Promise<Scene> {
-  const { data } = await useFetch(`${API_URL}/scenes/${id}`) as { data: any };
+  const { data } = await useFetch(`${nuxtConfig.apiUrl}/scenes/${id}`) as { data: any };
   return data.value;
 }
 
@@ -208,7 +209,7 @@ async function submit() {
 
   const scene = getCurrentScene();
   if (id.value === null) {
-    useFetch(`${API_URL}/scenes/create`, {
+    useFetch(`${nuxtConfig.apiUrl}/scenes/create`, {
       method: 'POST',
       body: { scene }
     }).then((res: { data: any }) => {
@@ -218,7 +219,7 @@ async function submit() {
       }
     });
   } else {
-    useFetch(`${API_URL}/scenes/${id.value}:update`, {
+    useFetch(`${nuxtConfig.apiUrl}/scenes/${id.value}:update`, {
       method: 'POST',
       body: {
         id: id.value,

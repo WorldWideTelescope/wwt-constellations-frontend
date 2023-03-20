@@ -45,4 +45,7 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 Environment variables:
 
-- `NUXT_KEYCLOAK_URL` to set the URL to the Keycloak instance
+- `NUXT_PUBLIC_API_URL` to set the URL to the backend API server; default
+  is `http://localhost:7000`
+- `NUXT_PUBLIC_KEYCLOAK_URL` to set the URL to the Keycloak instance; default
+  is `http://localhost:8080/`

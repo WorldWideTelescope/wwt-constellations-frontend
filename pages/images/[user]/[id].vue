@@ -6,13 +6,15 @@
 </template>
 
 <script lang="ts">
+const nuxtConfig = useRuntimeConfig();
+
 export default defineNuxtComponent({
   created() {
     console.log("In specific page created")
     const params = this.$route.params;
     this.user = params.user as string;
     this.id = params.id as string;
-    this.wtmlUrl = `http://localhost:8000/item/${this.user}/{this.id}`;
+    this.wtmlUrl = `http://${nuxtConfig.apiUrl}/item/${this.user}/{this.id}`;
   },
   data() {
     return {

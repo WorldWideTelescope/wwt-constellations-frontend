@@ -1,7 +1,5 @@
 import { BackgroundImageset, FitsColorMaps } from "~/utils/types";
 
-export const API_URL = "http://localhost:7000";
-
 export const D2R = Math.PI / 180.0;
 export const D2H = 15.0 / 180.0;
 export const H2D = 180.0 / 15.0;

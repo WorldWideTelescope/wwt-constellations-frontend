@@ -96,7 +96,7 @@ export default defineNuxtComponent({
   methods: {
     log(x: any) { console.log(x); },
     async loadItems(page: number): Promise<Item[]> {
-      //const url = `http://localhost:8000/data?page=${page}&limit=${this.pageSize}`;
+      //const url = `http://${nuxtConfig.apiUrl}/data?page=${page}&limit=${this.pageSize}`;
       const url = "http://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
       const folder = await store.loadImageCollection({
