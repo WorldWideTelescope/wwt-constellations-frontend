@@ -11,8 +11,6 @@ export default defineNuxtPlugin(_nuxtApp => {
 
   const keycloak = new Keycloak(config);
   keycloak.loginRequired = false;
-  console.log("Provided keycloak");
-  console.log(keycloak);
 
   return {
     provide: {

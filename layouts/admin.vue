@@ -1,0 +1,27 @@
+<template>
+  <div id="admin-root">
+    <slot />
+  </div>
+</template>
+
+<style lang="less">
+#admin-root {
+  color: #FFF;
+}
+</style>
+
+<script setup lang="ts">
+import { useConstellationsStore } from '../stores/constellations';
+import { storeToRefs } from 'pinia';
+
+const constellationsStore = useConstellationsStore();
+const { showWWT } = storeToRefs(constellationsStore);
+
+onMounted(() => {
+  showWWT.value = false;
+});
+
+onUnmounted(() => {
+  showWWT.value = true;
+});
+</script>

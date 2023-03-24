@@ -1,10 +1,9 @@
 <template>
   <div id="app">
-    <WWTViewSSR ref="wwt"/>
-    <NuxtPage class="page"/>
-    <button @click="logInOut" id="logout">
-      {{ loggedIn ? 'Log out' : 'Log in' }}
-    </button>
+    <WWTViewSSR ref="wwt" v-if="showWWT" />
+    <NuxtLayout>
+      <NuxtPage class="page" />
+    </NuxtLayout>
   </div>
 </template>
 
@@ -13,7 +12,7 @@ import { useConstellationsStore } from './stores/constellations';
 import { storeToRefs } from 'pinia';
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn } = storeToRefs(constellationsStore);
+const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 
 const { $keycloak } = useNuxtApp();
 
@@ -41,31 +40,6 @@ onMounted(() => {
     // }, 6000);
   });
 });
-
-function logInOut() {
-  if (!process.client) {
-    return;
-  }
-
-  if (loggedIn.value) {
-    $keycloak.logout({
-      redirectUri: window.location.href
-    }).then(() => {
-      loggedIn.value = false;
-    }).catch((error: Error) => {
-      console.log(`Error logging out: ${error.message}`);
-    });
-  } else {
-    $keycloak.login({
-      redirectUri: window.location.href,
-      prompt: 'login'
-    }).then(() => {
-      loggedIn.value = true;
-    }).catch((error: Error) => {
-      console.log(`Error logging in: ${error.message}`);
-    });
-  }
-}
 </script>
 
 <style lang="less">
@@ -84,7 +58,6 @@ function logInOut() {
     margin: 0;
     padding: 0;
   }
-
 }
 
 .page {
@@ -93,11 +66,5 @@ function logInOut() {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-#logout {
-  position: fixed;
-  top: 3px;
-  right: 3px;
 }
 </style>
