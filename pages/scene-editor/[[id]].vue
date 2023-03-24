@@ -211,6 +211,7 @@ async function submit() {
   if (id.value === null) {
     useFetch(`${nuxtConfig.apiUrl}/scenes/create`, {
       method: 'POST',
+      headers: { "Authorization": "Bearer " + $keycloak.token },
       body: { scene }
     }).then((res: { data: any }) => {
       if (res.data.value.created) {
@@ -221,6 +222,7 @@ async function submit() {
   } else {
     useFetch(`${nuxtConfig.apiUrl}/scenes/${id.value}:update`, {
       method: 'POST',
+      headers: { "Authorization": "Bearer " + $keycloak.token },
       body: {
         id: id.value,
         updates: sceneUpdates(scene)
