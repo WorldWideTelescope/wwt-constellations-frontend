@@ -57,16 +57,23 @@ export default defineNuxtComponent({
       splideOptions: {
         start: 2,
         focus: 'center',
-        perPage: 5,
-        direction: 'ttb',
-        heightRatio: 5,
+        perPage: 3,
+        height: '100%',
         perMove: 1,
-        arrows: false,
+        arrows: true,
         pagination: false,
         lazyLoad: 'nearby',
-        gap: "30px",
         updateOnMove: true,
-        wheel: true
+        wheel: true,
+        direction: 'ttb',
+        trimSpace: true,
+        padding: {top: 160},
+        breakpoints: {
+          600: {
+            direction: 'ltr',
+            arrows: false
+          }
+        }
       },
       layer: null as (ImageSetLayer | null),
       tweenIn: null as Function | null,
@@ -216,8 +223,13 @@ export default defineNuxtComponent({
 
 .feed {
   height: 100%;
-  padding: 10px;
-  background: black;
+  padding: 0 15px 0 15px;
+  transition: background-color 0.5s;
+
+}
+
+.feed:hover {
+  background-color: rgba(200, 200, 200, 0.1);
 }
 
 .feed-item {
@@ -225,10 +237,15 @@ export default defineNuxtComponent({
   background: black;
   border: 1px solid white;
   border-radius: 5px;
-  margin-left: 10px;
-
+  transition: transform 0.5s;
+  text-align: center;
+  margin: 0 auto;
+  
   img {
     margin: auto;
+    object-fit: cover;
+    width: 100%;
+    border-radius: 5px 5px 0 0;
   }
 
   .name,
@@ -236,30 +253,30 @@ export default defineNuxtComponent({
     color: white;
     font-size: 10pt;
     margin: auto;
+    line-height: 15pt;
+    padding: 5px;
   }
 }
 
+.feed-item:hover {
+  box-shadow: 0px 0px 10px white;
+}
+
+
 .splide__slide.is-active .feed-item {
   box-shadow: 0px 0px 10px white;
+  transform: scale(1);
 }
 
 .splide__slide:not(.is-active) .feed-item {
   filter: brightness(0.5);
+  transform: scale(0.8);
 }
 
-// .splide__slide.is-prev .feed-item {
-// }
-
-// .splide__slide.is-next .feed-item {
-// }
 
 .splide {
   height: 100%;
   overflow: hidden;
 }
 
-:deep(.splide__track) {
-  height: 100% !important;
-  overflow: hidden;
-}
 </style>
