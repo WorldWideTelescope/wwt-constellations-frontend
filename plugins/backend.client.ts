@@ -23,7 +23,7 @@ export default defineNuxtPlugin(_nuxtApp => {
     };
 
     if ($keycloak.token !== undefined) {
-      headers["Authentication"] = "Bearer " + $keycloak.token;
+      headers["Authorization"] = "Bearer " + $keycloak.token;
     }
 
     // This creates a "preloaded" fetcher with default values
