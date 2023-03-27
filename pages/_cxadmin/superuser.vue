@@ -20,14 +20,16 @@ definePageMeta({
 const isSuperuser = ref(false);
 const superuserStatus = ref("unknown");
 
-function onCheck() {
-  amISuperuser($backendAuthCall()).then((resp) => {
+async function onCheck() {
+  try {
+    const fetcher = await $backendAuthCall();
+    const resp = await amISuperuser(fetcher);
     isSuperuser.value = resp.result;
     superuserStatus.value = resp.result ? "yes" : "no";
-  }).catch((err) => {
+  } catch (err) {
     isSuperuser.value = false;
     superuserStatus.value = `no; error: ${err}`;
-  });
+  }
 }
 </script>
 
