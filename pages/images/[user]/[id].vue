@@ -14,7 +14,7 @@ export default defineNuxtComponent({
     const params = this.$route.params;
     this.user = params.user as string;
     this.id = params.id as string;
-    this.wtmlUrl = `http://${nuxtConfig.apiUrl}/item/${this.user}/{this.id}`;
+    this.wtmlUrl = `${nuxtConfig.apiUrl}/item/${this.user}/{this.id}`;
   },
   data() {
     return {

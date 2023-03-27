@@ -67,7 +67,7 @@ export default defineNuxtComponent({
         wheel: true,
         direction: 'ttb',
         trimSpace: true,
-        padding: {top: 160},
+        padding: { top: 160 },
         breakpoints: {
           600: {
             direction: 'ltr',
@@ -103,7 +103,7 @@ export default defineNuxtComponent({
   methods: {
     log(x: any) { console.log(x); },
     async loadItems(page: number): Promise<Item[]> {
-      //const url = `http://${nuxtConfig.apiUrl}/data?page=${page}&limit=${this.pageSize}`;
+      //const url = `${nuxtConfig.apiUrl}/data?page=${page}&limit=${this.pageSize}`;
       const url = "https://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
       const folder = await store.loadImageCollection({
@@ -240,7 +240,7 @@ export default defineNuxtComponent({
   transition: transform 0.5s;
   text-align: center;
   margin: 0 auto;
-  
+
   img {
     margin: auto;
     object-fit: cover;
@@ -278,5 +278,4 @@ export default defineNuxtComponent({
   height: 100%;
   overflow: hidden;
 }
-
 </style>

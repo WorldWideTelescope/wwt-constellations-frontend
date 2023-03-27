@@ -1,12 +1,11 @@
 <template>
   <div id="page-root">
     <ClientOnly>
-      <FeedContainer/>
+      <FeedContainer />
     </ClientOnly>
-    <!-- <WTMLViewSSR/> -->
   </div>
 </template>
-  
+
 <style lang="less">
 #page-root {
   pointer-events: none;
@@ -30,4 +29,3 @@
   }
 }
 </style>
-  

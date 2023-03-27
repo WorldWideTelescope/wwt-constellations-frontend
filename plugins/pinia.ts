@@ -1,6 +1,5 @@
-import { createPinia, setActivePinia } from "pinia";
+import { createPinia } from "pinia";
 
 export default defineNuxtPlugin(nuxtApp => {
-  //setActivePinia(wwtPinia);
   nuxtApp.vueApp.use(createPinia());
 });
