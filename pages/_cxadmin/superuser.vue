@@ -17,12 +17,25 @@
       <p>Display name: <input type="text" id="create-handle-display" name="create-handle-display"
           v-model="createHandleDisplay" /></p>
       <p><button @click="onCreateHandle">Do it</button> Result: {{ createHandleResult }}</p>
+
+      <h3>Add Handle Owner</h3>
+
+      <p>Handle: <input type="text" id="add-handle-owner-handle" name="add-handle-owner-handle"
+          v-model="addHandleOwnerHandle" /></p>
+      <p>Account ID: <input type="text" id="add-handle-owner-account" name="add-handle-owner-account"
+          v-model="addHandleOwnerAccount" /></p>
+      <p><button @click="onAddHandleOwner">Do it</button> Result: {{ addHandleOwnerResult }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { amISuperuser, miscConfigDatabase, createHandle } from "~/utils/apis";
+import {
+  addHandleOwner,
+  amISuperuser,
+  createHandle,
+  miscConfigDatabase,
+} from "~/utils/apis";
 
 const { $backendAuthCall } = useNuxtApp();
 
@@ -63,13 +76,13 @@ async function onConfigDatabase() {
 
 const createHandleName = ref("");
 const createHandleDisplay = ref("");
-const createHandleResult = ref("unknown");
+const createHandleResult = ref("N/A");
 
 async function onCreateHandle() {
   try {
     const req = {
-      handle: createHandleName?.value,
-      display_name: createHandleDisplay?.value,
+      handle: createHandleName.value,
+      display_name: createHandleDisplay.value,
     };
 
     const fetcher = await $backendAuthCall();
@@ -77,6 +90,27 @@ async function onCreateHandle() {
     createHandleResult.value = resp.error ? "error" : `OK: ${resp.id}`;
   } catch (err) {
     createHandleResult.value = `error: ${err}`;
+  }
+}
+
+// Add handle owner
+
+const addHandleOwnerHandle = ref("");
+const addHandleOwnerAccount = ref("");
+const addHandleOwnerResult = ref("N/A");
+
+async function onAddHandleOwner() {
+  try {
+    const req = {
+      handle: addHandleOwnerHandle.value,
+      account_id: addHandleOwnerAccount.value,
+    };
+
+    const fetcher = await $backendAuthCall();
+    const resp = await addHandleOwner(fetcher, req);
+    addHandleOwnerResult.value = resp.error ? "error" : "OK";
+  } catch (err) {
+    addHandleOwnerResult.value = `error: ${err}`;
   }
 }
 </script>

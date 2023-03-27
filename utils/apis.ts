@@ -60,6 +60,33 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
   });
 }
 
+// Endpoint: /handles/add-owner
+
+export interface HandleAddOwnerRequest {
+  handle: string;
+  account_id: string;
+}
+
+export interface HandleAddOwnerResponse {
+  error: boolean;
+}
+
+export function isHandleAddOwnerResponse(item: any): item is HandleAddOwnerResponse {
+  return typeof item.error === "boolean";
+}
+
+export async function addHandleOwner(fetcher: $Fetch, req: HandleAddOwnerRequest): Promise<HandleAddOwnerResponse> {
+  return fetcher("/handles/add-owner", { method: 'POST', body: req }).then((data) => {
+    checkForError(data);
+
+    if (isHandleAddOwnerResponse(data)) {
+      return data;
+    } else {
+      throw new Error("/handles/add-owner API response did not match schema");
+    }
+  });
+}
+
 // Endpoint: /handles/create
 
 export interface HandleCreateRequest {
