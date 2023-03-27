@@ -12,6 +12,8 @@ function checkForError(item: any) {
   }
 }
 
+// Endpoint: /misc/amisuperuser
+
 //export interface AmISuperuserRequest { }
 
 export interface AmISuperuserResponse {
@@ -34,6 +36,8 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
   });
 }
 
+// Endpoint: /misc/config-database
+
 //export interface MiscConfigDatabaseRequest { }
 
 export interface MiscConfigDatabaseResponse {
@@ -52,6 +56,34 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
       return data;
     } else {
       throw new Error("/misc/config-database API response did not match schema");
+    }
+  });
+}
+
+// Endpoint: /handles/create
+
+export interface HandleCreateRequest {
+  handle: string;
+  display_name: string;
+}
+
+export interface HandleCreateResponse {
+  error: boolean;
+  id: string;
+}
+
+export function isHandleCreateResponse(item: any): item is HandleCreateResponse {
+  return typeof item.error === "boolean" && typeof item.id === "string";
+}
+
+export async function createHandle(fetcher: $Fetch, req: HandleCreateRequest): Promise<HandleCreateResponse> {
+  return fetcher("/handles/create", { method: 'POST', body: req }).then((data) => {
+    checkForError(data);
+
+    if (isHandleCreateResponse(data)) {
+      return data;
+    } else {
+      throw new Error("/handles/create API response did not match schema");
     }
   });
 }
