@@ -5,11 +5,17 @@
     <p><button @click="onCheck">Check status</button></p>
 
     <p>Am I superuser? {{ superuserStatus }}</p>
+
+    <div v-if="isSuperuser">
+      <h3>Config Database</h3>
+
+      <p><button @click="onConfigDatabase">Do it</button> Result: {{ configDatabaseResult }}</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { amISuperuser } from "~/utils/apis";
+import { amISuperuser, miscConfigDatabase } from "~/utils/apis";
 
 const { $backendAuthCall } = useNuxtApp();
 
@@ -29,6 +35,18 @@ async function onCheck() {
   } catch (err) {
     isSuperuser.value = false;
     superuserStatus.value = `no; error: ${err}`;
+  }
+}
+
+const configDatabaseResult = ref("N/A");
+
+async function onConfigDatabase() {
+  try {
+    const fetcher = await $backendAuthCall();
+    const resp = await miscConfigDatabase(fetcher);
+    configDatabaseResult.value = resp.error ? "error" : "OK";
+  } catch (err) {
+    configDatabaseResult.value = `error: ${err}`;
   }
 }
 </script>
