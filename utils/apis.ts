@@ -31,7 +31,7 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
     if (isAmISuperuserResponse(data)) {
       return data;
     } else {
-      throw new Error("/misc/amisuperuser API response did not match schema");
+      throw new Error("GET /misc/amisuperuser: API response did not match schema");
     }
   });
 }
@@ -55,7 +55,7 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
     if (isMiscConfigDatabaseResponse(data)) {
       return data;
     } else {
-      throw new Error("/misc/config-database API response did not match schema");
+      throw new Error("POST /misc/config-database: API response did not match schema");
     }
   });
 }
@@ -82,7 +82,7 @@ export async function addHandleOwner(fetcher: $Fetch, req: HandleAddOwnerRequest
     if (isHandleAddOwnerResponse(data)) {
       return data;
     } else {
-      throw new Error("/handles/add-owner API response did not match schema");
+      throw new Error("POST /handles/add-owner: API response did not match schema");
     }
   });
 }
@@ -110,7 +110,40 @@ export async function createHandle(fetcher: $Fetch, req: HandleCreateRequest): P
     if (isHandleCreateResponse(data)) {
       return data;
     } else {
-      throw new Error("/handles/create API response did not match schema");
+      throw new Error("POST /handles/create: API response did not match schema");
     }
   });
+}
+
+// Endpoint: /handles/:handle
+
+export interface GetHandleResponse {
+  handle: string;
+  display_name: string;
+}
+
+export function isGetHandleResponse(item: any): item is GetHandleResponse {
+  return typeof item.handle === "string" && typeof item.display_name === "string";
+}
+
+// Returns null if a 404 is returned, i.e. the handle is not found.
+export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHandleResponse | null> {
+  try {
+    const data = await fetcher(`/handles/${encodeURIComponent(handle)}`);
+
+    checkForError(data);
+
+    if (isGetHandleResponse(data)) {
+      return data;
+    } else {
+      throw new Error("GET /handles/:handle: API response did not match schema");
+    }
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
 }

@@ -1,5 +1,6 @@
-// This is a client-only plugin since Keycloak is; the server-side renderer
-// doesn't know who we're logged in as!
+// This client-only plugin performs backend API calls with authentication; the
+// server-side renderer doesn't know who we're logged in as! The version without
+// authentication ($backendCall) can run on both client and server.
 
 import { ofetch } from "ofetch";
 
