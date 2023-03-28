@@ -12,7 +12,7 @@ function checkForError(item: any) {
   }
 }
 
-// Endpoint: /misc/amisuperuser
+// Endpoint: GET /misc/amisuperuser
 
 //export interface AmISuperuserRequest { }
 
@@ -36,7 +36,7 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
   });
 }
 
-// Endpoint: /misc/config-database
+// Endpoint: POST /misc/config-database
 
 //export interface MiscConfigDatabaseRequest { }
 
@@ -60,62 +60,7 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
   });
 }
 
-// Endpoint: /handles/add-owner
-
-export interface HandleAddOwnerRequest {
-  handle: string;
-  account_id: string;
-}
-
-export interface HandleAddOwnerResponse {
-  error: boolean;
-}
-
-export function isHandleAddOwnerResponse(item: any): item is HandleAddOwnerResponse {
-  return typeof item.error === "boolean";
-}
-
-export async function addHandleOwner(fetcher: $Fetch, req: HandleAddOwnerRequest): Promise<HandleAddOwnerResponse> {
-  return fetcher("/handles/add-owner", { method: 'POST', body: req }).then((data) => {
-    checkForError(data);
-
-    if (isHandleAddOwnerResponse(data)) {
-      return data;
-    } else {
-      throw new Error("POST /handles/add-owner: API response did not match schema");
-    }
-  });
-}
-
-// Endpoint: /handles/create
-
-export interface HandleCreateRequest {
-  handle: string;
-  display_name: string;
-}
-
-export interface HandleCreateResponse {
-  error: boolean;
-  id: string;
-}
-
-export function isHandleCreateResponse(item: any): item is HandleCreateResponse {
-  return typeof item.error === "boolean" && typeof item.id === "string";
-}
-
-export async function createHandle(fetcher: $Fetch, req: HandleCreateRequest): Promise<HandleCreateResponse> {
-  return fetcher("/handles/create", { method: 'POST', body: req }).then((data) => {
-    checkForError(data);
-
-    if (isHandleCreateResponse(data)) {
-      return data;
-    } else {
-      throw new Error("POST /handles/create: API response did not match schema");
-    }
-  });
-}
-
-// Endpoint: /handles/:handle
+// Endpoint: GET /handles/:handle
 
 export interface GetHandleResponse {
   handle: string;
@@ -146,4 +91,65 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
 
     throw err;
   }
+}
+
+// Endpoint: POST /handles/:handle
+
+export interface HandleCreateRequest {
+  display_name: string;
+}
+
+export interface HandleCreateResponse {
+  error: boolean;
+  id: string;
+}
+
+export function isHandleCreateResponse(item: any): item is HandleCreateResponse {
+  return typeof item.error === "boolean" && typeof item.id === "string";
+}
+
+export async function createHandle(fetcher: $Fetch, handle: string, req: HandleCreateRequest): Promise<HandleCreateResponse> {
+  const path = `/handles/${encodeURIComponent(handle)}`;
+
+  return fetcher(path, { method: 'POST', body: req }).then((data) => {
+    checkForError(data);
+
+    if (isHandleCreateResponse(data)) {
+      return data;
+    } else {
+      throw new Error("POST /handles/:handle: API response did not match schema");
+    }
+  });
+}
+
+// Endpoint: POST /handles/:handle/add-owner
+
+export interface HandleAddOwnerRequest {
+  account_id: string;
+}
+
+export interface HandleAddOwnerResponse {
+  error: boolean;
+}
+
+export function isHandleAddOwnerResponse(item: any): item is HandleAddOwnerResponse {
+  return typeof item.error === "boolean";
+}
+
+export async function addHandleOwner(
+  fetcher: $Fetch,
+  handle: string,
+  req: HandleAddOwnerRequest
+): Promise<HandleAddOwnerResponse> {
+  const path = `/handles/${encodeURIComponent(handle)}/add-owner`;
+
+  return fetcher(path, { method: 'POST', body: req }).then((data) => {
+    checkForError(data);
+
+    if (isHandleAddOwnerResponse(data)) {
+      return data;
+    } else {
+      throw new Error("POST /handles/:handle/add-owner: API response did not match schema");
+    }
+  });
 }

@@ -81,12 +81,11 @@ const createHandleResult = ref("N/A");
 async function onCreateHandle() {
   try {
     const req = {
-      handle: createHandleName.value,
       display_name: createHandleDisplay.value,
     };
 
     const fetcher = await $backendAuthCall();
-    const resp = await createHandle(fetcher, req);
+    const resp = await createHandle(fetcher, createHandleName.value, req);
     createHandleResult.value = resp.error ? "error" : `OK: ${resp.id}`;
   } catch (err) {
     createHandleResult.value = `error: ${err}`;
@@ -102,12 +101,11 @@ const addHandleOwnerResult = ref("N/A");
 async function onAddHandleOwner() {
   try {
     const req = {
-      handle: addHandleOwnerHandle.value,
       account_id: addHandleOwnerAccount.value,
     };
 
     const fetcher = await $backendAuthCall();
-    const resp = await addHandleOwner(fetcher, req);
+    const resp = await addHandleOwner(fetcher, addHandleOwnerHandle.value, req);
     addHandleOwnerResult.value = resp.error ? "error" : "OK";
   } catch (err) {
     addHandleOwnerResult.value = `error: ${err}`;
