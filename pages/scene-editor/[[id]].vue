@@ -90,17 +90,18 @@ onMounted(() => {
       return;
     }
     await store.waitForReady();
-    store.loadImageCollection({
-      url: `${nuxtConfig.apiUrl}/images?page=1&size=100`,
-      loadChildFolders: false
-    }).then((folder) => {
-      const children = folder?.get_children() ?? [];
-      children.forEach((child) => {
-        if (child instanceof Imageset) {
-          imagesets.push(child);
-        }
-      });
-    });
+
+    //store.loadImageCollection({
+    //  url: `${nuxtConfig.apiUrl}/images?page=1&size=100`,
+    //  loadChildFolders: false
+    //}).then((folder) => {
+    //  const children = folder?.get_children() ?? [];
+    //  children.forEach((child) => {
+    //    if (child instanceof Imageset) {
+    //      imagesets.push(child);
+    //    }
+    //  });
+    //});
 
     if (id.value !== null) {
       sceneSetup(id.value);
