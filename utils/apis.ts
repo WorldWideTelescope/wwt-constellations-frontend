@@ -60,7 +60,7 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
   });
 }
 
-// Endpoint: GET /handles/:handle
+// Endpoint: GET /handle/:handle
 
 export interface GetHandleResponse {
   handle: string;
@@ -74,14 +74,14 @@ export function isGetHandleResponse(item: any): item is GetHandleResponse {
 // Returns null if a 404 is returned, i.e. the handle is not found.
 export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHandleResponse | null> {
   try {
-    const data = await fetcher(`/handles/${encodeURIComponent(handle)}`);
+    const data = await fetcher(`/handle/${encodeURIComponent(handle)}`);
 
     checkForError(data);
 
     if (isGetHandleResponse(data)) {
       return data;
     } else {
-      throw new Error("GET /handles/:handle: API response did not match schema");
+      throw new Error("GET /handle/:handle: API response did not match schema");
     }
   } catch (err: any) {
     // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
@@ -93,7 +93,7 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
   }
 }
 
-// Endpoint: POST /handles/:handle
+// Endpoint: POST /handle/:handle
 
 export interface HandleCreateRequest {
   display_name: string;
@@ -109,7 +109,7 @@ export function isHandleCreateResponse(item: any): item is HandleCreateResponse 
 }
 
 export async function createHandle(fetcher: $Fetch, handle: string, req: HandleCreateRequest): Promise<HandleCreateResponse> {
-  const path = `/handles/${encodeURIComponent(handle)}`;
+  const path = `/handle/${encodeURIComponent(handle)}`;
 
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
@@ -117,12 +117,12 @@ export async function createHandle(fetcher: $Fetch, handle: string, req: HandleC
     if (isHandleCreateResponse(data)) {
       return data;
     } else {
-      throw new Error("POST /handles/:handle: API response did not match schema");
+      throw new Error("POST /handle/:handle: API response did not match schema");
     }
   });
 }
 
-// Endpoint: POST /handles/:handle/add-owner
+// Endpoint: POST /handle/:handle/add-owner
 
 export interface HandleAddOwnerRequest {
   account_id: string;
@@ -141,7 +141,7 @@ export async function addHandleOwner(
   handle: string,
   req: HandleAddOwnerRequest
 ): Promise<HandleAddOwnerResponse> {
-  const path = `/handles/${encodeURIComponent(handle)}/add-owner`;
+  const path = `/handle/${encodeURIComponent(handle)}/add-owner`;
 
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
@@ -149,7 +149,7 @@ export async function addHandleOwner(
     if (isHandleAddOwnerResponse(data)) {
       return data;
     } else {
-      throw new Error("POST /handles/:handle/add-owner: API response did not match schema");
+      throw new Error("POST /handle/:handle/add-owner: API response did not match schema");
     }
   });
 }
