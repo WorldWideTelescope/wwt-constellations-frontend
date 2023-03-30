@@ -2,6 +2,8 @@
 
 import { $Fetch } from "ofetch";
 
+import { PlaceDetails } from "./types";
+
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
     if (typeof item.message === "string") {
@@ -152,4 +154,44 @@ export async function addHandleOwner(
       throw new Error("POST /handle/:handle/add-owner: API response did not match schema");
     }
   });
+}
+
+// Endpoint: GET /scene/:id
+
+export interface GetSceneResponse {
+  id: string;
+  handle_id: string;
+  handle: GetHandleResponse;
+  creation_date: string;
+  likes: number;
+  place: PlaceDetails;
+  text: string;
+  outgoing_url?: string;
+}
+
+export function isGetSceneResponse(item: any): item is GetSceneResponse {
+  /// XXX TEMPORARY
+  return typeof item.text === "string";
+}
+
+// Returns null if a 404 is returned, i.e. the scene is not found.
+export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponse | null> {
+  try {
+    const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`);
+
+    checkForError(data);
+
+    if (isGetSceneResponse(data)) {
+      return data;
+    } else {
+      throw new Error("GET /scene/:id - API response did not match schema");
+    }
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
 }

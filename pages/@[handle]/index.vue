@@ -49,7 +49,6 @@ const { data } = await useAsyncData(`handle-${handle}`, async () => {
 const display_name = computed(() => {
   return data.value === null ? "Loading ..." : data.value.display_name;
 });
-
 </script>
 
 <style scoped lang="less">
