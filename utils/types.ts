@@ -1,49 +1,33 @@
-export interface PlaceDetails {
-  raRad: number;
-  decRad: number;
-  zoomDeg: number;
-  rollRad?: number;
-}
+// Copyright 2023 the .NET Foundation
 
-export function isPlaceDetails(item: any): item is PlaceDetails {
-  return typeof item.raRad === "number" &&
-         typeof item.decRad === "number" &&
-         typeof item.zoomDeg === "number" &&
-         item.rollRad === undefined || typeof item.rollRad === "number";
-}
+import * as t from "io-ts";
 
-export interface ImagesetLayerDetails {
-  url: string;
-  name: string;
-  opacity: number;
-}
+export const PlaceDetails = t.type({
+  ra_rad: t.number,
+  dec_rad: t.number,
+  zoom_deg: t.number,
+  roll_rad: t.union([t.number, t.undefined]),
+});
 
-export function isImagesetLayerDetails(item: any): item is ImagesetLayerDetails {
-  return typeof item.url === "string" &&
-         typeof item.name === "string" &&
-         typeof item.opacity === "number";
-}
+export type PlaceDetailsT = t.TypeOf<typeof PlaceDetails>;
 
-export interface Scene {
-  name: string;
-  imagesetLayers: ImagesetLayerDetails[];
-  background: string;
-  user: string;
-  place: PlaceDetails;
-}
+export const ImagesetLayerDetails = t.type({
+  url: t.string,
+  name: t.string,
+  opacity: t.number,
+});
 
-export function isScene(item: any): item is Scene {
-  const types = Array.isArray(item.imagesets) &&
-                typeof item.name === "string" &&
-                typeof item.user === "string" &&
-                typeof item.background === "string" &&
-                isPlaceDetails(item.place);
-    if (!types) {
-      return false;
-    }
+export type ImagesetLayerDetailsT = t.TypeOf<typeof ImagesetLayerDetails>;
 
-  return item.imagesets.every(isImagesetLayerDetails);
-}
+export const Scene = t.type({
+  name: t.string,
+  imagesetLayers: t.array(ImagesetLayerDetails),
+  background: t.string,
+  user: t.string,
+  place: PlaceDetails,
+});
+
+export type SceneT = t.TypeOf<typeof Scene>;
 
 export interface FitsColorMaps {
   wwt: string;

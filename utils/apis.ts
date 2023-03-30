@@ -1,5 +1,10 @@
+// Copyright 2023 the .NET Foundation
+
 // Interfaces associated with backend APIs
 
+import { isLeft } from "fp-ts/lib/Either.js";
+import * as t from "io-ts";
+import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
 import { PlaceDetails } from "./types";
@@ -12,29 +17,31 @@ function checkForError(item: any) {
       throw new Error("API server returned error; no details provided");
     }
   }
+
+  delete item.error;
 }
 
 // Endpoint: GET /misc/amisuperuser
 
 //export interface AmISuperuserRequest { }
 
-export interface AmISuperuserResponse {
-  result: boolean;
-}
+export const AmISuperuserResponse = t.type({
+  result: t.boolean,
+});
 
-export function isAmISuperuserResponse(item: any): item is AmISuperuserResponse {
-  return typeof item.result === "boolean";
-}
+export type AmISuperuserResponseT = t.TypeOf<typeof AmISuperuserResponse>;
 
-export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserResponse> {
+export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserResponseT> {
   return fetcher("/misc/amisuperuser").then((data) => {
     checkForError(data);
 
-    if (isAmISuperuserResponse(data)) {
-      return data;
-    } else {
-      throw new Error("GET /misc/amisuperuser: API response did not match schema");
+    const maybe = AmISuperuserResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /misc/amisuperuser: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   });
 }
 
@@ -42,49 +49,46 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
 
 //export interface MiscConfigDatabaseRequest { }
 
-export interface MiscConfigDatabaseResponse {
-  error: boolean;
-}
+export const MiscConfigDatabaseResponse = t.type({});
 
-export function isMiscConfigDatabaseResponse(item: any): item is MiscConfigDatabaseResponse {
-  return typeof item.error === "boolean";
-}
+export type MiscConfigDatabaseResponseT = t.TypeOf<typeof MiscConfigDatabaseResponse>;
 
-export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDatabaseResponse> {
+export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDatabaseResponseT> {
   return fetcher("/misc/config-database", { method: 'POST' }).then((data) => {
     checkForError(data);
 
-    if (isMiscConfigDatabaseResponse(data)) {
-      return data;
-    } else {
-      throw new Error("POST /misc/config-database: API response did not match schema");
+    const maybe = MiscConfigDatabaseResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /misc/config-database: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   });
 }
 
 // Endpoint: GET /handle/:handle
 
-export interface GetHandleResponse {
-  handle: string;
-  display_name: string;
-}
+export const GetHandleResponse = t.type({
+  handle: t.string,
+  display_name: t.string,
+});
 
-export function isGetHandleResponse(item: any): item is GetHandleResponse {
-  return typeof item.handle === "string" && typeof item.display_name === "string";
-}
+export type GetHandleResponseT = t.TypeOf<typeof GetHandleResponse>;
 
 // Returns null if a 404 is returned, i.e. the handle is not found.
-export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHandleResponse | null> {
+export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHandleResponseT | null> {
   try {
     const data = await fetcher(`/handle/${encodeURIComponent(handle)}`);
-
     checkForError(data);
 
-    if (isGetHandleResponse(data)) {
-      return data;
-    } else {
-      throw new Error("GET /handle/:handle: API response did not match schema");
+    const maybe = GetHandleResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /handle/:handle: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   } catch (err: any) {
     // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
     if (typeof err.message === "string" && err.message.includes("404")) {
@@ -97,95 +101,93 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
 
 // Endpoint: POST /handle/:handle
 
-export interface HandleCreateRequest {
-  display_name: string;
-}
+export const HandleCreateRequest = t.type({
+  display_name: t.string,
+});
 
-export interface HandleCreateResponse {
-  error: boolean;
-  id: string;
-}
+export type HandleCreateRequestT = t.TypeOf<typeof HandleCreateRequest>;
 
-export function isHandleCreateResponse(item: any): item is HandleCreateResponse {
-  return typeof item.error === "boolean" && typeof item.id === "string";
-}
+export const HandleCreateResponse = t.type({
+  id: t.string,
+});
 
-export async function createHandle(fetcher: $Fetch, handle: string, req: HandleCreateRequest): Promise<HandleCreateResponse> {
+export type HandleCreateResponseT = t.TypeOf<typeof HandleCreateResponse>;
+
+export async function createHandle(fetcher: $Fetch, handle: string, req: HandleCreateRequestT): Promise<HandleCreateResponseT> {
   const path = `/handle/${encodeURIComponent(handle)}`;
 
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
 
-    if (isHandleCreateResponse(data)) {
-      return data;
-    } else {
-      throw new Error("POST /handle/:handle: API response did not match schema");
+    const maybe = HandleCreateResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   });
 }
 
 // Endpoint: POST /handle/:handle/add-owner
 
-export interface HandleAddOwnerRequest {
-  account_id: string;
-}
+export const HandleAddOwnerRequest = t.type({
+  account_id: t.string,
+});
 
-export interface HandleAddOwnerResponse {
-  error: boolean;
-}
+export type HandleAddOwnerRequestT = t.TypeOf<typeof HandleAddOwnerRequest>;
 
-export function isHandleAddOwnerResponse(item: any): item is HandleAddOwnerResponse {
-  return typeof item.error === "boolean";
-}
+export const HandleAddOwnerResponse = t.type({});
+
+export type HandleAddOwnerResponseT = t.TypeOf<typeof HandleAddOwnerResponse>;
 
 export async function addHandleOwner(
   fetcher: $Fetch,
   handle: string,
-  req: HandleAddOwnerRequest
-): Promise<HandleAddOwnerResponse> {
+  req: HandleAddOwnerRequestT
+): Promise<HandleAddOwnerResponseT> {
   const path = `/handle/${encodeURIComponent(handle)}/add-owner`;
 
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
 
-    if (isHandleAddOwnerResponse(data)) {
-      return data;
-    } else {
-      throw new Error("POST /handle/:handle/add-owner: API response did not match schema");
+    const maybe = HandleAddOwnerResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle/add-owner: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   });
 }
 
 // Endpoint: GET /scene/:id
 
-export interface GetSceneResponse {
-  id: string;
-  handle_id: string;
-  handle: GetHandleResponse;
-  creation_date: string;
-  likes: number;
-  place: PlaceDetails;
-  text: string;
-  outgoing_url?: string;
-}
+export const GetSceneResponse = t.type({
+  id: t.string,
+  handle_id: t.string,
+  handle: GetHandleResponse,
+  creation_date: t.string,
+  likes: t.number,
+  place: PlaceDetails,
+  text: t.string,
+  outgoing_url: t.union([t.string, t.undefined]),
+});
 
-export function isGetSceneResponse(item: any): item is GetSceneResponse {
-  /// XXX TEMPORARY
-  return typeof item.text === "string";
-}
+export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
 
 // Returns null if a 404 is returned, i.e. the scene is not found.
-export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponse | null> {
+export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponseT | null> {
   try {
     const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`);
-
     checkForError(data);
+    const maybe = GetSceneResponse.decode(data);
 
-    if (isGetSceneResponse(data)) {
-      return data;
-    } else {
-      throw new Error("GET /scene/:id - API response did not match schema");
+    if (isLeft(maybe)) {
+      throw new Error(`GET /scene/:id: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
+
+    return maybe.right;
   } catch (err: any) {
     // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
     if (typeof err.message === "string" && err.message.includes("404")) {
