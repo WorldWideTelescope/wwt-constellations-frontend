@@ -1,9 +1,9 @@
 <template>
   <div id="feed-root">
     <div class="feed">
-      <Splide :options="splideOptions" @splide:click="(_event, splideData) => {
-        $refs.splide.go(splideData.index);
-      }" @splide:move="(_event, newIndex, _oldIndex) => {
+      <Splide :options="splideOptions" @splide:click="(splide: Splide, splideData: SlideComponent) => {
+        splide.go(splideData.index);
+      }" @splide:move="(_splide: Splide, newIndex: number, _oldIndex: number) => {
   loadIfNeeded(newIndex);
   itemSelected(items[newIndex]);
 }" ref="splide">
@@ -20,28 +20,14 @@
         </SplideSlide>
       </Splide>
     </div>
-
-    <!-- <VueEternalLoading
-      :load="load"
-      :is-initial="false"
-      position="left"
-      class="loader"
-    >
-      <template #no-more><div></div></template>
-    </VueEternalLoading> -->
   </div>
 </template>
 
 <script lang="ts">
 import { nextTick } from 'vue'
-import { LoadAction } from "@ts-pro/vue-eternal-loading";
 import { ImageSetLayer, Place } from '@wwtelescope/engine';
 import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
-
-const D2R = Math.PI / 180.0;
-const D2H = 15.0 / 180.0;
-const H2D = 180.0 / 15.0;
-const H2R = Math.PI / 12.0;
+import { Splide, SlideComponent } from "@splidejs/splide";
 
 interface Item {
   place: Place;
@@ -80,6 +66,7 @@ export default defineNuxtComponent({
       tweensOut: [] as Function[]
     };
   },
+
   props: {
     wwtReady: {
       type: Boolean,
@@ -90,19 +77,17 @@ export default defineNuxtComponent({
       default: false
     }
   },
-  mounted() {
-    console.log(this.$refs.splide);
 
+  mounted() {
     // We need to do this during nextTick,
     // otherwise the WWTInstance hasn't yet been set
     nextTick(() => {
       this.loadInitialItems();
-      console.log("Loaded first set of items");
     });
   },
+
   methods: {
-    log(x: any) { console.log(x); },
-    async loadItems(page: number): Promise<Item[]> {
+    async loadItems(_page: number): Promise<Item[]> {
       //const url = `${nuxtConfig.apiUrl}/data?page=${page}&limit=${this.pageSize}`;
       const url = "https://data1.wwtassets.org/packages/2022/07_jwst/jwst_first_v2.wtml";
       const store = this.$engineStore(this.$pinia);
@@ -111,12 +96,15 @@ export default defineNuxtComponent({
         loadChildFolders: false
       });
       const result = [];
+
       for (const child of folder.get_children() ?? []) {
         if (!(child instanceof Place)) {
           continue;
         }
+
         const place = child as Place;
         const imageset = place.get_studyImageset();
+
         if (imageset !== null) {
           const isetUrl = imageset.get_url();
           result.push({ place, url: isetUrl });
@@ -125,22 +113,20 @@ export default defineNuxtComponent({
 
       return result;
     },
+
     async loadNextPage(): Promise<Item[]> {
       const loadedItems = await this.loadItems(this.page);
       this.items.push(...loadedItems);
       this.page += 1;
       return loadedItems;
     },
+
     async loadIfNeeded(index: number) {
       if (index >= (this.page - 2) * this.pageSize) {
         this.loadNextPage();
       }
     },
-    async load({ loaded }: LoadAction): Promise<void> {
-      console.log(`Loading: page = ${this.page}`);
-      const loadedItems = await this.loadNextPage();
-      loaded(loadedItems.length, this.pageSize);
-    },
+
     async itemSelected(item: Item) {
       const store = this.$engineStore(this.$pinia);
       const place = item.place;
@@ -148,6 +134,7 @@ export default defineNuxtComponent({
       if (studyImageset == null) {
         return;
       }
+
       const name = studyImageset.get_name();
       const iset = store.lookupImageset(name);
       if (iset === null) {
@@ -158,12 +145,14 @@ export default defineNuxtComponent({
       if (this.tweenIn) {
         this.tweenIn();
       }
+
       this.tweensOut.forEach(t => t());
 
       const moveTime = timeToImageset(iset, place.get_zoomLevel());
       const minMoveTime = 2000;
 
       this.tweensOut = [];
+
       Object.keys(store.imagesetLayers).forEach((id) => {
         const layer = store.imagesetLayerById(id);
         if (layer === null) {
@@ -198,15 +187,14 @@ export default defineNuxtComponent({
         }
       });
     },
+
     async loadInitialItems() {
       this.loadNextPage().then(() => {
-        //(this.$refs.splide as typeof Splide).index = 0
-        //console.log(this.items);
         this.itemSelected(this.items[0]);
       });
-
     }
   },
+
   watch: {
     horizontal: function (horizontal) {
       const direction = horizontal ? 'ltr' : 'ttb';
@@ -262,7 +250,6 @@ export default defineNuxtComponent({
   box-shadow: 0px 0px 10px white;
 }
 
-
 .splide__slide.is-active .feed-item {
   box-shadow: 0px 0px 10px white;
   transform: scale(1);
@@ -272,7 +259,6 @@ export default defineNuxtComponent({
   filter: brightness(0.5);
   transform: scale(0.8);
 }
-
 
 .splide {
   height: 100%;
