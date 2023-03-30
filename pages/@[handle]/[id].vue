@@ -1,8 +1,9 @@
 <template>
   <div id="scene-page-root">
-    <NuxtLink to="/" id="home-link">Home</NuxtLink>
-    <!-- <WTMLViewSSR :wtml-url="wtmlUrl" /> -->
-
+    <div class="links">
+      <NuxtLink to="/">Home</NuxtLink>
+      <NuxtLink :to="'/@' + encodeURIComponent($route.params.handle as string)">Owner</NuxtLink>
+    </div>
     <div class="info">
       <h1>@{{ $route.params.handle }}'s scene</h1>
       <p>{{ text }}</p>
@@ -45,8 +46,8 @@ definePageMeta({
 // in the validate callback.
 
 const { $backendCall } = useNuxtApp();
-
 const route = useRoute();
+
 const id = route.params.id as string;
 
 const { data } = await useAsyncData(`scene-${id}`, async () => {
@@ -64,7 +65,7 @@ const text = computed(() => {
   color: #FFF;
 }
 
-#home-link {
+.links {
   pointer-events: auto;
   position: fixed;
   background: black;
