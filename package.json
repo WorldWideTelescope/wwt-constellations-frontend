@@ -22,6 +22,7 @@
     "css-loader": "^6",
     "esbuild-loader": "^3",
     "nuxt": "~3.2.2",
+    "postcss": "^8.4",
     "postcss-loader": "^7",
     "vue-loader": "^17",
     "webpack": "^5.0.0"
