@@ -11,6 +11,53 @@ export const PlaceDetails = t.type({
 
 export type PlaceDetailsT = t.TypeOf<typeof PlaceDetails>;
 
+export const ImageWwt = t.type({
+  base_degrees_per_tile: t.number,
+  bottoms_up: t.boolean,
+  center_x: t.number,
+  center_y: t.number,
+  file_type: t.string,
+  offset_x: t.number,
+  offset_y: t.number,
+  projection: t.string,
+  quad_tree_map: t.string,
+  rotation: t.number,
+  tile_levels: t.number,
+  width_factor: t.number,
+  thumbnail_url: t.string,
+});
+
+export type ImageWwtT = t.TypeOf<typeof ImageWwt>;
+
+export const ImageStorage = t.type({
+  legacy_url_template: t.union([t.string, t.undefined]),
+});
+
+export type ImageStorageT = t.TypeOf<typeof ImageStorage>;
+
+export const ImageDisplayInfo = t.type({
+  wwt: ImageWwt,
+  storage: ImageStorage,
+});
+
+export type ImageDisplayInfoT = t.TypeOf<typeof ImageDisplayInfo>;
+
+export const SceneImageLayerHydrated = t.type({
+  image: ImageDisplayInfo,
+  opacity: t.number,
+});
+
+export type SceneImageLayerHydratedT = t.TypeOf<typeof SceneImageLayerHydrated>;
+
+export const SceneContentHydrated = t.type({
+  image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
+});
+
+export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
+
+
+// Older types, potentially to be removed:
+
 export const ImagesetLayerDetails = t.type({
   url: t.string,
   name: t.string,

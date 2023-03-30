@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
-import { PlaceDetails } from "./types";
+import { PlaceDetails, SceneContentHydrated } from "./types";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -170,6 +170,7 @@ export const GetSceneResponse = t.type({
   creation_date: t.string,
   likes: t.number,
   place: PlaceDetails,
+  content: SceneContentHydrated,
   text: t.string,
   outgoing_url: t.union([t.string, t.undefined]),
 });
