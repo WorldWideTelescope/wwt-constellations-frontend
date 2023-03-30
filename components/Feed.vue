@@ -41,7 +41,7 @@ import { applyImageSetLayerSetting } from '@wwtelescope/engine-helpers';
 const D2R = Math.PI / 180.0;
 const D2H = 15.0 / 180.0;
 const H2D = 180.0 / 15.0;
-const H2R = Math.PI / 15.0;
+const H2R = Math.PI / 12.0;
 
 interface Item {
   place: Place;
