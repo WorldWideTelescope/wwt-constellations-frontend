@@ -55,6 +55,13 @@ export const SceneContentHydrated = t.type({
 
 export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
 
+export const SceneDisplayInfo = t.type({
+  place: PlaceDetails,
+  content: SceneContentHydrated,
+});
+
+export type SceneDisplayInfoT = t.TypeOf<typeof SceneDisplayInfo>;
+
 
 // Older types, potentially to be removed:
 

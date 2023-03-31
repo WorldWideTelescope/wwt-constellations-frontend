@@ -198,3 +198,23 @@ export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSc
     throw err;
   }
 }
+
+// Endpoint: GET /scenes/home-timeline?page=$number
+
+export const ScenesHomeTimelineResponse = t.type({
+  results: t.array(GetSceneResponse),
+});
+
+export type ScenesHomeTimelineResponseT = t.TypeOf<typeof ScenesHomeTimelineResponse>;
+
+export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promise<ScenesHomeTimelineResponseT> {
+  const data = await fetcher(`/scenes/home-timeline`, { query: { page: page_num } });
+  checkForError(data);
+  const maybe = ScenesHomeTimelineResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /scenes/home-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+}

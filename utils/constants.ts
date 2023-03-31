@@ -1,9 +1,9 @@
 import { BackgroundImageset, FitsColorMaps } from "~/utils/types";
 
 export const D2R = Math.PI / 180.0;
-export const D2H = 15.0 / 180.0;
-export const H2D = 180.0 / 15.0;
 export const H2R = Math.PI / 12.0;
+export const R2D = 180.0 / Math.PI;
+export const R2H = 12.0 / Math.PI;
 
 export const FITS_COLORMAPS: FitsColorMaps[] = [
   { wwt: "viridis", desc: "Viridis" },

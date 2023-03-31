@@ -15,6 +15,7 @@
 import { computed } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
+import { useConstellationsStore } from "~/stores/constellations";
 import { getScene } from "~/utils/apis";
 
 definePageMeta({
@@ -46,12 +47,42 @@ definePageMeta({
 // in the validate callback.
 
 const { $backendCall } = useNuxtApp();
+const store = getEngineStore();
 const route = useRoute();
 
 const id = route.params.id as string;
 
 const { data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
+});
+
+watch(data, (newData) => {
+  if (newData !== null) {
+    useConstellationsStore().desiredScene = {
+      place: newData.place,
+      content: newData.content,
+    };
+  }
+});
+
+onMounted(() => {
+  // This is all to handle the case when `data` is non-null right off the bat,
+  // given that we have to wait for the store to become ready to apply our
+  // changes. Is there a cleaner way to unify this and the `watch()` codepath?
+  nextTick(async () => {
+    if (store === null) {
+      return;
+    }
+
+    await store.waitForReady();
+
+    if (data.value !== null) {
+      useConstellationsStore().desiredScene = {
+        place: data.value.place,
+        content: data.value.content,
+      };
+    }
+  });
 });
 
 const text = computed(() => {

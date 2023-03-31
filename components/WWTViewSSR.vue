@@ -1,12 +1,108 @@
 <template>
   <div>
     <ClientOnly>
-      <WorldWideTelescope
-        wwt-namespace="wwt-constellations"
-      ></WorldWideTelescope>
+      <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
       <template #fallback>
         <div>WorldWide Telescope component</div>
       </template>
     </ClientOnly>
   </div>
 </template>
+
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { Place } from "@wwtelescope/engine";
+import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
+import { ImageSetType } from "@wwtelescope/engine-types";
+
+import { R2H, R2D } from "~/utils/constants";
+import { getEngineStore, imageInfoToSet } from "~/utils/helpers";
+import { timeToPlace, tweenLayerInForMove } from "~/utils/tween";
+import { useConstellationsStore } from "~/stores/constellations";
+
+const engineStore = getEngineStore();
+const constellationsStore = useConstellationsStore();
+const { desiredScene } = storeToRefs(constellationsStore);
+
+const tweenInCancellers: Function[] = [];
+const tweenOutCancellers: Function[] = [];
+
+watch(desiredScene, (newScene) => {
+  // Cancel any pending tweens
+
+  tweenInCancellers.forEach(t => t());
+  tweenInCancellers.length = 0;
+
+  tweenOutCancellers.forEach(t => t());
+  tweenOutCancellers.length = 0;
+
+  // If no scene, delete all layers and call it a day, I guess?
+
+  if (newScene === null) {
+    Object.keys(engineStore.imagesetLayers).forEach((id) => engineStore.deleteLayer(id));
+    return;
+  }
+
+  // Set up new engine elements
+
+  const place = new Place();
+  place.set_RA(newScene.place.ra_rad * R2H);
+  place.set_dec(newScene.place.dec_rad * R2D);
+  place.set_type(ImageSetType.sky);
+  place.set_zoomLevel(newScene.place.zoom_deg);
+
+  if (newScene.place.roll_rad !== undefined) {
+    place.get_camParams().rotation = newScene.place.roll_rad * R2D;
+  }
+
+  const imageset_info = [];
+
+  if (newScene.content.image_layers) {
+    for (var imgdef of newScene.content.image_layers) {
+      const imgset = imageInfoToSet(imgdef.image);
+      engineStore.addImagesetToRepository(imgset);
+      imageset_info.push({ url: imgset.get_url(), opacity: imgdef.opacity });
+    }
+  }
+
+  // Figure out move parameters and set up to fade out, then remove, existing layers
+
+  const moveTime = timeToPlace(newScene.place);
+  const minMoveTime = 2000;
+
+  Object.keys(engineStore.imagesetLayers).forEach((id) => {
+    const layer = engineStore.imagesetLayerById(id);
+
+    if (layer !== null) {
+      // If the layer is already at partial opacity,
+      // we can make the fadeout that much quicker
+      const tweenTime = layer.opacity * Math.min(moveTime, minMoveTime);
+      tweenOutCancellers.push(tweenLayerOutToDelete(layer, tweenTime));
+    }
+  });
+
+  // Set up the new layers and fade them in
+
+  for (var img_info of imageset_info) {
+    engineStore.addImageSetLayer({
+      url: img_info.url,
+      name: img_info.url,
+      mode: "preloaded",
+      goto: false
+    }).then((layer) => {
+      applyImageSetLayerSetting(layer, ["opacity", 0]);
+      tweenInCancellers.push(tweenLayerInForMove(layer, img_info.opacity, moveTime, minMoveTime));
+    });
+  }
+
+  // Finally, launch the goto
+
+  engineStore.gotoRADecZoom({
+    raRad: newScene.place.ra_rad,
+    decRad: newScene.place.dec_rad,
+    zoomDeg: newScene.place.zoom_deg,
+    rollRad: newScene.place.roll_rad ?? 0.,
+    instant: false
+  });
+});
+</script>
