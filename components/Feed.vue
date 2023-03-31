@@ -21,18 +21,20 @@
 </template>
 
 <script lang="ts">
-import { nextTick } from 'vue'
-import { ImageSetLayer } from '@wwtelescope/engine';
+// Note that it seems that we can't use `script setup` for this due to usage of
+// `this` within the Splide component.
+
+import { nextTick } from "vue";
 import { Splide, SlideComponent } from "@splidejs/splide";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { getHomeTimeline, GetSceneResponseT } from "../utils/apis";
+import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "../utils/apis";
 
 export default defineNuxtComponent({
   data() {
     return {
       page: 1,
-      pageSize: 10,
+      pageSize: 8,
       items: [] as GetSceneResponseT[],
       splideOptions: {
         start: 2,
@@ -55,24 +57,30 @@ export default defineNuxtComponent({
           }
         }
       },
-      layer: null as (ImageSetLayer | null),
-      tweenIn: null as Function | null,
-      tweensOut: [] as Function[]
+      getTimeline: getHomeTimeline,
     };
   },
 
   props: {
-    wwtReady: {
-      type: Boolean,
-      default: false
-    },
     horizontal: {
       type: Boolean,
       default: false
-    }
+    },
+
+    // If this property is the empty string, we use the home timeline as the
+    // feed. Otherwise, we fetch the timeline for the handle whose name is this
+    // property.
+    sourceType: {
+      type: String,
+      default: ""
+    },
   },
 
   mounted() {
+    if (this.sourceType.length != 0) {
+      this.getTimeline = (fetcher, page) => getHandleTimeline(fetcher, this.sourceType, page);
+    }
+
     // We need to do this during nextTick,
     // otherwise the WWTInstance hasn't yet been set
     nextTick(() => {
@@ -86,7 +94,7 @@ export default defineNuxtComponent({
       // because our feed isn't personalized. To get a personalized feed we'll
       // need to change that.
       const { $backendCall } = useNuxtApp();
-      const result = await getHomeTimeline($backendCall, page);
+      const result = await this.getTimeline($backendCall, page);
       return result.results;
     },
 

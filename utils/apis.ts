@@ -199,18 +199,36 @@ export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSc
   }
 }
 
-// Endpoint: GET /scenes/home-timeline?page=$number
+// Endpoint: GET /handle/:handle/timeline?page=$number
 
-export const ScenesHomeTimelineResponse = t.type({
+export const TimelineResponse = t.type({
   results: t.array(GetSceneResponse),
 });
 
-export type ScenesHomeTimelineResponseT = t.TypeOf<typeof ScenesHomeTimelineResponse>;
+export type TimelineResponseT = t.TypeOf<typeof TimelineResponse>;
 
-export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promise<ScenesHomeTimelineResponseT> {
+export async function getHandleTimeline(
+  fetcher: $Fetch,
+  handle: string,
+  page_num: number
+): Promise<TimelineResponseT> {
+  const data = await fetcher(`/handle/${encodeURIComponent(handle)}/timeline`, { query: { page: page_num } });
+  checkForError(data);
+  const maybe = TimelineResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+}
+
+// Endpoint: GET /scenes/home-timeline?page=$number
+
+export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promise<TimelineResponseT> {
   const data = await fetcher(`/scenes/home-timeline`, { query: { page: page_num } });
   checkForError(data);
-  const maybe = ScenesHomeTimelineResponse.decode(data);
+  const maybe = TimelineResponse.decode(data);
 
   if (isLeft(maybe)) {
     throw new Error(`GET /scenes/home-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);

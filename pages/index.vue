@@ -1,7 +1,7 @@
 <template>
   <div id="page-root">
     <ClientOnly>
-      <FeedContainer />
+      <FeedContainer source-type="" />
     </ClientOnly>
   </div>
 </template>

@@ -1,22 +1,14 @@
 <template>
   <div>
     <ClientOnly>
-      <Feed
-        id="feed"
-        ref="feed"
-        :horizontal="mobile"
-      />
+      <Feed id="feed" ref="feed" :horizontal="mobile" :source-type="sourceType" />
     </ClientOnly>
   </div>
 </template>
 
-<script lang="ts">
-export default defineNuxtComponent({
-  props: {
-    mobile: {
-      type: Boolean,
-      default: false
-    }
-  }
-});
+<script setup lang="ts">
+defineProps<{
+  mobile?: boolean,
+  sourceType: string,
+}>();
 </script>
