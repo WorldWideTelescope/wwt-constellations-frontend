@@ -2,6 +2,10 @@
   <div id="handle-page-root">
     <NuxtLink to="/" id="home-link">Home</NuxtLink>
 
+    <ClientOnly>
+      <FeedContainer :source-type="handle" />
+    </ClientOnly>
+
     <div class="info">
       <h1>@{{ $route.params.handle }}</h1>
       <h2>{{ display_name }}</h2>
@@ -66,7 +70,7 @@ const display_name = computed(() => {
   margin: auto;
   border-radius: 2px;
   top: 10px;
-  left: 10px;
+  left: 240px;
   font-size: 20pt;
   padding: 3px;
 }
@@ -78,6 +82,6 @@ const display_name = computed(() => {
   max-width: 12%;
   min-width: 200px;
   top: 50px;
-  left: 20px;
+  left: 240px;
 }
 </style>
