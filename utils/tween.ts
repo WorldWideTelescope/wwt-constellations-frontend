@@ -1,7 +1,9 @@
 import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { tween } from "femtotween";
+
 import { getEngineStore, raDecForImageset } from "./helpers";
+import { PlaceDetailsT } from "./types";
 
 const MIN_MOVE_TIME = 2000;
 
@@ -17,8 +19,19 @@ export function timeToImageset(imageset: Imageset, zoomDeg: number): number {
   return store.timeToRADecZoom({ ...raDecZoom, zoomDeg }) * 1000;
 }
 
-export function tweenLayerIn(layer: ImageSetLayer, options?: TweenOptions) {
-  return tween(0, 1, (value) => applyImageSetLayerSetting(layer, ["opacity", value]), options);
+/** Returns a time in milliseconds */
+export function timeToPlace(place: PlaceDetailsT): number {
+  const store = getEngineStore();
+  return store.timeToRADecZoom({
+    raRad: place.ra_rad,
+    decRad: place.dec_rad,
+    zoomDeg: place.zoom_deg,
+    rollRad: place.roll_rad ?? 0.,
+  }) * 1000;
+}
+
+export function tweenLayerIn(layer: ImageSetLayer, finalOpacity: number, options?: TweenOptions) {
+  return tween(0, finalOpacity, (value) => applyImageSetLayerSetting(layer, ["opacity", value]), options);
 }
 
 export function tweenLayerOut(layer: ImageSetLayer, options?: TweenOptions): Function {
@@ -26,10 +39,7 @@ export function tweenLayerOut(layer: ImageSetLayer, options?: TweenOptions): Fun
 }
 
 // If the time is <= minMoveTime, the tween will start immediately
-export function tweenLayerInForGoto(layer: ImageSetLayer, zoomDeg: number, minMoveTime = MIN_MOVE_TIME): Function {
-  
-  const moveTime = timeToImageset(layer.get_imageSet(), zoomDeg);
-  
+export function tweenLayerInForMove(layer: ImageSetLayer, finalOpacity: number, moveTime: number, minMoveTime = MIN_MOVE_TIME): Function {
   // The tweening takes place over a "time" interval from 0 to 1
   // t0 represents the "time" at which the animation will start
   // (i.e. the easing function is 0 before t0)
@@ -41,15 +51,15 @@ export function tweenLayerInForGoto(layer: ImageSetLayer, zoomDeg: number, minMo
     time: moveTime,
     ease: (t: number) => {
       if (t < t0) { return 0; }
-      return Math.pow(A*(t-t0), 1);
+      return Math.pow(A * (t - t0), 1);
     }
   }
-  return tweenLayerIn(layer, tweenOptions);
+  return tweenLayerIn(layer, finalOpacity, tweenOptions);
 }
 
 export function tweenLayerOutToDelete(layer: ImageSetLayer, duration: number): Function {
   const store = getEngineStore();
-  const tweenOptions = {  
+  const tweenOptions = {
     time: duration,
     done: () => store.deleteLayer(layer.id)
   };

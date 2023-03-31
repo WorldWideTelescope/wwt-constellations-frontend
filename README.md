@@ -60,31 +60,10 @@ Environment variables:
   is `http://localhost:8080/`
 
 
-## Keycloak Development Server
+## Setting up a Development Environment
 
-The easiest way to set up a **totally insecure** development Keycloak server for
-testing the IAM integration is with Docker. Create a long-lived container
-instance:
+See [the wwt-constellations-backend README][1] for detailed instructions on
+setting up the necessary services for local testing. If you use the default
+values there, a simple `yarn dev` should get things going for you here.
 
-```
-docker create \
-  --name cx-keycloak \
-  -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  -p 8080:8080 \
-  quay.io/keycloak/keycloak start-dev
-
-docker start cx-keycloak
-```
-
-Then:
-
-1. Navigate to http://localhost:8080/ to get the admin UI
-1. Log in with your specified username and password
-1. In the top left dropdown, create a new realm named `constellations`
-1. In the Clients tab, create a new client
-    1. Call it `constellations-app`
-    1. Add `http://localhost:3000/*` as a valid redirect URI
-    1. Add `*` as allowed web origin
-1. In the Users tab, create a new user for yourself
-    1. Choose a username
-    1. After creation, in the Credentials tab of the user, set a password
+[1]: https://github.com/WorldWideTelescope/wwt-constellations-backend/#readme

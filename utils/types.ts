@@ -1,49 +1,87 @@
-export interface PlaceDetails {
-  raRad: number;
-  decRad: number;
-  zoomDeg: number;
-  rollRad?: number;
-}
+// Copyright 2023 the .NET Foundation
 
-export function isPlaceDetails(item: any): item is PlaceDetails {
-  return typeof item.raRad === "number" &&
-         typeof item.decRad === "number" &&
-         typeof item.zoomDeg === "number" &&
-         item.rollRad === undefined || typeof item.rollRad === "number";
-}
+import * as t from "io-ts";
 
-export interface ImagesetLayerDetails {
-  url: string;
-  name: string;
-  opacity: number;
-}
+export const PlaceDetails = t.type({
+  ra_rad: t.number,
+  dec_rad: t.number,
+  zoom_deg: t.number,
+  roll_rad: t.union([t.number, t.undefined]),
+});
 
-export function isImagesetLayerDetails(item: any): item is ImagesetLayerDetails {
-  return typeof item.url === "string" &&
-         typeof item.name === "string" &&
-         typeof item.opacity === "number";
-}
+export type PlaceDetailsT = t.TypeOf<typeof PlaceDetails>;
 
-export interface Scene {
-  name: string;
-  imagesetLayers: ImagesetLayerDetails[];
-  background: string;
-  user: string;
-  place: PlaceDetails;
-}
+export const ImageWwt = t.type({
+  base_degrees_per_tile: t.number,
+  bottoms_up: t.boolean,
+  center_x: t.number,
+  center_y: t.number,
+  file_type: t.string,
+  offset_x: t.number,
+  offset_y: t.number,
+  projection: t.string,
+  quad_tree_map: t.string,
+  rotation: t.number,
+  tile_levels: t.number,
+  width_factor: t.number,
+  thumbnail_url: t.string,
+});
 
-export function isScene(item: any): item is Scene {
-  const types = Array.isArray(item.imagesets) &&
-                typeof item.name === "string" &&
-                typeof item.user === "string" &&
-                typeof item.background === "string" &&
-                isPlaceDetails(item.place);
-    if (!types) {
-      return false;
-    }
+export type ImageWwtT = t.TypeOf<typeof ImageWwt>;
 
-  return item.imagesets.every(isImagesetLayerDetails);
-}
+export const ImageStorage = t.type({
+  legacy_url_template: t.union([t.string, t.undefined]),
+});
+
+export type ImageStorageT = t.TypeOf<typeof ImageStorage>;
+
+export const ImageDisplayInfo = t.type({
+  wwt: ImageWwt,
+  storage: ImageStorage,
+});
+
+export type ImageDisplayInfoT = t.TypeOf<typeof ImageDisplayInfo>;
+
+export const SceneImageLayerHydrated = t.type({
+  image: ImageDisplayInfo,
+  opacity: t.number,
+});
+
+export type SceneImageLayerHydratedT = t.TypeOf<typeof SceneImageLayerHydrated>;
+
+export const SceneContentHydrated = t.type({
+  image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
+});
+
+export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
+
+export const SceneDisplayInfo = t.type({
+  place: PlaceDetails,
+  content: SceneContentHydrated,
+});
+
+export type SceneDisplayInfoT = t.TypeOf<typeof SceneDisplayInfo>;
+
+
+// Older types, potentially to be removed:
+
+export const ImagesetLayerDetails = t.type({
+  url: t.string,
+  name: t.string,
+  opacity: t.number,
+});
+
+export type ImagesetLayerDetailsT = t.TypeOf<typeof ImagesetLayerDetails>;
+
+export const Scene = t.type({
+  name: t.string,
+  imagesetLayers: t.array(ImagesetLayerDetails),
+  background: t.string,
+  user: t.string,
+  place: PlaceDetails,
+});
+
+export type SceneT = t.TypeOf<typeof Scene>;
 
 export interface FitsColorMaps {
   wwt: string;
