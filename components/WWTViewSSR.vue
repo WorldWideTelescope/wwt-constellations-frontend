@@ -27,7 +27,7 @@ const { desiredScene } = storeToRefs(constellationsStore);
 const tweenInCancellers: Function[] = [];
 const tweenOutCancellers: Function[] = [];
 
-watch(desiredScene, (newScene) => {
+watch(desiredScene, async (newScene) => {
   // Cancel any pending tweens
 
   tweenInCancellers.forEach(t => t());
@@ -63,6 +63,28 @@ watch(desiredScene, (newScene) => {
       engineStore.addImagesetToRepository(imgset);
       imageset_info.push({ url: imgset.get_url(), opacity: imgdef.opacity });
     }
+  }
+
+  // If the WWT view is starting out in a pristine state, initialize it to be in
+  // a nice position relative to our target scene. We do this up here so that we
+  // can correctly calculate the amount of time the camera move will take.
+  //
+  // Right now we just have an extremely simpleminded thing where we start the
+  // camera more zoomed out, with clamping to reasonable values. We could try
+  // something fancier like a random offset, or maybe even a little roll?
+
+  if (constellationsStore.viewNeedsInitialization) {
+    const zoom = Math.max(Math.min(newScene.place.zoom_deg * 60, 360), 60);
+
+    await engineStore.gotoRADecZoom({
+      raRad: newScene.place.ra_rad,
+      decRad: newScene.place.dec_rad,
+      zoomDeg: zoom,
+      rollRad: newScene.place.roll_rad ?? 0.,
+      instant: true
+    });
+
+    constellationsStore.viewNeedsInitialization = false;
   }
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
