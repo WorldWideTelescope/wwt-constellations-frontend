@@ -13,7 +13,7 @@
       <p>Handle page!</p>
 
       <p v-if="can_dashboard">
-        <NuxtLink to="./dashboard">Go to dashboard</NuxtLink>.
+        <NuxtLink :to="`/@${handle}/dashboard`">Go to dashboard</NuxtLink>.
       </p>
     </div>
   </div>

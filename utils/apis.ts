@@ -131,6 +131,8 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
 
 // Endpoint: POST /handle/:handle
+//
+// This is an undocumented superuser-only API, for now.
 
 export const HandleCreateRequest = t.type({
   display_name: t.string,
@@ -159,6 +161,24 @@ export async function createHandle(fetcher: $Fetch, handle: string, req: HandleC
     return maybe.right;
   });
 }
+
+
+// Endpoint: PATCH /handle/:handle
+
+export const HandleUpdateRequest = t.type({
+  display_name: t.union([t.string, t.undefined]),
+});
+
+export type HandleUpdateRequestT = t.TypeOf<typeof HandleUpdateRequest>;
+
+export async function updateHandle(fetcher: $Fetch, handle: string, req: HandleUpdateRequestT): Promise<void> {
+  const path = `/handle/${encodeURIComponent(handle)}`;
+
+  return fetcher(path, { method: 'PATCH', body: req }).then((data) => {
+    checkForError(data);
+  });
+}
+
 
 // Endpoint: POST /handle/:handle/add-owner
 
