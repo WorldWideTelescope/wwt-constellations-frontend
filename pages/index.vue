@@ -13,10 +13,9 @@
 
 #feed {
   position: absolute;
-  overflow: scroll;
+  overflow: visible;
   z-index: 10;
   height: 100%;
-  max-width: 12%;
   min-width: 200px;
   pointer-events: auto;
 }

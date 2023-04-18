@@ -1,21 +1,26 @@
 <template>
   <div id="feed-root">
-    <div class="feed">
-      <Splide :options="splideOptions" @splide:click="(splide: Splide, splideData: SlideComponent) => {
-        splide.go(splideData.index);
-      }" @splide:move="(_splide: Splide, newIndex: number, _oldIndex: number) => {
+    <div v-if="horizontal">
+      <div class="feed">
+        <Splide :options="splideOptions" @splide:click="(splide: Splide, splideData: SlideComponent) => {
+          splide.go(splideData.index);
+        }" @splide:move="(_splide: Splide, newIndex: number, _oldIndex: number) => {
   loadIfNeeded(newIndex);
   itemSelected(items[newIndex]);
 }" ref="splide">
-        <SplideSlide v-for="(item, index) in items" :key="index">
-          <div class="feed-item">
-            <p>{{ item.text }}</p>
-            <p>
-              <NuxtLink :to="`/@${encodeURIComponent(item.handle.handle)}/${item.id}`">scene page</NuxtLink>
-            </p>
-          </div>
-        </SplideSlide>
-      </Splide>
+          <SplideSlide v-for="(item, index) in items" :key="index">
+            <div class="feed-item">
+              <p>{{ item.text }}</p>
+              <p>
+                <NuxtLink :to="`/@${encodeURIComponent(item.handle.handle)}/${item.id}`">scene page</NuxtLink>
+              </p>
+            </div>
+          </SplideSlide>
+        </Splide>
+      </div>
+    </div>
+    <div v-else>
+      <Skymap :scenes="items.slice(0,3).map((item) => ({place: item.place, content: item.content}))" />
     </div>
   </div>
 </template>
