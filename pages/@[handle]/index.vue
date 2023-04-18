@@ -11,15 +11,21 @@
       <h2>{{ display_name }}</h2>
 
       <p>Handle page!</p>
+
+      <p v-if="can_dashboard">
+        <NuxtLink to="./dashboard">Go to dashboard</NuxtLink>.
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { computed } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
-import { getHandle } from "~/utils/apis";
+import { getHandle, handlePermissions } from "~/utils/apis";
+import { useConstellationsStore } from "~/stores/constellations";
 
 definePageMeta({
   // Does this page actually exist? I'm not sure if I'm doing this right, but it
@@ -41,7 +47,10 @@ definePageMeta({
 // Now the main page implementation, which has to repeat some of the work done
 // in the validate callback.
 
-const { $backendCall } = useNuxtApp();
+const { $backendCall, $backendAuthCall } = useNuxtApp();
+
+const constellationsStore = useConstellationsStore();
+const { loggedIn } = storeToRefs(constellationsStore);
 
 const route = useRoute();
 const handle = route.params.handle as string;
@@ -53,11 +62,22 @@ const { data } = await useAsyncData(`handle-${handle}`, async () => {
 const display_name = computed(() => {
   return data.value === null ? "Loading ..." : data.value.display_name;
 });
+
+const can_dashboard = ref(false);
+
+watchEffect(async () => {
+  if (!loggedIn.value) {
+    can_dashboard.value = false;
+  } else {
+    const fetcher = await $backendAuthCall();
+    const result = await handlePermissions(fetcher, handle);
+    can_dashboard.value = result && result.view_dashboard || false;
+  }
+});
 </script>
 
 <style scoped lang="less">
 #handle-page-root {
-  pointer-events: none;
   color: #FFF;
 }
 

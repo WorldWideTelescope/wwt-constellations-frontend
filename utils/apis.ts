@@ -99,6 +99,37 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
   }
 }
 
+// Endpoint: GET /handle/:handle/permissions
+
+export const HandlePermissionsResponse = t.type({
+  handle: t.string,
+  view_dashboard: t.boolean,
+});
+
+export type HandlePermissionsResponseT = t.TypeOf<typeof HandlePermissionsResponse>;
+
+export async function handlePermissions(fetcher: $Fetch, handle: string): Promise<HandlePermissionsResponseT | null> {
+  try {
+    const data = await fetcher(`/handle/${encodeURIComponent(handle)}/permissions`);
+    checkForError(data);
+    const maybe = HandlePermissionsResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /handle/:handle/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+
 // Endpoint: POST /handle/:handle
 
 export const HandleCreateRequest = t.type({
