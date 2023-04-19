@@ -115,7 +115,6 @@ watchEffect(async () => {
 
 <style scoped lang="less">
 #scene-page-root {
-  pointer-events: none;
   color: #FFF;
 }
 
@@ -134,6 +133,7 @@ watchEffect(async () => {
 }
 
 .info {
+  pointer-events: auto;
   position: absolute;
   overflow: scroll;
   z-index: 10;

@@ -7,10 +7,6 @@
 </template>
 
 <style lang="less">
-#page-root {
-  pointer-events: none;
-}
-
 #feed {
   position: absolute;
   overflow: scroll;

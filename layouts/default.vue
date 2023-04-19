@@ -44,6 +44,7 @@ function logInOut() {
 
 <style lang="less">
 #logout {
+  pointer-events: auto;
   position: fixed;
   top: 3px;
   right: 3px;
