@@ -99,6 +99,7 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
   }
 }
 
+
 // Endpoint: GET /handle/:handle/permissions
 
 export const HandlePermissionsResponse = t.type({
@@ -127,6 +128,39 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
     throw err;
   }
+}
+
+
+// Endpoint: GET /handle/:handle/stats
+
+export const HandleImageStats = t.type({
+  count: t.number,
+});
+
+export const HandleSceneStats = t.type({
+  count: t.number,
+  impressions: t.number,
+  likes: t.number,
+});
+
+export const HandleStatsResponse = t.type({
+  handle: t.string,
+  images: HandleImageStats,
+  scenes: HandleSceneStats,
+});
+
+export type HandleStatsResponseT = t.TypeOf<typeof HandleStatsResponse>;
+
+export async function handleStats(fetcher: $Fetch, handle: string): Promise<HandleStatsResponseT> {
+  const data = await fetcher(`/handle/${encodeURIComponent(handle)}/stats`);
+  checkForError(data);
+  const maybe = HandleStatsResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/stats: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
 }
 
 
