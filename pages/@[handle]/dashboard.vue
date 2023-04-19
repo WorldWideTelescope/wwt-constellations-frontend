@@ -1,6 +1,15 @@
 <template>
   <div>
-    <h1>Dashboard for @{{ handle }}</h1>
+    <h1>
+      <NuxtLink :to="`/@${handle}/`">
+        <n-button circle>
+          <template #icon>
+            ←
+          </template>
+        </n-button>
+      </NuxtLink>
+      Dashboard for @{{ handle }}
+    </h1>
 
     <n-form>
       <n-form-item label="Display name:">
@@ -14,7 +23,8 @@
               Update
             </n-button>
           </div>
-        </n-col></n-row>
+        </n-col>
+      </n-row>
     </n-form>
   </div>
 </template>

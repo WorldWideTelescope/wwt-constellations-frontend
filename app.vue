@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <WWTViewSSR ref="wwt" v-if="showWWT" />
+    <WWTViewSSR ref="wwt" v-show="showWWT" />
     <NuxtLayout class="page">
       <NuxtPage></NuxtPage>
     </NuxtLayout>
