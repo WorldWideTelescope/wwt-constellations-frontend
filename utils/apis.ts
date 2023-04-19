@@ -131,6 +131,45 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 }
 
 
+// Endpoint: GET /handle/:handle/sceneinfo?page=$int&pagesize=$int
+
+export const HandleSceneInfo = t.type({
+  _id: t.string,
+  creation_date: t.string,
+  impressions: t.number,
+  likes: t.number,
+});
+
+export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
+
+export const HandleSceneInfoResponse = t.type({
+  total_count: t.number,
+  results: t.array(HandleSceneInfo),
+});
+
+export type HandleSceneInfoResponseT = t.TypeOf<typeof HandleSceneInfoResponse>;
+
+export async function handleSceneInfo(
+  fetcher: $Fetch,
+  handle: string,
+  page_num: number,
+  page_size: number
+): Promise<HandleSceneInfoResponseT> {
+  const data = await fetcher(
+    `/handle/${encodeURIComponent(handle)}/sceneinfo`,
+    { query: { page: page_num, pagesize: page_size } }
+  );
+  checkForError(data);
+  const maybe = HandleSceneInfoResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/sceneinfo: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+}
+
+
 // Endpoint: GET /handle/:handle/stats
 
 export const HandleImageStats = t.type({

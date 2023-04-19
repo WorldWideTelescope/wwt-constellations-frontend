@@ -32,6 +32,14 @@
 
     <n-divider></n-divider>
 
+    <h2>Scenes</h2>
+
+    <n-data-table remote striped :columns="sceneColumns" :data="sceneData" :loading="sceneIsLoading"
+      :row-key="sceneRowKey" :pagination="scenePagination" @update:page="onSceneTablePageChange">
+    </n-data-table>
+
+    <n-divider></n-divider>
+
     <n-form>
       <n-form-item label="Display name:">
         <n-input v-model:value="display_name" type="text" placeholder="Display name"
@@ -54,6 +62,7 @@
 import {
   NButton,
   NCol,
+  NDataTable,
   NDivider,
   NForm,
   NFormItem,
@@ -64,7 +73,14 @@ import {
 } from "naive-ui";
 import { RouteLocationNormalized } from "vue-router";
 
-import { getHandle, handleStats, HandleStatsResponseT, updateHandle } from "~/utils/apis";
+import {
+  getHandle,
+  handleSceneInfo,
+  HandleSceneInfoT,
+  handleStats,
+  HandleStatsResponseT,
+  updateHandle,
+} from "~/utils/apis";
 
 definePageMeta({
   layout: 'naiveui',
@@ -127,6 +143,62 @@ const stats = ref<HandleStatsResponseT>({
 onMounted(async () => {
   const fetcher = await $backendAuthCall();
   stats.value = await handleStats(fetcher, handle);
+});
+
+// Scene table
+
+const sceneColumns = [
+  {
+    title: "ID",
+    key: "_id",
+    render: (row: HandleSceneInfoT) => {
+      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, [row._id]);
+    }
+  },
+  {
+    title: "Impressions",
+    key: "impressions",
+  },
+  {
+    title: "Likes",
+    key: "likes",
+  },
+];
+
+const sceneData = ref<HandleSceneInfoT[]>([]);
+
+const sceneIsLoading = ref(true);
+
+function sceneRowKey(row: HandleSceneInfoT) {
+  return row._id;
+}
+
+const SCENE_TABLE_PAGE_SIZE = 10;
+
+const scenePagination = reactive({
+  page: 1,
+  pageCount: 1,
+  itemCount: 0,
+  pageSize: SCENE_TABLE_PAGE_SIZE,
+});
+
+async function onSceneTablePageChange(page: number) {
+  if (!sceneIsLoading.value) {
+    sceneIsLoading.value = true;
+
+    const fetcher = await $backendAuthCall();
+    const result = await handleSceneInfo(fetcher, handle, page - 1, SCENE_TABLE_PAGE_SIZE);
+
+    sceneData.value = result.results;
+    scenePagination.page = page;
+    scenePagination.itemCount = result.total_count;
+    sceneIsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  sceneIsLoading.value = false;
+  onSceneTablePageChange(1);
 });
 
 </script>
