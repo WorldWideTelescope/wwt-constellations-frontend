@@ -323,6 +323,38 @@ export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSc
   }
 }
 
+
+// Endpoint: GET /scene/:id/permissions
+
+export const ScenePermissionsResponse = t.type({
+  id: t.string,
+  edit: t.boolean,
+});
+
+export type ScenePermissionsResponseT = t.TypeOf<typeof ScenePermissionsResponse>;
+
+export async function scenePermissions(fetcher: $Fetch, id: string): Promise<ScenePermissionsResponseT | null> {
+  try {
+    const data = await fetcher(`/scene/${encodeURIComponent(id)}/permissions`);
+    checkForError(data);
+    const maybe = ScenePermissionsResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /scene/:id/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+
 // Endpoint: GET /handle/:handle/timeline?page=$number
 
 export const TimelineResponse = t.type({
