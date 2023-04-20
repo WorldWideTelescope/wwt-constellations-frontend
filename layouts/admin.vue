@@ -11,8 +11,9 @@
 </style>
 
 <script setup lang="ts">
-import { useConstellationsStore } from '../stores/constellations';
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from "pinia";
+
+import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
 const { showWWT } = storeToRefs(constellationsStore);

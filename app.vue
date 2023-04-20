@@ -1,15 +1,16 @@
 <template>
   <div id="app">
-    <WWTViewSSR ref="wwt" v-if="showWWT" />
-    <NuxtLayout>
-      <NuxtPage class="page" />
+    <WWTViewSSR ref="wwt" v-show="showWWT" />
+    <NuxtLayout class="page">
+      <NuxtPage></NuxtPage>
     </NuxtLayout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useConstellationsStore } from './stores/constellations';
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from "pinia";
+
+import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
 const { loggedIn, showWWT } = storeToRefs(constellationsStore);
@@ -17,14 +18,20 @@ const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 const { $keycloak } = useNuxtApp();
 
 onMounted(() => {
+  // In most cases we need to initialize the Keycloak state, but it is possible
+  // that a middleware has already done it.
+  //
   // See the example of silent SSO checking at
   // https://www.keycloak.org/docs/latest/securing_apps/index.html#_javascript_adapter
-  $keycloak.init({
-    onLoad: 'check-sso',
-    silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso`
-  }).then(() => {
-    loggedIn.value = $keycloak.authenticated ?? false;
-  });
+
+  if (!$keycloak.refreshToken) {
+    $keycloak.init({
+      onLoad: "check-sso",
+      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso`
+    }).then(() => {
+      loggedIn.value = $keycloak.authenticated ?? false;
+    });
+  }
 });
 </script>
 
