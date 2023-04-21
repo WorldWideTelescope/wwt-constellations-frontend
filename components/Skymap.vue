@@ -21,6 +21,7 @@ import { useConstellationsStore } from "~/stores/constellations";
 import { getEngineStore } from "~/utils/helpers";
 
 interface CelestialObject extends SceneDisplayInfoT {
+    itemId?: string,
     radius?: number,
     isHovered?: boolean
 }
@@ -34,6 +35,7 @@ export default defineNuxtComponent({
             default: () => []
         },
     },
+    emits: ['selected'],
     data() {
         return {
             detailsPosX: 0,
@@ -165,10 +167,7 @@ export default defineNuxtComponent({
             const co = this.celestialObjects.find((co) => co.isHovered);
 
             if (co) {
-                useConstellationsStore().desiredScene = {
-                    place: co.place,
-                    content: co.content,
-                };
+                this.$emit("selected", co.itemId);
             }
         },
         onMouseMove(event: MouseEvent) {
@@ -263,9 +262,7 @@ canvas {
 }
 
 #skymap-root {
-    margin-left: 50px;
-    margin-top: 50px;
-    width: 500px;
+    width: 100%;
     height: 300px;
 }
 

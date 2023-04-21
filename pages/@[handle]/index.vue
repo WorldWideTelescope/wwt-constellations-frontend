@@ -3,7 +3,7 @@
     <NuxtLink to="/" id="home-link">Home</NuxtLink>
 
     <ClientOnly>
-      <FeedContainer :source-type="handle" />
+      <Feed :source-type="handle" />
     </ClientOnly>
 
     <div class="info">
