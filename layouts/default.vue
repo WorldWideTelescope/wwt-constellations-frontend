@@ -34,7 +34,10 @@
               </template>
             </n-drawer-content>
           </n-drawer>
-          <slot />
+          <Breadcrumb />
+          <div style="position:relative">
+            <slot />
+          </div>
         </n-layout-content>
 
 
@@ -64,7 +67,8 @@ import {
   NLayoutHeader,
   NSpace,
   NH1,
-  NImage
+  NImage,
+  NEl
 } from "naive-ui";
 
 const constellationsStore = useConstellationsStore();

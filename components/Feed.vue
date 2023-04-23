@@ -37,7 +37,7 @@
           <n-grid-item>
             <n-space justify="space-between">
               <NuxtLink class="text-no-decoration"
-                :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`">
+                :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
               <n-text class="text-strong">
