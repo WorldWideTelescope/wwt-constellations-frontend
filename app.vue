@@ -59,5 +59,9 @@ onMounted(() => {
   position: absolute;
   top: 0;
   left: 0;
+
+  // Don't eat up WWT events by default. Children should re-enable pointer
+  // events as needed.
+  pointer-events: none;
 }
 </style>

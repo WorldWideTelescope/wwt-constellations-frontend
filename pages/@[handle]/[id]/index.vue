@@ -7,16 +7,18 @@
     <div class="info">
       <h1>@{{ $route.params.handle }}'s scene</h1>
       <p>{{ text }}</p>
+      <p v-if="can_edit">[Editable!]</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { computed } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { getScene } from "~/utils/apis";
+import { getScene, scenePermissions } from "~/utils/apis";
 
 definePageMeta({
   // Does this page actually exist?
@@ -46,19 +48,24 @@ definePageMeta({
 // Now the main page implementation, which has to repeat some of the work done
 // in the validate callback.
 
-const { $backendCall } = useNuxtApp();
+const { $backendCall, $backendAuthCall } = useNuxtApp();
+
+const constellationsStore = useConstellationsStore();
+const { loggedIn } = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
 
 const id = route.params.id as string;
 
-const { data } = await useAsyncData(`scene-${id}`, async () => {
+const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
 });
 
-watch(data, (newData) => {
+// Managing the "desired scene" state
+
+watch(scene_data, (newData) => {
   if (newData !== null) {
-    useConstellationsStore().desiredScene = {
+    constellationsStore.desiredScene = {
       place: newData.place,
       content: newData.content,
     };
@@ -76,23 +83,38 @@ onMounted(() => {
 
     await store.waitForReady();
 
-    if (data.value !== null) {
-      useConstellationsStore().desiredScene = {
-        place: data.value.place,
-        content: data.value.content,
+    if (scene_data.value !== null) {
+      constellationsStore.desiredScene = {
+        place: scene_data.value.place,
+        content: scene_data.value.content,
       };
     }
   });
 });
 
+// Data
+
 const text = computed(() => {
-  return data.value === null ? "Loading ..." : data.value.text;
+  return scene_data.value === null ? "Loading ..." : scene_data.value.text;
+});
+
+// Editability
+
+const can_edit = ref(false);
+
+watchEffect(async () => {
+  if (!loggedIn.value) {
+    can_edit.value = false;
+  } else {
+    const fetcher = await $backendAuthCall();
+    const result = await scenePermissions(fetcher, id);
+    can_edit.value = result && result.edit || false;
+  }
 });
 </script>
 
 <style scoped lang="less">
 #scene-page-root {
-  pointer-events: none;
   color: #FFF;
 }
 
@@ -111,6 +133,7 @@ const text = computed(() => {
 }
 
 .info {
+  pointer-events: auto;
   position: absolute;
   overflow: scroll;
   z-index: 10;
