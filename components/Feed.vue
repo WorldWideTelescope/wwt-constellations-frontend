@@ -15,7 +15,7 @@
                   <StarBorderRound />
                 </n-icon>
                 <n-text class="action-button-label">
-                  24
+                  -1
                 </n-text>
               </n-button>
               <n-button class="action-button" :bordered="false">
@@ -23,7 +23,7 @@
                   <RemoveRedEyeOutlined />
                 </n-icon>
                 <n-text class="action-button-label">
-                  150
+                  {{selectedItem?.likes}}
                 </n-text>
               </n-button>
             </n-space>
