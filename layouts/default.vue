@@ -2,7 +2,7 @@
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
       <n-layout style="height: 100%;">
-        <n-layout-header style="padding: 10px;">
+        <n-layout-header id="header">
           <n-space align="center">
             <n-button-group>
               <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false">
@@ -105,3 +105,11 @@ function logInOut() {
 }
 
 </script>
+
+
+<style type="less">
+#header {
+  padding: 10px;
+  pointer-events: all;
+}
+</style>

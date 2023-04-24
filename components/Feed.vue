@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="feed-root">
     <ClientOnly>
       <n-grid cols="1" y-gap="5" style="position:absolute; top:0; padding: 50px; width: 500px;">
         <n-grid-item>
@@ -167,6 +167,11 @@ watch
 
 
 <style scoped lang="less">
+
+#feed-root {
+  pointer-events: all;
+}
+
 .action-button {
   padding: 0;
 }

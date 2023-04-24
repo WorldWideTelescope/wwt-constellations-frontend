@@ -1,5 +1,5 @@
 <template>
-    <n-breadcrumb>
+    <n-breadcrumb id="breadcrumb-root">
         <n-breadcrumb-item v-for="(crumb, index) in crumbs" :on-click="() => navigate(crumb, index)">
             {{ crumb }}
         </n-breadcrumb-item>
@@ -29,3 +29,10 @@ async function navigate(crumb: string, index: number) {
 }
 
 </script>
+
+
+<style type="less">
+#breadcrumb-root {
+    pointer-events: all;
+}
+</style>

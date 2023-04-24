@@ -264,6 +264,7 @@ canvas {
 #skymap-root {
     width: 100%;
     height: 300px;
+    pointer-events: all;
 }
 
 #skymap-details-container {
