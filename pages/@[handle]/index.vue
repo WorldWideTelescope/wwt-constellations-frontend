@@ -1,21 +1,8 @@
 <template>
   <div id="handle-page-root">
-    <NuxtLink to="/" id="home-link">Home</NuxtLink>
-
     <ClientOnly>
       <Feed :source-type="handle" />
     </ClientOnly>
-
-    <div class="info">
-      <h1>@{{ $route.params.handle }}</h1>
-      <h2>{{ display_name }}</h2>
-
-      <p>Handle page!</p>
-
-      <p v-if="can_dashboard">
-        <NuxtLink :to="`/@${handle}/dashboard`">Go to dashboard</NuxtLink>.
-      </p>
-    </div>
   </div>
 </template>
 
