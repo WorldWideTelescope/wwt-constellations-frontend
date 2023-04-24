@@ -13,7 +13,7 @@ const homeCrumb = "home";
 
 const crumbs = computed<string[]>(() => {
     const route = useRoute();
-    return (homeCrumb + route.fullPath).split('/');
+    return (homeCrumb + route.path).split('/');
 });
 
 function buildRoute(crumb: string, index: number): string {
