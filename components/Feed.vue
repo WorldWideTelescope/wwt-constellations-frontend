@@ -3,7 +3,8 @@
     <ClientOnly>
       <n-grid cols="1" y-gap="5" style="position:absolute; top:0; padding: 50px; width: 500px;">
         <n-grid-item>
-          <Skymap :scenes="items.slice(0, 3).map((item) => ({ itemId: item.id, place: item.place, content: item.content }))"
+          <Skymap
+            :scenes="items.slice(0, 3).map((item) => ({ itemId: item.id, place: item.place, content: item.content }))"
             @selected="itemSelected" />
         </n-grid-item>
         <n-grid-item>
@@ -26,18 +27,14 @@
                 </n-text>
               </n-button>
             </n-space>
-            <n-button class="action-button" :bordered="false">
-              <n-icon size="30">
-                <RocketLaunchOutlined />
-              </n-icon>
-            </n-button>
+            <ShareButton v-if="selectedItem" title="WorldWide Telescope" :url="getExternalItemURL(selectedItem)"
+              :description="selectedItem.text" />
           </n-space>
         </n-grid-item>
         <template v-if="selectedItem">
           <n-grid-item>
             <n-space justify="space-between">
-              <NuxtLink class="text-no-decoration"
-                :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
+              <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
               <n-text class="text-strong">
@@ -68,7 +65,6 @@
 import {
   NGrid,
   NGridItem,
-  NButtonGroup,
   NButton,
   NSpace,
   NIcon,
@@ -80,6 +76,8 @@ import { useConstellationsStore } from "~/stores/constellations";
 import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "../utils/apis";
 import { $Fetch } from "ofetch";
 import { nextTick } from "vue";
+import ShareButton from './ShareButton.vue'
+const nuxtConfig = useRuntimeConfig();
 
 const props = defineProps<{
   mobile?: boolean,
@@ -129,7 +127,7 @@ async function loadIfNeeded(index: number) {
 
 async function itemSelected(id: String) {
   selectedItem.value = items.value.find(item => item.id == id);
-
+  console.log(selectedItem.value);
   if (selectedItem.value) {
     useConstellationsStore().desiredScene = {
       place: selectedItem.value.place,
@@ -145,7 +143,7 @@ async function loadInitialItems() {
   });
 }
 
-function formatDate(date: string) {
+function formatDate(date: string): string {
   const now = Date.now();
   const then = Date.parse(date);
   const daysBetween = Math.floor((now - then) / 86400000);
@@ -153,6 +151,15 @@ function formatDate(date: string) {
   return daysBetween > 10
     ? new Date(then).toLocaleDateString()
     : daysBetween + " days ago"
+}
+
+function getExternalItemURL(item: GetSceneResponseT): string {
+  if (selectedItem.value) {
+    return `${nuxtConfig.public.hostUrl}/@${encodeURIComponent(selectedItem.value.handle.handle)}/${selectedItem.value.id}`;
+  } else {
+    return "";
+  }
+
 }
 
 watch

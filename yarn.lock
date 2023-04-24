@@ -1923,6 +1923,7 @@ __metadata:
     vue: ^3
     vue-loader: ^17
     vue-slider-component: ^4.1.0-beta.7
+    vue-social-sharing: next
     vue3-popper: ^1.5.0
     webpack: ^5.0.0
   languageName: unknown
@@ -8109,6 +8110,15 @@ __metadata:
   version: 4.1.0-beta.7
   resolution: "vue-slider-component@npm:4.1.0-beta.7"
   checksum: 1da351e3a9e9005326a2510ed9e8711e87982a150b62ba1c0dbd4b489679da7a89d80e6c573d36a5071df104b7b82380a3b84eed41ee2c276c2fa8de2b31309a
+  languageName: node
+  linkType: hard
+
+"vue-social-sharing@npm:next":
+  version: 4.0.0-alpha4
+  resolution: "vue-social-sharing@npm:4.0.0-alpha4"
+  peerDependencies:
+    vue: ^3.0.0
+  checksum: ddf45b4aecba316c2f750fb2a880f57ea6b9c5aab80e77e4c83b95f3ce3f32ff9045f08a7adade41a1eb7ff373b1658e21665d26b25aeefa8980834c1d085bdc
   languageName: node
   linkType: hard
 

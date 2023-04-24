@@ -33,7 +33,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: "http://localhost:7000",
-      keycloakUrl: "http://localhost:8080/"
+      keycloakUrl: "http://localhost:8080/",
+      hostUrl: "http://localhost:3000"
     }
   }
 });
