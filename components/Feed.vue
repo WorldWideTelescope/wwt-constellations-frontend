@@ -15,7 +15,7 @@
                   <StarBorderRound />
                 </n-icon>
                 <n-text class="action-button-label">
-                  {{ selectedItem?.likes }} 
+                  {{ selectedItem?.likes }}
                 </n-text>
               </n-button>
               <n-button class="action-button" :bordered="false">
@@ -37,9 +37,11 @@
               <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
-              <n-text class="text-strong" v-model="selectedItem.creation_date">
+              <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`" >
+                <n-text class=" text-strong" v-model="selectedItem.creation_date">
                 {{ formatDate(selectedItem.creation_date) }}
-              </n-text>
+                </n-text>
+              </NuxtLink>
             </n-space>
           </n-grid-item>
           <n-grid-item>
