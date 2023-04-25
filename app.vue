@@ -50,6 +50,7 @@ onMounted(() => {
     border-width: 0;
     margin: 0;
     padding: 0;
+    pointer-events: all;
   }
 }
 
