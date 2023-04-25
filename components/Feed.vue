@@ -38,7 +38,7 @@
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
               <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`" >
-                <n-text class=" text-strong" v-model="selectedItem.creation_date">
+                <n-text class=" text-strong" >
                 {{ formatDate(selectedItem.creation_date) }}
                 </n-text>
               </NuxtLink>

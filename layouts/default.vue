@@ -14,7 +14,7 @@
             <n-divider vertical style="height: 2em;" />
             <n-image src="https://web.wwtassets.org/webclient/images/wwtlogo.png" width="35" />
             <n-h1 :align-text="true" style="margin:0">
-              WorldWide telescope
+              WorldWide Telescope
             </n-h1>
           </n-space>
         </n-layout-header>
@@ -24,7 +24,7 @@
               <template #header>
                 <n-space align="center">
                   <n-image src="https://web.wwtassets.org/webclient/images/wwtlogo.png" width="35" />
-                  WorldWide telescope
+                  WorldWide Telescope
                 </n-space>
               </template>
               <template #footer>
