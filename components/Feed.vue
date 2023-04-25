@@ -15,7 +15,7 @@
                   <StarBorderRound />
                 </n-icon>
                 <n-text class="action-button-label">
-                  -1
+                  {{ selectedItem?.likes }} 
                 </n-text>
               </n-button>
               <n-button class="action-button" :bordered="false">
@@ -23,7 +23,7 @@
                   <RemoveRedEyeOutlined />
                 </n-icon>
                 <n-text class="action-button-label">
-                  {{selectedItem?.likes}}
+                  -1
                 </n-text>
               </n-button>
             </n-space>
@@ -37,7 +37,7 @@
               <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
-              <n-text class="text-strong">
+              <n-text class="text-strong" v-model="selectedItem.creation_date">
                 {{ formatDate(selectedItem.creation_date) }}
               </n-text>
             </n-space>
@@ -127,7 +127,6 @@ async function loadIfNeeded(index: number) {
 
 async function itemSelected(id: String) {
   selectedItem.value = items.value.find(item => item.id == id);
-  console.log(selectedItem.value);
   if (selectedItem.value) {
     useConstellationsStore().desiredScene = {
       place: selectedItem.value.place,
@@ -167,7 +166,6 @@ watch
 
 
 <style scoped lang="less">
-
 #feed-root {
   pointer-events: all;
 }
