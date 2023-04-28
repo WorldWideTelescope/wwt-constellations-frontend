@@ -1,7 +1,7 @@
 <template>
   <div id="handle-page-root">
     <ClientOnly>
-      <Feed :source-type="handle" />
+      <MainOverlay :source-type="handle" />
     </ClientOnly>
   </div>
 </template>

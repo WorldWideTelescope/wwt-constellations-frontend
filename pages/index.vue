@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <Feed source-type="" />
+    <MainOverlay source-type="" />
   </ClientOnly>
 </template>
 
