@@ -1,7 +1,7 @@
 <template>
   <div id="feed-root">
     <ClientOnly>
-      <n-grid cols="1" y-gap="5" style="position:absolute; top:0; padding: 50px; width: 500px;">
+      <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 24px; width: 440px;">
         <n-grid-item>
           <Skymap
             :scenes="items.slice(0, 3).map((item) => ({ itemId: item.id, place: item.place, content: item.content }))"
@@ -37,9 +37,10 @@
               <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
                 <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
               </NuxtLink>
-              <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`" >
-                <n-text class=" text-strong" >
-                {{ formatDate(selectedItem.creation_date) }}
+              <NuxtLink class="text-no-decoration"
+                :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`">
+                <n-text class=" text-strong">
+                  {{ formatDate(selectedItem.creation_date) }}
                 </n-text>
               </NuxtLink>
             </n-space>
@@ -162,8 +163,6 @@ function getExternalItemURL(item: GetSceneResponseT): string {
   }
 
 }
-
-watch
 </script>
 
 

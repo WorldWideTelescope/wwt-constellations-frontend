@@ -8,7 +8,6 @@
                 </div>
             </template>
         </transition>
-
     </div>
 </template>
 
@@ -220,10 +219,10 @@ export default defineNuxtComponent({
             const damping = 0.8;
 
             function update() {
-                if (!co.isHovered && targetRadius > self.defaultObjectRadius){
+                if (!co.isHovered && targetRadius > self.defaultObjectRadius) {
                     return;
                 }
-                
+
                 const force = (targetRadius - currentRadius) * springConstant;
                 velocity += force;
                 velocity *= damping;
@@ -256,14 +255,15 @@ export default defineNuxtComponent({
 <style scoped>
 canvas {
     background-color: black;
-    border: 1px solid white;
+    border: 1px solid #777;
+    border-radius: 2px;
     width: 100%;
     height: 100%;
 }
 
 #skymap-root {
     width: 100%;
-    height: 300px;
+    height: 240px;
     pointer-events: all;
 }
 

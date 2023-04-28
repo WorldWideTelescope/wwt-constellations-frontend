@@ -22,7 +22,7 @@
           <n-drawer v-model:show="drawer" :width="502" :placement="placement">
             <n-drawer-content>
               <template #header>
-                <n-space :align="'center'">
+                <n-space :align="'center'" size="small">
                   <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" />
                   WorldWide Telescope
                 </n-space>
