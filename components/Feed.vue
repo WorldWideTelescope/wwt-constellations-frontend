@@ -1,197 +1,191 @@
 <template>
   <div id="feed-root">
-    <div class="feed">
-      <Splide :options="splideOptions" @splide:click="(splide: Splide, splideData: SlideComponent) => {
-        splide.go(splideData.index);
-      }" @splide:move="(_splide: Splide, newIndex: number, _oldIndex: number) => {
-  loadIfNeeded(newIndex);
-  itemSelected(items[newIndex]);
-}" ref="splide">
-        <SplideSlide v-for="(item, index) in items" :key="index">
-          <div class="feed-item">
-            <p>{{ item.text }}</p>
-            <p>
-              <NuxtLink :to="`/@${encodeURIComponent(item.handle.handle)}/${item.id}`">scene page</NuxtLink>
-            </p>
-          </div>
-        </SplideSlide>
-      </Splide>
-    </div>
+    <ClientOnly>
+      <n-grid cols="1" y-gap="5" style="position:absolute; top:0; padding: 50px; width: 500px;">
+        <n-grid-item>
+          <Skymap
+            :scenes="items.slice(0, 3).map((item) => ({ itemId: item.id, place: item.place, content: item.content }))"
+            @selected="itemSelected" />
+        </n-grid-item>
+        <n-grid-item>
+          <n-space justify="space-between">
+            <n-space justify="start">
+              <n-button class="action-button" :bordered="false">
+                <n-icon size="30">
+                  <StarBorderRound />
+                </n-icon>
+                <n-text class="action-button-label">
+                  {{ selectedItem?.likes }}
+                </n-text>
+              </n-button>
+              <n-button class="action-button" :bordered="false">
+                <n-icon size="30">
+                  <RemoveRedEyeOutlined />
+                </n-icon>
+                <n-text class="action-button-label">
+                  -1
+                </n-text>
+              </n-button>
+            </n-space>
+            <ShareButton v-if="selectedItem" title="WorldWide Telescope" :url="getExternalItemURL(selectedItem)"
+              :description="selectedItem.text" />
+          </n-space>
+        </n-grid-item>
+        <template v-if="selectedItem">
+          <n-grid-item>
+            <n-space justify="space-between">
+              <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}`">
+                <n-text class="text-strong">@{{ selectedItem.handle.handle }}</n-text>
+              </NuxtLink>
+              <NuxtLink class="text-no-decoration" :to="`/@${encodeURIComponent(selectedItem.handle.handle)}/${selectedItem.id}`" >
+                <n-text class=" text-strong" >
+                {{ formatDate(selectedItem.creation_date) }}
+                </n-text>
+              </NuxtLink>
+            </n-space>
+          </n-grid-item>
+          <n-grid-item>
+            {{ selectedItem.text }}
+          </n-grid-item>
+          <n-grid-item>
+            <n-text depth="3" style="font-size: smaller;">
+              Credits: TBA
+            </n-text>
+          </n-grid-item>
+          <n-grid-item>
+            <n-text depth="3" style="font-size: smaller;">
+              Copyright: TBA
+            </n-text>
+          </n-grid-item>
+        </template>
+      </n-grid>
+    </ClientOnly>
   </div>
 </template>
 
-<script lang="ts">
-// Note that it seems that we can't use `script setup` for this due to usage of
-// `this` within the Splide component.
+<script setup lang="ts">
+import {
+  NGrid,
+  NGridItem,
+  NButton,
+  NSpace,
+  NIcon,
+  NText
+} from "naive-ui";
 
-import { nextTick } from "vue";
-import { Splide, SlideComponent } from "@splidejs/splide";
-
+import { StarBorderRound, StarRound, RocketLaunchOutlined, RemoveRedEyeOutlined } from '@vicons/material'
 import { useConstellationsStore } from "~/stores/constellations";
 import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "../utils/apis";
+import { $Fetch } from "ofetch";
+import { nextTick } from "vue";
+import ShareButton from './ShareButton.vue'
+const nuxtConfig = useRuntimeConfig();
 
-export default defineNuxtComponent({
-  data() {
-    return {
-      page: 1,
-      pageSize: 8,
-      items: [] as GetSceneResponseT[],
-      splideOptions: {
-        start: 2,
-        focus: 'center',
-        perPage: 3,
-        height: '100%',
-        perMove: 1,
-        arrows: true,
-        pagination: false,
-        lazyLoad: 'nearby',
-        updateOnMove: true,
-        wheel: true,
-        direction: 'ttb',
-        trimSpace: true,
-        padding: { top: 160 },
-        breakpoints: {
-          600: {
-            direction: 'ltr',
-            arrows: false
-          }
-        }
-      },
-      getTimeline: getHomeTimeline,
-    };
-  },
+const props = defineProps<{
+  mobile?: boolean,
+  sourceType: string,
+}>();
 
-  props: {
-    horizontal: {
-      type: Boolean,
-      default: false
-    },
+const { sourceType } = toRefs(props);
+const page = ref<number>(0);
+const pageSize = ref<number>(3);
+const items = ref<GetSceneResponseT[]>([]);
+const selectedItem = ref<GetSceneResponseT | undefined>(undefined);
+const getTimeline = ref<Function>(getHomeTimeline);
 
-    // If this property is the empty string, we use the home timeline as the
-    // feed. Otherwise, we fetch the timeline for the handle whose name is this
-    // property.
-    sourceType: {
-      type: String,
-      default: ""
-    },
-  },
 
-  mounted() {
-    if (this.sourceType.length != 0) {
-      this.getTimeline = (fetcher, page) => getHandleTimeline(fetcher, this.sourceType, page);
-    }
-
-    // We need to do this during nextTick,
-    // otherwise the WWTInstance hasn't yet been set
-    nextTick(() => {
-      this.loadInitialItems();
-    });
-  },
-
-  methods: {
-    async loadItems(page: number): Promise<GetSceneResponseT[]> {
-      // Note that we are currently using $backendCall, not $backendAuth call,
-      // because our feed isn't personalized. To get a personalized feed we'll
-      // need to change that.
-      const { $backendCall } = useNuxtApp();
-      const result = await this.getTimeline($backendCall, page);
-      return result.results;
-    },
-
-    async loadNextPage(): Promise<GetSceneResponseT[]> {
-      const loadedItems = await this.loadItems(this.page);
-      this.items.push(...loadedItems);
-      this.page += 1;
-      return loadedItems;
-    },
-
-    async loadIfNeeded(index: number) {
-      if (index >= (this.page - 2) * this.pageSize) {
-        this.loadNextPage();
-      }
-    },
-
-    async itemSelected(item: GetSceneResponseT) {
-      useConstellationsStore().desiredScene = {
-        place: item.place,
-        content: item.content,
-      };
-    },
-
-    async loadInitialItems() {
-      this.loadNextPage().then(() => {
-        this.itemSelected(this.items[0]);
-      });
-    }
-  },
-
-  watch: {
-    horizontal: function (horizontal) {
-      const direction = horizontal ? 'ltr' : 'ttb';
-      this.splideOptions = { ...this.splideOptions, direction };
-    }
+onMounted(() => {
+  if (sourceType.value.length != 0) {
+    getTimeline.value = (fetcher: $Fetch, page: number) => getHandleTimeline(fetcher, sourceType.value, page);
   }
+
+  nextTick(() => {
+    loadInitialItems();
+  });
 });
+
+async function loadItems(page: number): Promise<GetSceneResponseT[]> {
+  // Note that we are currently using $backendCall, not $backendAuth call,
+  // because our feed isn't personalized. To get a personalized feed we'll
+  // need to change that.
+  const { $backendCall } = useNuxtApp();
+  const result = await getTimeline.value($backendCall, page);
+  return result.results;
+};
+
+
+async function loadNextPage(): Promise<GetSceneResponseT[]> {
+  const loadedItems = await loadItems(page.value);
+  items.value.push(...loadedItems);
+  page.value++;
+  return loadedItems;
+};
+
+async function loadIfNeeded(index: number) {
+  if (index >= (page.value - 2) * pageSize.value) {
+    loadNextPage();
+  }
+};
+
+async function itemSelected(id: String) {
+  selectedItem.value = items.value.find(item => item.id == id);
+  if (selectedItem.value) {
+    useConstellationsStore().desiredScene = {
+      place: selectedItem.value.place,
+      content: selectedItem.value.content,
+    };
+  }
+
+};
+
+async function loadInitialItems() {
+  loadNextPage().then(() => {
+    itemSelected(items.value[0].id);
+  });
+}
+
+function formatDate(date: string): string {
+  const now = Date.now();
+  const then = Date.parse(date);
+  const daysBetween = Math.floor((now - then) / 86400000);
+
+  return daysBetween > 10
+    ? new Date(then).toLocaleDateString()
+    : daysBetween + " days ago"
+}
+
+function getExternalItemURL(item: GetSceneResponseT): string {
+  if (selectedItem.value) {
+    return `${nuxtConfig.public.hostUrl}/@${encodeURIComponent(selectedItem.value.handle.handle)}/${selectedItem.value.id}`;
+  } else {
+    return "";
+  }
+
+}
+
+watch
 </script>
+
 
 <style scoped lang="less">
 #feed-root {
-  height: 100%;
+  pointer-events: all;
 }
 
-.feed {
-  height: 100%;
-  padding: 0 15px 0 15px;
-  transition: background-color 0.5s;
-
+.action-button {
+  padding: 0;
 }
 
-.feed:hover {
-  background-color: rgba(200, 200, 200, 0.1);
+.action-button-label {
+  margin-left: 5px;
 }
 
-.feed-item {
-  align-content: center;
-  background: black;
-  border: 1px solid white;
-  border-radius: 5px;
-  transition: transform 0.5s;
-  text-align: center;
-  margin: 0 auto;
-
-  img {
-    margin: auto;
-    object-fit: cover;
-    width: 100%;
-    border-radius: 5px 5px 0 0;
-  }
-
-  .name,
-  p {
-    color: white;
-    font-size: 10pt;
-    margin: auto;
-    line-height: 15pt;
-    padding: 5px;
-  }
+.text-no-decoration {
+  text-decoration: none;
 }
 
-.feed-item:hover {
-  box-shadow: 0px 0px 10px white;
-}
-
-.splide__slide.is-active .feed-item {
-  box-shadow: 0px 0px 10px white;
-  transform: scale(1);
-}
-
-.splide__slide:not(.is-active) .feed-item {
-  filter: brightness(0.5);
-  transform: scale(0.8);
-}
-
-.splide {
-  height: 100%;
-  overflow: hidden;
+.text-strong {
+  font-weight: bold;
+  font-size: medium;
 }
 </style>

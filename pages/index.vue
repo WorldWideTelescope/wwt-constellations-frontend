@@ -1,27 +1,6 @@
 <template>
-  <div id="page-root">
-    <ClientOnly>
-      <FeedContainer source-type="" />
-    </ClientOnly>
-  </div>
+  <ClientOnly>
+    <Feed source-type="" />
+  </ClientOnly>
 </template>
 
-<style lang="less">
-#feed {
-  position: absolute;
-  overflow: scroll;
-  z-index: 10;
-  height: 100%;
-  max-width: 12%;
-  min-width: 200px;
-  pointer-events: auto;
-}
-
-@media(max-width: 600px) {
-  #feed {
-    top: 80%;
-    max-width: 100%;
-    max-height: 20%;
-  }
-}
-</style>
