@@ -7,13 +7,18 @@
 </template>
 
 <script setup lang="ts">
-import { NBreadcrumb, NBreadcrumbItem } from 'naive-ui'
+import { NBreadcrumb, NBreadcrumbItem } from "naive-ui";
 
-const homeCrumb = "home";
+const homeCrumb = "WorldWide Telescope";
 
 const crumbs = computed<string[]>(() => {
     const route = useRoute();
-    return (homeCrumb + route.path).split('/');
+
+    if (route.path == "/") {
+        return [homeCrumb];
+    } else {
+        return (homeCrumb + route.path).split('/');
+    }
 });
 
 function buildRoute(crumb: string, index: number): string {
@@ -27,9 +32,7 @@ function buildRoute(crumb: string, index: number): string {
 async function navigate(crumb: string, index: number) {
     await navigateTo(buildRoute(crumb, index))
 }
-
 </script>
-
 
 <style type="less">
 #breadcrumb-root {
