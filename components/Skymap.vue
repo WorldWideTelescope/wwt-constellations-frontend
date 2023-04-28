@@ -12,15 +12,12 @@
 </template>
 
 <script lang="ts">
-
-import { SceneDisplayInfoT } from '~/utils/types';
+import { SceneDisplayInfoT } from "~/utils/types";
 import { R2D } from "~/utils/constants";
-
-import { useConstellationsStore } from "~/stores/constellations";
 import { getEngineStore } from "~/utils/helpers";
 
 interface CelestialObject extends SceneDisplayInfoT {
-    itemId?: string,
+    itemIndex?: number,
     radius?: number,
     isHovered?: boolean
 }
@@ -166,7 +163,7 @@ export default defineNuxtComponent({
             const co = this.celestialObjects.find((co) => co.isHovered);
 
             if (co) {
-                this.$emit("selected", co.itemId);
+                this.$emit("selected", co.itemIndex);
             }
         },
         onMouseMove(event: MouseEvent) {
@@ -251,12 +248,13 @@ export default defineNuxtComponent({
 
 </script>
 
-  
+
 <style scoped>
 canvas {
     background-color: black;
     border: 1px solid #777;
     border-radius: 3px;
+    box-sizing: border-box;
     width: 100%;
     height: 100%;
 }

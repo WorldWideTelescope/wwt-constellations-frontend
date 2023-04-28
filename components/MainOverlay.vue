@@ -2,14 +2,12 @@
   <div id="feed-root">
     <ClientOnly>
       <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
-        <n-grid-item>
-          <Skymap
-            :scenes="items.slice(0, 3).map((item) => ({ itemId: item.id, place: item.place, content: item.content }))"
-            @selected="itemSelected" />
+        <n-grid-item v-if="timelineSource !== null">
+          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
 
-        <n-grid-item v-if="selectedItem">
-          <ScenePanel :scene="selectedItem" />
+        <n-grid-item v-if="describedScene">
+          <ScenePanel :scene="describedScene" />
         </n-grid-item>
       </n-grid>
     </ClientOnly>
@@ -21,69 +19,63 @@ import {
   NGrid,
   NGridItem,
 } from "naive-ui";
-
-import { useConstellationsStore } from "~/stores/constellations";
-import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "../utils/apis";
-import { $Fetch } from "ofetch";
+import { storeToRefs } from "pinia";
 import { nextTick } from "vue";
 
-const props = defineProps<{
+import { useConstellationsStore } from "~/stores/constellations";
+import { SceneDisplayInfoT } from "~/utils/types";
+
+defineProps<{
   mobile?: boolean,
-  sourceType: string,
 }>();
 
-const { sourceType } = toRefs(props);
-const page = ref<number>(0);
-const items = ref<GetSceneResponseT[]>([]);
-const selectedItem = ref<GetSceneResponseT | undefined>(undefined);
-const getTimeline = ref<Function>(getHomeTimeline);
+const constellationsStore = useConstellationsStore();
+const {
+  describedScene,
+  desiredScene,
+  knownScenes,
+  timeline,
+  timelineIndex,
+  timelineSource,
+} = storeToRefs(constellationsStore);
 
-
-onMounted(() => {
-  if (sourceType.value.length != 0) {
-    getTimeline.value = (fetcher: $Fetch, page: number) => getHandleTimeline(fetcher, sourceType.value, page);
-  }
-
-  nextTick(() => {
-    loadInitialItems();
+const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
+  const i0 = Math.max(timelineIndex.value - 5, 0);
+  const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
+  return timeline.value.slice(i0, i1).map((id, relIndex) => {
+    const scene = knownScenes.value.get(id)!;
+    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
 });
 
-async function loadItems(page: number): Promise<GetSceneResponseT[]> {
-  // Note that we are currently using $backendCall, not $backendAuth call,
-  // because our feed isn't personalized. To get a personalized feed we'll
-  // need to change that.
-  const { $backendCall } = useNuxtApp();
-  const result = await getTimeline.value($backendCall, page);
-  return result.results;
-};
-
-
-async function loadNextPage(): Promise<GetSceneResponseT[]> {
-  const loadedItems = await loadItems(page.value);
-  items.value.push(...loadedItems);
-  page.value++;
-  return loadedItems;
-};
-
-async function itemSelected(id: String) {
-  selectedItem.value = items.value.find(item => item.id == id);
-  if (selectedItem.value) {
-    useConstellationsStore().desiredScene = {
-      place: selectedItem.value.place,
-      content: selectedItem.value.content,
-    };
+onMounted(() => {
+  if (timelineSource.value !== null) {
+    nextTick(() => {
+      constellationsStore.ensureTimelineCoverage(8);
+    });
   }
+});
 
-};
-
-async function loadInitialItems() {
-  loadNextPage().then(() => {
-    itemSelected(items.value[0].id);
-  });
+function onItemSelected(index: number) {
+  timelineIndex.value = index;
 }
-</script>
 
+watchEffect(async () => {
+  if (timelineIndex.value >= 0) {
+    const id = timeline.value[timelineIndex.value];
+    describedScene.value = knownScenes.value.get(id)!;
+
+    if (describedScene.value) {
+      desiredScene.value = {
+        place: describedScene.value.place,
+        content: describedScene.value.content,
+      };
+    }
+
+    await constellationsStore.ensureTimelineCoverage(8);
+  }
+});
+</script>
 
 <style scoped lang="less">
 #feed-root {
