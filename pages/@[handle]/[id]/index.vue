@@ -1,4 +1,9 @@
 <template>
+  <ClientOnly>
+    <MainOverlay />
+  </ClientOnly>
+
+  <!--
   <div id="scene-page-root">
     <div class="info">
       <h1>@{{ $route.params.handle }}'s scene</h1>
@@ -6,6 +11,7 @@
       <p v-if="can_edit">[Editable!]</p>
     </div>
   </div>
+  -->
 </template>
 
 <script setup lang="ts">
@@ -47,7 +53,12 @@ definePageMeta({
 const { $backendCall, $backendAuthCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn } = storeToRefs(constellationsStore);
+const {
+  describedScene,
+  desiredScene,
+  loggedIn,
+  timelineSource
+} = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
 
@@ -61,7 +72,8 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 
 watch(scene_data, (newData) => {
   if (newData !== null) {
-    constellationsStore.desiredScene = {
+    describedScene.value = newData;
+    desiredScene.value = {
       place: newData.place,
       content: newData.content,
     };
@@ -69,6 +81,8 @@ watch(scene_data, (newData) => {
 });
 
 onMounted(() => {
+  timelineSource.value = null;
+
   // This is all to handle the case when `data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our
   // changes. Is there a cleaner way to unify this and the `watch()` codepath?
@@ -80,7 +94,8 @@ onMounted(() => {
     await store.waitForReady();
 
     if (scene_data.value !== null) {
-      constellationsStore.desiredScene = {
+      describedScene.value = scene_data.value;
+      desiredScene.value = {
         place: scene_data.value.place,
         content: scene_data.value.content,
       };
