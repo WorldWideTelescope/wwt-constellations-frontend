@@ -256,7 +256,7 @@ export default defineNuxtComponent({
 canvas {
     background-color: black;
     border: 1px solid #777;
-    border-radius: 2px;
+    border-radius: 3px;
     width: 100%;
     height: 100%;
 }
