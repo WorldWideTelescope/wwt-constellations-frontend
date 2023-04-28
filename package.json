@@ -2,7 +2,6 @@
   "dependencies": {
     "@nuxt/webpack-builder": "~3.2.0",
     "@pinia/nuxt": "^0.4.7",
-    "@splidejs/vue-splide": "^0.6.12",
     "@wwtelescope/astro": "^0.2.2",
     "@wwtelescope/engine": "^7.24.0",
     "@wwtelescope/engine-helpers": "^0.14",
