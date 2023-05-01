@@ -1,14 +1,14 @@
 <template>
   <div id="handle-page-root">
     <ClientOnly>
-      <Feed :source-type="handle" />
+      <MainOverlay />
     </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
+import { computed, nextTick } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
 import { getHandle, handlePermissions } from "~/utils/apis";
@@ -37,7 +37,7 @@ definePageMeta({
 const { $backendCall, $backendAuthCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn } = storeToRefs(constellationsStore);
+const { loggedIn, timelineSource } = storeToRefs(constellationsStore);
 
 const route = useRoute();
 const handle = route.params.handle as string;
@@ -60,6 +60,13 @@ watchEffect(async () => {
     const result = await handlePermissions(fetcher, handle);
     can_dashboard.value = result && result.view_dashboard || false;
   }
+});
+
+onMounted(() => {
+  timelineSource.value = handle;
+  nextTick(() => {
+    constellationsStore.ensureTimelineCoverage(8);
+  });
 });
 </script>
 

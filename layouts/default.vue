@@ -1,29 +1,29 @@
 <template>
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
-      <n-layout style="height: 100%;">
+      <n-layout style="height: 100%; background: none;">
         <n-layout-header id="header">
-          <n-space align="center">
+          <n-space :align="'center'" :size="'small'">
             <n-button-group>
-              <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false">
-                <n-icon size="40">
+              <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
+                style="padding-right: 0px;">
+                <n-icon size="24">
                   <MenuRound />
                 </n-icon>
               </n-button>
             </n-button-group>
-            <n-divider vertical style="height: 2em;" />
-            <n-image src="https://web.wwtassets.org/webclient/images/wwtlogo.png" width="35" />
-            <n-h1 :align-text="true" style="margin:0">
-              WorldWide Telescope
-            </n-h1>
+            <n-divider vertical style="height: 24px;" />
+            <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" />
+            <Breadcrumb />
           </n-space>
         </n-layout-header>
-        <n-layout-content style="height: 100%;">
+
+        <n-layout-content style="height: 100%; background: none;">
           <n-drawer v-model:show="drawer" :width="502" :placement="placement">
             <n-drawer-content>
               <template #header>
-                <n-space align="center">
-                  <n-image src="https://web.wwtassets.org/webclient/images/wwtlogo.png" width="35" />
+                <n-space :align="'center'" size="small">
+                  <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" />
                   WorldWide Telescope
                 </n-space>
               </template>
@@ -34,13 +34,10 @@
               </template>
             </n-drawer-content>
           </n-drawer>
-          <Breadcrumb />
           <div style="position:relative">
             <slot />
           </div>
         </n-layout-content>
-
-
       </n-layout>
     </n-notification-provider>
   </n-config-provider>
@@ -66,9 +63,6 @@ import {
   NLayoutContent,
   NLayoutHeader,
   NSpace,
-  NH1,
-  NImage,
-  NEl
 } from "naive-ui";
 
 const constellationsStore = useConstellationsStore();
@@ -103,13 +97,14 @@ function logInOut() {
     });
   }
 }
-
 </script>
 
 
 <style type="less">
 #header {
-  padding: 10px;
+  padding: 2px;
   pointer-events: all;
+  line-height: 1em;
+  background: none;
 }
 </style>

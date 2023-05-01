@@ -1,7 +1,7 @@
 <template>
   <div id="app">
+    <WWTViewSSR ref="wwt" v-show="showWWT" />
     <NuxtLayout class="page">
-      <WWTViewSSR ref="wwt" v-show="showWWT" />
       <NuxtPage />
     </NuxtLayout>
   </div>
