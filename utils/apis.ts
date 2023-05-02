@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
-import { PlaceDetails, SceneContentHydrated } from "./types";
+import { PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -297,6 +297,7 @@ export const GetSceneResponse = t.type({
   content: SceneContentHydrated,
   text: t.string,
   outgoing_url: t.union([t.string, t.undefined]),
+  previews: ScenePreviews,
 });
 
 export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;

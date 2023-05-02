@@ -61,6 +61,28 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
 });
 
+useServerSeoMeta({
+  ogTitle: "WWT Constellations scene",
+  ogUrl: route.fullPath,
+  ogVideo: scene_data.value.previews.video,
+  ogVideoWidth: 800,
+  ogVideoHeight: 600,
+  ogImage: scene_data.value.previews.thumbnail,
+  ogImageWidth: 800,
+  ogImageHeight: 600,
+  ogImageType: "image/png",
+  ogImageAlt: scene_data.value.text,
+  ogType: "website",
+
+  twitterSite: "@wwtelescope",
+  twitterCard: "summary_large_image",
+  twitterImage: scene_data.value.previews.thumbnail,
+  twitterImageAlt: scene_data.value.text,
+  twitterPlayerStream: scene_data.value.previews.video,
+  twitterPlayerWidth: 800,
+  twitterPlayerHeight: 600,
+});
+
 // Managing the "desired scene" state
 
 watch(scene_data, (newData) => {
