@@ -92,7 +92,7 @@ onMounted(() => {
     await store.waitForReady();
 
     //store.loadImageCollection({
-    //  url: `${nuxtConfig.apiUrl}/images?page=1&size=100`,
+    //  url: `${nuxtConfig.public.apiUrl}/images?page=1&size=100`,
     //  loadChildFolders: false
     //}).then((folder) => {
     //  const children = folder?.get_children() ?? [];
@@ -156,7 +156,7 @@ function onThumbnailClick(iset: Imageset) {
 }
 
 async function queryForScene(id: string): Promise<Scene> {
-  const { data } = await useFetch(`${nuxtConfig.apiUrl}/scenes/${id}`) as { data: any };
+  const { data } = await useFetch(`${nuxtConfig.public.apiUrl}/scenes/${id}`) as { data: any };
   return data.value;
 }
 
@@ -210,7 +210,7 @@ async function submit() {
 
   const scene = getCurrentScene();
   if (id.value === null) {
-    useFetch(`${nuxtConfig.apiUrl}/scenes/create`, {
+    useFetch(`${nuxtConfig.public.apiUrl}/scenes/create`, {
       method: 'POST',
       headers: { "Authorization": "Bearer " + $keycloak.token },
       body: { scene }
@@ -221,7 +221,7 @@ async function submit() {
       }
     });
   } else {
-    useFetch(`${nuxtConfig.apiUrl}/scenes/${id.value}:update`, {
+    useFetch(`${nuxtConfig.public.apiUrl}/scenes/${id.value}:update`, {
       method: 'POST',
       headers: { "Authorization": "Bearer " + $keycloak.token },
       body: {
