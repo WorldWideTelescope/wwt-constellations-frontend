@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <MainOverlay />
+    <MainOverlay :mobile="true"/>
   </ClientOnly>
 
   <!--

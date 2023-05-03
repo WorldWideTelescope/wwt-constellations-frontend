@@ -106,5 +106,7 @@ function logInOut() {
   pointer-events: all;
   line-height: 1em;
   background: none;
+  position: absolute;
+  z-index: 100;
 }
 </style>
