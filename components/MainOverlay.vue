@@ -14,7 +14,24 @@
       </template>
       <!-- Mobile -->
       <template v-else>
-        <div class="full-page-container" v-on:scroll.passive="onScroll">
+        <button class="scroll-button" @click="toggleScroll" style="margin-top: 15px;">
+          <n-icon size="30">
+            <img src="@/assets/images/explore.png" alt="Scroll Icon" style="max-width: 100%; max-height: 100%;" />
+          </n-icon>
+        </button>
+        <n-icon class="arrow arrow-left" v-show="!isFullPageVisible">
+          <img src="@/assets/images/arrow-left.png" style="max-width: 100%; max-height: 100%;" />
+        </n-icon>
+        <n-icon class="arrow arrow-right" v-show="!isFullPageVisible">
+          <img src="@/assets/images/arrow-right.png" style="max-width: 100%; max-height: 100%;" />
+        </n-icon>
+        <n-icon class="arrow arrow-top" v-show="!isFullPageVisible">
+          <img src="@/assets/images/arrow-top.png" style="max-width: 100%; max-height: 100%;" />
+        </n-icon>
+        <n-icon class="arrow arrow-bottom" v-show="!isFullPageVisible">
+          <img src="@/assets/images/arrow-bottom.png" style="max-width: 100%; max-height: 100%;" />
+        </n-icon>
+        <div class="full-page-container" v-if="isFullPageVisible" v-on:scroll.passive="onScroll">
           <n-grid cols="1">
             <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
               <transition name="fade" appear>
@@ -34,7 +51,7 @@ import {
   NGridItem
 } from "naive-ui";
 import { storeToRefs } from "pinia";
-import { nextTick } from "vue";
+import { nextTick, ref } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
@@ -42,6 +59,8 @@ import { SceneDisplayInfoT } from "~/utils/types";
 defineProps<{
   mobile?: boolean,
 }>();
+
+const isFullPageVisible = ref(true);
 
 const constellationsStore = useConstellationsStore();
 const {
@@ -91,6 +110,11 @@ function onScroll(event: UIEvent) {
     const index = Math.round(target.scrollTop / target.offsetHeight);
     onItemSelected(index);
   }
+}
+
+function toggleScroll() {
+  isFullPageVisible.value = !isFullPageVisible.value;
+  console.log(isFullPageVisible.value);
 }
 
 watchEffect(async () => {
@@ -194,5 +218,56 @@ watchEffect(async () => {
   to {
     transform: translate3d(0, -10px, 0);
   }
+}
+
+.scroll-button {
+  font-size: 14px; /* Adjust the font size to match the toggle-skymap-btn */
+  padding: 4px 4px; /* Adjust the padding to match the toggle-skymap-btn */
+  position: absolute; /* Use absolute positioning */
+  top: 45px; /* Set the distance from the top */
+  left: 10px; /* Set the distance from the left */
+  z-index: 1000; /* Add a z-index value to ensure it renders above other elements */
+  background-color: #ffffff; /* Change the background color */
+  border: none; /* Remove the border */
+  cursor: pointer; /* Change the cursor to a pointer */
+  transition: all 0.1s ease-in-out; /* Add a transition effect */
+}
+
+.scroll-button:active {
+  background-color: #d1d1d1; /* Change the background color when active */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) inset; /* Add an inner shadow */
+  transform: translateY(1px); /* Move the button down by 1px */
+}
+
+.arrow {
+  position: fixed;
+  // background-color: rgba(0, 0, 0, 0.0);
+  // width: 24px;
+  // height: 24px;
+  z-index: 1001;
+}
+
+.arrow-top {
+  top: 20px;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.arrow-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.arrow-left {
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
+}
+
+.arrow-right {
+  top: 50%;
+  right: 0;
+  transform: translate(0, -50%);
 }
 </style>

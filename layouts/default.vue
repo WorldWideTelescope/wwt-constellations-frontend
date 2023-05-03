@@ -19,7 +19,7 @@
         </n-layout-header>
 
         <n-layout-content style="height: 100%; background: none;">
-          <n-drawer v-model:show="drawer" :width="502" :placement="placement">
+          <n-drawer v-model:show="drawer" :width="drawerWidth" :placement="placement">
             <n-drawer-content>
               <template #header>
                 <n-space :align="'center'" size="small">
@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { useConstellationsStore } from '../stores/constellations';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { MenuRound } from "@vicons/material"
 import {
   darkTheme,
@@ -72,6 +72,7 @@ const { $keycloak } = useNuxtApp();
 
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
+const drawerWidth = ref('502px')
 
 function logInOut() {
   if (!process.client) {
@@ -97,6 +98,24 @@ function logInOut() {
     });
   }
 }
+
+onMounted(() => {
+  updateDrawerWidth();
+  window.addEventListener('resize', updateDrawerWidth);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateDrawerWidth);
+});
+
+function updateDrawerWidth() {
+  if (window.innerWidth < 1000) {
+    drawerWidth.value = `${window.innerWidth * 0.70}px`;
+  } else {
+    drawerWidth.value = '502px';
+  }
+}
+
 </script>
 
 
