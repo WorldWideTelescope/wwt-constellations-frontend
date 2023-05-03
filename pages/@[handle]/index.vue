@@ -1,27 +1,14 @@
 <template>
   <div id="handle-page-root">
-    <NuxtLink to="/" id="home-link">Home</NuxtLink>
-
     <ClientOnly>
-      <FeedContainer :source-type="handle" />
+      <MainOverlay />
     </ClientOnly>
-
-    <div class="info">
-      <h1>@{{ $route.params.handle }}</h1>
-      <h2>{{ display_name }}</h2>
-
-      <p>Handle page!</p>
-
-      <p v-if="can_dashboard">
-        <NuxtLink :to="`/@${handle}/dashboard`">Go to dashboard</NuxtLink>.
-      </p>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
+import { computed, nextTick } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
 import { getHandle, handlePermissions } from "~/utils/apis";
@@ -50,7 +37,7 @@ definePageMeta({
 const { $backendCall, $backendAuthCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn } = storeToRefs(constellationsStore);
+const { loggedIn, timelineSource } = storeToRefs(constellationsStore);
 
 const route = useRoute();
 const handle = route.params.handle as string;
@@ -73,6 +60,13 @@ watchEffect(async () => {
     const result = await handlePermissions(fetcher, handle);
     can_dashboard.value = result && result.view_dashboard || false;
   }
+});
+
+onMounted(() => {
+  timelineSource.value = handle;
+  nextTick(() => {
+    constellationsStore.ensureTimelineCoverage(8);
+  });
 });
 </script>
 

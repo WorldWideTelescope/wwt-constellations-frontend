@@ -2,7 +2,7 @@
   <div id="app">
     <WWTViewSSR ref="wwt" v-show="showWWT" />
     <NuxtLayout class="page">
-      <NuxtPage></NuxtPage>
+      <NuxtPage />
     </NuxtLayout>
   </div>
 </template>
@@ -50,6 +50,7 @@ onMounted(() => {
     border-width: 0;
     margin: 0;
     padding: 0;
+    pointer-events: all;
   }
 }
 

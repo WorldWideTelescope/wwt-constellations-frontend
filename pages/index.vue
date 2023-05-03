@@ -1,27 +1,23 @@
 <template>
-  <div id="page-root">
-    <ClientOnly>
-      <FeedContainer source-type="" />
-    </ClientOnly>
-  </div>
+  <ClientOnly>
+    <MainOverlay />
+  </ClientOnly>
 </template>
 
-<style lang="less">
-#feed {
-  position: absolute;
-  overflow: scroll;
-  z-index: 10;
-  height: 100%;
-  max-width: 12%;
-  min-width: 200px;
-  pointer-events: auto;
-}
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { nextTick } from "vue";
 
-@media(max-width: 600px) {
-  #feed {
-    top: 80%;
-    max-width: 100%;
-    max-height: 20%;
-  }
-}
-</style>
+import { useConstellationsStore } from "~/stores/constellations";
+
+const constellationsStore = useConstellationsStore();
+const { timelineSource } = storeToRefs(constellationsStore);
+
+onMounted(() => {
+  timelineSource.value = "";
+
+  nextTick(async () => {
+    await constellationsStore.ensureTimelineCoverage(8);
+  });
+});
+</script>

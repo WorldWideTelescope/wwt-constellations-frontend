@@ -2,7 +2,6 @@
   "dependencies": {
     "@nuxt/webpack-builder": "~3.2.0",
     "@pinia/nuxt": "^0.4.7",
-    "@splidejs/vue-splide": "^0.6.12",
     "@wwtelescope/astro": "^0.2.2",
     "@wwtelescope/engine": "^7.24.0",
     "@wwtelescope/engine-helpers": "^0.14",
@@ -17,11 +16,13 @@
     "pinia": "^2.0.32",
     "vue": "^3",
     "vue-slider-component": "^4.1.0-beta.7",
+    "vue-social-sharing": "next",
     "vue3-popper": "^1.5.0"
   },
   "devDependencies": {
     "@css-render/vue3-ssr": "^0.15.12",
     "@types/xml": "^1.0.8",
+    "@vicons/material": "^0.12.0",
     "css-loader": "^6",
     "esbuild-loader": "^3",
     "naive-ui": "^2.34",
@@ -41,5 +42,6 @@
     "preview": "nuxt preview",
     "start": "nuxt start"
   },
-  "version": "0.0.0-dev.0"
+  "version": "0.0.0-dev.0",
+  "packageManager": "yarn@3.5.0"
 }
