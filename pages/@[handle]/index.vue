@@ -1,7 +1,7 @@
 <template>
   <div id="handle-page-root">
     <ClientOnly>
-      <MainOverlay :mobile="true"/>
+      <MainOverlay />
     </ClientOnly>
   </div>
 </template>

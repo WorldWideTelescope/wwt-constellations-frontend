@@ -2,7 +2,7 @@
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
       <n-layout style="height: 100%; background: none;">
-        <n-layout-header id="header">
+        <n-layout-header id="header" :class="{'header-mobile': isMobile}">
           <n-space :align="'center'" :size="'small'">
             <n-button-group>
               <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
@@ -125,7 +125,12 @@ function updateDrawerWidth() {
   pointer-events: all;
   line-height: 1em;
   background: none;
-  position: absolute;
   z-index: 100;
+  position: relative;
 }
+
+.header-mobile {
+  position: absolute !important;
+}
+
 </style>

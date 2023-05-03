@@ -20,6 +20,9 @@ export default defineNuxtConfig({
             "@wwtelescope/astro"
           ]),
   },
+  modules: [
+    '@vueuse/nuxt',
+  ],
   builder: "webpack",
   vite: {
     // magic needed by naive-ui:

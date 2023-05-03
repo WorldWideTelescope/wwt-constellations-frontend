@@ -2,7 +2,7 @@
   <div id="feed-root">
     <ClientOnly>
       <!-- Desktop -->
-      <template v-if="!mobile">
+      <template v-if="!isMobile">
         <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
           <n-grid-item v-if="timelineSource !== null">
             <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
@@ -55,10 +55,6 @@ import { nextTick, ref } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
-
-defineProps<{
-  mobile?: boolean,
-}>();
 
 const isFullPageVisible = ref(true);
 
