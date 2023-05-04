@@ -59,6 +59,8 @@
 </template>
 
 <script setup lang="ts">
+import { RouteLocationNormalized } from "vue-router";
+
 import {
   NButton,
   NCol,
@@ -70,8 +72,7 @@ import {
   NRow,
   NStatistic,
   useNotification
-} from "naive-ui";
-import { RouteLocationNormalized } from "vue-router";
+} from "~/utils/fixnaive.mjs";
 
 import {
   getHandle,

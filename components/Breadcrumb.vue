@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { NBreadcrumb, NBreadcrumbItem } from "naive-ui";
+import { NBreadcrumb, NBreadcrumbItem } from "~/utils/fixnaive.mjs";
 
 const homeCrumb = "WorldWide Telescope";
 

@@ -61,8 +61,8 @@ import {
   NButton,
   NSpace,
   NIcon,
-  NText
-} from "naive-ui";
+  NText,
+} from "~/utils/fixnaive.mjs";
 
 import { StarBorderRound, RemoveRedEyeOutlined } from "@vicons/material";
 import { GetSceneResponseT } from "~/utils/apis";

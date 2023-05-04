@@ -12,6 +12,7 @@ export default defineNuxtConfig({
           "@css-render/vue3-ssr",
         ] : []).concat(
           [
+            "date-fns",
             "@juggle/resize-observer",
             "@wwtelescope/engine",
             "@wwtelescope/engine-pinia",

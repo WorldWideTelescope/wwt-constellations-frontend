@@ -4,7 +4,7 @@ export default defineNuxtPlugin(_nuxtApp => {
   const nuxtConfig = useRuntimeConfig();
 
   const config: KeycloakConfig = {
-    url: nuxtConfig.keycloakUrl,
+    url: nuxtConfig.public.keycloakUrl,
     realm: "constellations",
     clientId: "constellations-app",
   };

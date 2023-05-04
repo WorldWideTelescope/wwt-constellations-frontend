@@ -10,7 +10,7 @@ export default defineNuxtPlugin(_nuxtApp => {
 
   // This is a $Fetch object preloaded to make API calls.
   const backendCall = ofetch.create({
-    baseURL: nuxtConfig.apiUrl,
+    baseURL: nuxtConfig.public.apiUrl,
     headers: {
       "Accept": "application/json"
     },

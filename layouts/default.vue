@@ -19,21 +19,28 @@
         </n-layout-header>
 
         <n-layout-content style="height: 100%; background: none;">
-          <n-drawer v-model:show="drawer" :width="502" :placement="placement">
-            <n-drawer-content>
-              <template #header>
-                <n-space :align="'center'" size="small">
-                  <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" />
-                  WorldWide Telescope
-                </n-space>
-              </template>
-              <template #footer>
-                <n-button @click="logInOut">
-                  {{ loggedIn ? 'Log out' : 'Log in' }}
-                </n-button>
-              </template>
-            </n-drawer-content>
-          </n-drawer>
+          <!-- NDrawer has some kind of problem that seems to prevent it from
+            working in Nuxt SSR dev mode, no matter what I try. But I don't see
+            any ways in which it is particularly important to SSR the drawer,
+            and if we make it client-only, things work. So that's what we do for
+            now. -->
+          <ClientOnly>
+            <n-drawer v-model:show="drawer" :width="502" :placement="placement">
+              <n-drawer-content>
+                <template #header>
+                  <n-space :align="'center'" size="small">
+                    <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" />
+                    WorldWide Telescope
+                  </n-space>
+                </template>
+                <template #footer>
+                  <n-button @click="logInOut">
+                    {{ loggedIn ? 'Log out' : 'Log in' }}
+                  </n-button>
+                </template>
+              </n-drawer-content>
+            </n-drawer>
+          </ClientOnly>
           <div style="position:relative">
             <slot />
           </div>
@@ -50,20 +57,23 @@ import { ref } from 'vue'
 import { MenuRound } from "@vicons/material"
 import {
   darkTheme,
-  NConfigProvider,
-  NNotificationProvider,
+  DrawerPlacement,
+} from "naive-ui";
+
+import {
   NButton,
-  NDrawer,
   NButtonGroup,
+  NConfigProvider,
+  NDivider,
+  NDrawer,
   NDrawerContent,
   NIcon,
-  DrawerPlacement,
-  NDivider,
   NLayout,
   NLayoutContent,
   NLayoutHeader,
+  NNotificationProvider,
   NSpace,
-} from "naive-ui";
+} from "~/utils/fixnaive.mjs";
 
 const constellationsStore = useConstellationsStore();
 const { loggedIn } = storeToRefs(constellationsStore);
