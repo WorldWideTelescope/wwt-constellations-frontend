@@ -27,7 +27,7 @@
                 </n-space>
             </div>
             <template #footer>
-                {{sharing.description}}
+                {{ sharing.description }}
             </template>
         </n-card>
     </n-modal>
@@ -42,7 +42,7 @@ import {
     NCard,
     NAvatar,
     NSpace
-} from "naive-ui";
+} from "~/utils/fixnaive.mjs";
 
 import { RocketLaunchOutlined } from '@vicons/material'
 

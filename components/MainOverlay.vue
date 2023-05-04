@@ -18,7 +18,7 @@
 import {
   NGrid,
   NGridItem,
-} from "naive-ui";
+} from "~/utils/fixnaive.mjs";
 import { storeToRefs } from "pinia";
 import { nextTick } from "vue";
 
