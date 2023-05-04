@@ -52,6 +52,8 @@ definePageMeta({
 
 const { $backendCall, $backendAuthCall } = useNuxtApp();
 
+const nuxtConfig = useRuntimeConfig();
+
 const constellationsStore = useConstellationsStore();
 const {
   describedScene,
@@ -70,7 +72,7 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 
 useServerSeoMeta({
   ogTitle: "WWT Constellations scene",
-  ogUrl: route.fullPath,
+  ogUrl: `${nuxtConfig.public.hostUrl}${route.fullPath}`,
   ogVideo: scene_data.value.previews.video,
   ogVideoWidth: 800,
   ogVideoHeight: 600,
