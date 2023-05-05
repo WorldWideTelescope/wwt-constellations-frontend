@@ -2,6 +2,9 @@ import { Imageset } from "@wwtelescope/engine";
 import { ProjectionType } from "@wwtelescope/engine-types";
 
 import { ImageDisplayInfoT, PlaceDetailsT } from "./types";
+import { v5 } from "uuid";
+
+const wwtNamespace = "1420736a-a637-40a7-813a-ba692e72204e";
 
 export function getEngineStore() {
   const { $engineStore, $wwtPinia } = useNuxtApp();
@@ -118,4 +121,12 @@ export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportS
   const rollRad = place.roll_rad ?? 0;
 
   return { raRad, decRad, rollRad, zoomDeg };
+}
+
+export function backgroundInfoToSet(info: ImageDisplayInfoT): Imageset {
+  const img = imageInfoToSet(info);
+  const id = String(img.get_imageSetID());
+  const name = v5(id, wwtNamespace);
+  img.set_name(name);
+  return img;
 }
