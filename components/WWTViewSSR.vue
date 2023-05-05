@@ -16,7 +16,7 @@ import { ComponentPublicInstance } from "vue";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { R2H, R2D } from "~/utils/constants";
 import { backgroundInfoToSet, getEngineStore, imageInfoToSet } from "~/utils/helpers";
-import { timeToPlace, tweenLayerInForMove } from "~/utils/tween";
+import { timeToPlace, tweenLayerInForMove, tweenToBackground } from "~/utils/tween";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();
@@ -72,10 +72,10 @@ watch(desiredScene, async (newScene) => {
 
   const setup = wwtSetupForPlace(newScene.place, viewport_shape);
 
+  let bgImageset;
   if (newScene.background) {
-    const imgset = backgroundInfoToSet(newScene.background);
-    engineStore.addImagesetToRepository(imgset);
-    engineStore.setBackgroundImageByName(imgset.get_name());
+    bgImageset = backgroundInfoToSet(newScene.background);
+    engineStore.addImagesetToRepository(bgImageset);
   }
 
   // If the WWT view is starting out in a pristine state, initialize it to be in
@@ -115,6 +115,10 @@ watch(desiredScene, async (newScene) => {
       tweenOutCancellers.push(tweenLayerOutToDelete(layer, tweenTime));
     }
   });
+
+  if (newScene.background) {
+    tweenToBackground(bgImageset.get_name(), Math.min(moveTime, minMoveTime));
+  }
 
   // Set up the new layers and fade them in
 

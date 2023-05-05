@@ -54,3 +54,21 @@ export function tweenLayerOutToDelete(layer: ImageSetLayer, duration: number): F
   };
   return tweenLayerOut(layer, tweenOptions);
 }
+
+export function tweenToBackground(newBgName: string, duration: number): Function {
+  const store = getEngineStore();
+  const tweenOptions = {
+    time: duration,
+    done: () => {
+      store.setBackgroundImageByName(newBgName);
+      store.setForegroundOpacity(0);
+    }
+  };
+  const tweenCallback = (value: number) => {
+    store.setForegroundOpacity(value);
+  };
+
+  store.setForegroundImageByName(newBgName);
+  return tween(0, 100, tweenCallback, tweenOptions); 
+}
+
