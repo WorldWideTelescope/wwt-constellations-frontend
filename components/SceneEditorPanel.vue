@@ -1,9 +1,9 @@
 <template>
-  <n-grid cols="1" y-gap="5" class="scene-panel">
+  <n-grid cols="1" y-gap="5" class="scene-editor-panel">
     <n-grid-item>
       <n-space justify="space-between">
         <NuxtLink class="metadata" :to="`/@${encodeURIComponent(scene.handle.handle)}`">
-          <n-text>@{{ scene.handle.handle }}</n-text>
+          <n-text>EDITING @{{ scene.handle.handle }}</n-text>
         </NuxtLink>
         <NuxtLink class="metadata" :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}`">
           <n-text>{{ formatDate(scene.creation_date) }}</n-text>
@@ -25,41 +25,6 @@
       <n-text depth="3" style="font-size: smaller;">
         Copyright: TBA
       </n-text>
-    </n-grid-item>
-
-    <n-grid-item>
-      <n-space justify="space-between">
-        <n-space justify="start">
-          <n-button class="action-button" :bordered="false">
-            <n-icon size="30">
-              <StarBorderRound />
-            </n-icon>
-            <n-text class="action-button-label">
-              {{ scene.likes }}
-            </n-text>
-          </n-button>
-          <n-button class="action-button" :bordered="false">
-            <n-icon size="30">
-              <RemoveRedEyeOutlined />
-            </n-icon>
-            <n-text class="action-button-label">
-              -1
-            </n-text>
-          </n-button>
-        </n-space>
-
-        <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
-
-          <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
-            <n-button class="action-button" :bordered="false" v-if="can_edit">
-              <n-icon size="30">
-                <ModeEditOutlined />
-              </n-icon>
-            </n-button>
-          </NuxtLink>
-        </n-space>
-      </n-space>
     </n-grid-item>
   </n-grid>
 </template>
@@ -93,7 +58,6 @@ const {
 
 const props = defineProps<{
   scene: GetSceneResponseT,
-  potentiallyEditable: boolean,
 }>();
 
 const { scene } = toRefs(props);
@@ -121,7 +85,7 @@ function getExternalItemURL(item: GetSceneResponseT): string {
 const can_edit = ref(false);
 
 watchEffect(async () => {
-  if (!loggedIn.value || !props.potentiallyEditable) {
+  if (!loggedIn.value) {
     can_edit.value = false;
   } else {
     const fetcher = await $backendAuthCall();
@@ -133,7 +97,7 @@ watchEffect(async () => {
 </script>
 
 <style scoped lang="less">
-.scene-panel {
+.scene-editor-panel {
   background: rgba(0, 0, 0, 0.8);
   border-radius: 3px;
   box-sizing: border-box;

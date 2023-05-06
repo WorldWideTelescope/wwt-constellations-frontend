@@ -1,7 +1,7 @@
 <template>
   <div id="handle-page-root">
     <ClientOnly>
-      <MainOverlay :scene-potentially-editable="false" />
+      <MainOverlay />
     </ClientOnly>
   </div>
 </template>

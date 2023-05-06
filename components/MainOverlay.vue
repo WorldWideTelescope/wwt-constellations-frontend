@@ -8,7 +8,8 @@
             <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
           </n-grid-item>
           <n-grid-item v-if="describedScene">
-            <ScenePanel :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
+            <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
+            <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
           </n-grid-item>
         </n-grid>
       </template>
@@ -100,9 +101,13 @@ import {
   KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
 
-defineProps<{
-  scenePotentiallyEditable: boolean,
-}>();
+withDefaults(defineProps<{
+  scenePotentiallyEditable?: boolean,
+  showSceneEditor?: boolean,
+}>(), {
+  scenePotentiallyEditable: false,
+  showSceneEditor: false,
+});
 
 const isExploreMode = ref(false);
 

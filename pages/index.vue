@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <MainOverlay :scene-potentially-editable="false" />
+    <MainOverlay />
   </ClientOnly>
 </template>
 
