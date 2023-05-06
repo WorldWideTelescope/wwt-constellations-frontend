@@ -1,7 +1,5 @@
 <template>
-  <ClientOnly>
-    <MainOverlay :show-scene-editor="true" />
-  </ClientOnly>
+  <MainOverlay :show-scene-editor="true" />
 </template>
 
 <script setup lang="ts">

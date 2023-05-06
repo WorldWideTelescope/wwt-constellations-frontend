@@ -1,83 +1,81 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
-    <ClientOnly>
-      <!-- Desktop -->
-      <template v-if="!isMobile">
-        <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
-          <n-grid-item v-if="timelineSource !== null">
-            <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
-          </n-grid-item>
-          <n-grid-item v-if="describedScene">
-            <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
-            <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
-          </n-grid-item>
-        </n-grid>
-      </template>
-      <!-- Mobile -->
-      <template v-else>
-        <div id="toolbar">
-          <n-space justify="space-around" size="large" style="padding: 10px;">
-            <n-button :on-click="() => navigateTo('/')">
+    <!-- Desktop -->
+    <template v-if="!isMobile">
+      <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
+        <n-grid-item v-if="timelineSource !== null">
+          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+        </n-grid-item>
+        <n-grid-item v-if="describedScene">
+          <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
+          <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
+        </n-grid-item>
+      </n-grid>
+    </template>
+    <!-- Mobile -->
+    <template v-else>
+      <div id="toolbar">
+        <n-space justify="space-around" size="large" style="padding: 10px;">
+          <n-button :on-click="() => navigateTo('/')">
+            <template #icon>
+              <n-icon size="25">
+                <HomeFilled />
+              </n-icon>
+            </template>
+          </n-button>
+          <n-button-group>
+            <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
               <template #icon>
                 <n-icon size="25">
-                  <HomeFilled />
+                  <SwipeVerticalFilled />
                 </n-icon>
               </template>
             </n-button>
-            <n-button-group>
-              <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
-                <template #icon>
-                  <n-icon size="25">
-                    <SwipeVerticalFilled />
-                  </n-icon>
-                </template>
-              </n-button>
-              <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
-                <template #icon>
-                  <n-icon size="25">
-                    <ZoomOutMapFilled style="transform: rotate(45deg);" />
-                  </n-icon>
-                </template>
-              </n-button>
-            </n-button-group>
-            <n-button>
+            <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
               <template #icon>
                 <n-icon size="25">
-                  <PersonFilled />
+                  <ZoomOutMapFilled style="transform: rotate(45deg);" />
                 </n-icon>
               </template>
             </n-button>
-          </n-space>
-        </div>
+          </n-button-group>
+          <n-button>
+            <template #icon>
+              <n-icon size="25">
+                <PersonFilled />
+              </n-icon>
+            </template>
+          </n-button>
+        </n-space>
+      </div>
 
-        <template v-if="isExploreMode">
-          <n-icon class="arrow arrow-left bounce-x-fade" size="50">
-            <KeyboardArrowLeftFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-right bounce-x-fade-reverse" size="50">
-            <KeyboardArrowRightFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-top bounce-y-fade" size="50">
-            <KeyboardArrowUpFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-bottom bounce-y-fade-reverse" size="50">
-            <KeyboardArrowDownFilled />
-          </n-icon>
-        </template>
-        <template v-else>
-          <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
-            <n-grid cols="1">
-              <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
-                <transition name="fade" appear>
-                  <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
-                    :potentially-editable="scenePotentiallyEditable" />
-                </transition>
-              </n-grid-item>
-            </n-grid>
-          </div>
-        </template>
+      <template v-if="isExploreMode">
+        <n-icon class="arrow arrow-left bounce-x-fade" size="50">
+          <KeyboardArrowLeftFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-right bounce-x-fade-reverse" size="50">
+          <KeyboardArrowRightFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-top bounce-y-fade" size="50">
+          <KeyboardArrowUpFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-bottom bounce-y-fade-reverse" size="50">
+          <KeyboardArrowDownFilled />
+        </n-icon>
       </template>
-    </ClientOnly>
+      <template v-else>
+        <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
+          <n-grid cols="1">
+            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
+              <transition name="fade" appear>
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
+                  :potentially-editable="scenePotentiallyEditable" />
+              </transition>
+            </n-grid-item>
+          </n-grid>
+        </div>
+      </template>
+    </template>
   </div>
 </template>
 

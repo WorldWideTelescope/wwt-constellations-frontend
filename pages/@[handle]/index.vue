@@ -1,8 +1,6 @@
 <template>
   <div id="handle-page-root">
-    <ClientOnly>
-      <MainOverlay />
-    </ClientOnly>
+    <MainOverlay />
   </div>
 </template>
 

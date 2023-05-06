@@ -1,7 +1,5 @@
 <template>
-  <ClientOnly>
-    <MainOverlay />
-  </ClientOnly>
+  <MainOverlay />
 </template>
 
 <script setup lang="ts">

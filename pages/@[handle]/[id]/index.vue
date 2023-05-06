@@ -1,7 +1,5 @@
 <template>
-  <ClientOnly>
-    <MainOverlay :scene-potentially-editable="true" />
-  </ClientOnly>
+  <MainOverlay :scene-potentially-editable="true" />
 </template>
 
 <script setup lang="ts">
