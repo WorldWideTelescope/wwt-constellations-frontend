@@ -3,7 +3,7 @@
     <n-grid-item>
       <n-space justify="space-between">
         <NuxtLink class="metadata" :to="`/@${encodeURIComponent(scene.handle.handle)}`">
-          <n-text>EDITING @{{ scene.handle.handle }}</n-text>
+          <n-text>@{{ scene.handle.handle }}</n-text>
         </NuxtLink>
         <NuxtLink class="metadata" :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}`">
           <n-text>{{ formatDate(scene.creation_date) }}</n-text>
@@ -11,8 +11,25 @@
       </n-space>
     </n-grid-item>
 
-    <n-grid-item class="description">
-      {{ scene.text }}
+    <n-grid-item class="text">
+      <n-input v-model:value="text" type="textarea" placeholder="Scene text ..." @change="onUpdateText"></n-input>
+      <n-space justify="end">
+        <n-button :loading="text_loading" @click="onUpdateText">
+          Update
+        </n-button>
+      </n-space>
+    </n-grid-item>
+
+    <n-grid-item>
+      <n-text depth="3" style="font-size: smaller;">
+        Outgoing URL:
+      </n-text>
+      <n-input v-model:value="outgoing_url" type="text" placeholder="https://..." @change="onUpdateOutgoingUrl"></n-input>
+      <n-space justify="end">
+        <n-button :loading="outgoing_url_loading" @click="onUpdateOutgoingUrl">
+          Update
+        </n-button>
+      </n-space>
     </n-grid-item>
 
     <n-grid-item>
@@ -30,37 +47,26 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-
 import {
+  NButton,
   NGrid,
   NGridItem,
-  NButton,
   NSpace,
-  NIcon,
+  NInput,
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined } from "@vicons/material";
-
-import { useConstellationsStore } from "~/stores/constellations";
-import { GetSceneResponseT } from "~/utils/apis";
-import ShareButton from "./ShareButton.vue";
+import { GetSceneResponseT, updateScene } from "~/utils/apis";
 
 const { $backendAuthCall } = useNuxtApp();
-
-const nuxtConfig = useRuntimeConfig();
-
-const constellationsStore = useConstellationsStore();
-const {
-  loggedIn,
-} = storeToRefs(constellationsStore);
 
 const props = defineProps<{
   scene: GetSceneResponseT,
 }>();
 
 const { scene } = toRefs(props);
+
+const notification = useNotification();
 
 function formatDate(date: string): string {
   const now = Date.now();
@@ -72,28 +78,31 @@ function formatDate(date: string): string {
     : daysBetween + " days ago"
 }
 
-function getExternalItemURL(item: GetSceneResponseT): string {
-  if (scene.value) {
-    return `${nuxtConfig.public.hostUrl}/@${encodeURIComponent(scene.value.handle.handle)}/${scene.value.id}`;
-  } else {
-    return "";
-  }
+// Editing - scene text
+
+const text = ref(props.scene.text);
+const text_loading = ref(false);
+
+async function onUpdateText() {
+  const fetcher = await $backendAuthCall();
+  text_loading.value = true;
+  await updateScene(fetcher, scene.value.id, { text: text.value });
+  notification.success({ content: "Text updated.", duration: 3000 });
+  text_loading.value = false;
 }
 
-// Editability
+// Editing - outgoing URL
 
-const can_edit = ref(false);
+const outgoing_url = ref(props.scene.outgoing_url);
+const outgoing_url_loading = ref(false);
 
-watchEffect(async () => {
-  if (!loggedIn.value) {
-    can_edit.value = false;
-  } else {
-    const fetcher = await $backendAuthCall();
-    const result = await scenePermissions(fetcher, scene.value.id);
-    can_edit.value = result && result.edit || false;
-  }
-});
-
+async function onUpdateOutgoingUrl() {
+  const fetcher = await $backendAuthCall();
+  outgoing_url_loading.value = true;
+  await updateScene(fetcher, scene.value.id, { outgoing_url: outgoing_url.value });
+  notification.success({ content: "URL updated.", duration: 3000 });
+  outgoing_url_loading.value = false;
+}
 </script>
 
 <style scoped lang="less">
@@ -114,7 +123,7 @@ watchEffect(async () => {
   }
 }
 
-.description {
+.text {
   color: #ffffff;
   font-size: 120%;
 }

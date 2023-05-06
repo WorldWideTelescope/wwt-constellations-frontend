@@ -115,34 +115,3 @@ onMounted(() => {
   });
 });
 </script>
-
-<style scoped lang="less">
-#scene-page-root {
-  color: #FFF;
-}
-
-.links {
-  pointer-events: auto;
-  position: fixed;
-  background: black;
-  border: 1px solid white;
-  text-decoration: none;
-  margin: auto;
-  border-radius: 2px;
-  top: 10px;
-  left: 10px;
-  font-size: 20pt;
-  padding: 3px;
-}
-
-.info {
-  pointer-events: auto;
-  position: absolute;
-  overflow: scroll;
-  z-index: 10;
-  max-width: 12%;
-  min-width: 200px;
-  top: 50px;
-  left: 20px;
-}
-</style>

@@ -238,8 +238,8 @@ export async function createHandle(fetcher: $Fetch, handle: string, req: HandleC
 
 // Endpoint: PATCH /handle/:handle
 
-export const HandleUpdateRequest = t.type({
-  display_name: t.union([t.string, t.undefined]),
+export const HandleUpdateRequest = t.partial({
+  display_name: t.string,
 });
 
 export type HandleUpdateRequestT = t.TypeOf<typeof HandleUpdateRequest>;
@@ -353,6 +353,24 @@ export async function scenePermissions(fetcher: $Fetch, id: string): Promise<Sce
 
     throw err;
   }
+}
+
+
+// Endpoint: PATCH /scene/:id
+
+export const SceneUpdateRequest = t.partial({
+  outgoing_url: t.string,
+  text: t.string,
+});
+
+export type SceneUpdateRequestT = t.TypeOf<typeof SceneUpdateRequest>;
+
+export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateRequestT): Promise<void> {
+  const path = `/scene/${encodeURIComponent(id)}`;
+
+  return fetcher(path, { method: 'PATCH', body: req }).then((data) => {
+    checkForError(data);
+  });
 }
 
 
