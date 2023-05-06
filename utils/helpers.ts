@@ -1,26 +1,11 @@
-import { Imageset, Place } from "@wwtelescope/engine";
+import { Imageset } from "@wwtelescope/engine";
 import { ProjectionType } from "@wwtelescope/engine-types";
 
-import { ImageDisplayInfoT } from "./types";
+import { ImageDisplayInfoT, PlaceDetailsT } from "./types";
 
 export function getEngineStore() {
   const { $engineStore, $wwtPinia } = useNuxtApp();
   return $engineStore($wwtPinia);
-}
-
-export function raDecForImageset(imageset: Imageset) {
-  return {
-    raRad: D2R * imageset.get_centerX(),
-    decRad: D2R * imageset.get_centerY(),
-  };
-}
-
-export function raDecZoomForPlace(place: Place) {
-  return {
-    raRad: D2R * place.get_RA(),
-    decRad: H2R * place.get_dec(),
-    zoomDeg: place.get_zoomLevel(),
-  };
 }
 
 const projection_type_map: { [t: string]: ProjectionType } = {
@@ -58,4 +43,17 @@ export function imageInfoToSet(info: ImageDisplayInfoT): Imageset {
 
   img.set_imageSetID(img.getHashCode());
   return img;
+}
+
+export function wwtZoomForPlace(place: PlaceDetailsT, viewport_aspect: number): number {
+  // WWT's definition of its zoom setting is the height of the viewport in
+  // degrees, times six. To figure out the right zoom for a place, we need to
+  // know the shape of the region of interest, and the shape of the viewport, so
+  // that we can be sure everything fits. We then pad that out a little bit so give
+  // a nice margin on the edge.
+
+  const PAD_FACTOR = 1.2;
+  const vZoom = place.roi_height_deg;
+  const hZoom = place.roi_height_deg * place.roi_aspect_ratio / viewport_aspect;
+  return Math.max(vZoom, hZoom) * 6 * PAD_FACTOR;
 }

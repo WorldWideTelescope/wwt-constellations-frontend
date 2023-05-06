@@ -1,7 +1,7 @@
 <template>
   <div>
     <ClientOnly>
-      <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
+      <WorldWideTelescope wwt-namespace="wwt-constellations" ref="wwt"></WorldWideTelescope>
       <template #fallback>
         <div>WorldWide Telescope component</div>
       </template>
@@ -11,18 +11,18 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { ComponentPublicInstance } from "vue";
+
 import { Place } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { ImageSetType } from "@wwtelescope/engine-types";
-
-import { R2H, R2D } from "~/utils/constants";
-import { getEngineStore, imageInfoToSet } from "~/utils/helpers";
-import { timeToPlace, tweenLayerInForMove } from "~/utils/tween";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();
 const constellationsStore = useConstellationsStore();
 const { desiredScene } = storeToRefs(constellationsStore);
+
+const wwt = ref<ComponentPublicInstance | null>(null);
 
 const tweenInCancellers: Function[] = [];
 const tweenOutCancellers: Function[] = [];
@@ -45,11 +45,15 @@ watch(desiredScene, async (newScene) => {
 
   // Set up new engine elements
 
+  const viewport_aspect = wwt.value && wwt.value.$el.offsetHeight > 0
+    ? wwt.value.$el.offsetWidth / wwt.value.$el.offsetHeight
+    : 1.0;
+
   const place = new Place();
   place.set_RA(newScene.place.ra_rad * R2H);
   place.set_dec(newScene.place.dec_rad * R2D);
   place.set_type(ImageSetType.sky);
-  place.set_zoomLevel(newScene.place.zoom_deg);
+  place.set_zoomLevel(wwtZoomForPlace(newScene.place, viewport_aspect));
 
   if (newScene.place.roll_rad !== undefined) {
     place.get_camParams().rotation = newScene.place.roll_rad * R2D;
@@ -74,7 +78,7 @@ watch(desiredScene, async (newScene) => {
   // something fancier like a random offset, or maybe even a little roll?
 
   if (constellationsStore.viewNeedsInitialization) {
-    const zoom = Math.max(Math.min(newScene.place.zoom_deg * 60, 360), 60);
+    const zoom = Math.max(Math.min(place.get_zoomLevel() * 60, 360), 60);
 
     await engineStore.gotoRADecZoom({
       raRad: newScene.place.ra_rad,
@@ -89,7 +93,7 @@ watch(desiredScene, async (newScene) => {
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
 
-  const moveTime = timeToPlace(newScene.place);
+  const moveTime = timeToPlace(newScene.place, viewport_aspect);
   const minMoveTime = 2000;
 
   Object.keys(engineStore.imagesetLayers).forEach((id) => {
@@ -122,7 +126,7 @@ watch(desiredScene, async (newScene) => {
   engineStore.gotoRADecZoom({
     raRad: newScene.place.ra_rad,
     decRad: newScene.place.dec_rad,
-    zoomDeg: newScene.place.zoom_deg,
+    zoomDeg: wwtZoomForPlace(newScene.place, viewport_aspect),
     rollRad: newScene.place.roll_rad ?? 0.,
     instant: false
   });
