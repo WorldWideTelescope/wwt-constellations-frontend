@@ -1,5 +1,5 @@
 <template>
-  <div id="feed-root">
+  <div id="feed-root" :class="{ 'disable-pe': showToolbar }">
     <ClientOnly>
       <!-- Desktop -->
       <template v-if="!isMobile">
@@ -14,32 +14,66 @@
       </template>
       <!-- Mobile -->
       <template v-else>
-        <button class="scroll-button" @click="toggleScroll" style="margin-top: 15px;">
-          <n-icon size="30">
-            <img src="@/assets/images/explore.png" alt="Scroll Icon" style="max-width: 100%; max-height: 100%;" />
-          </n-icon>
-        </button>
-        <n-icon class="arrow arrow-left" v-show="!isFullPageVisible">
-          <img src="@/assets/images/arrow-left.png" style="max-width: 100%; max-height: 100%;" />
-        </n-icon>
-        <n-icon class="arrow arrow-right" v-show="!isFullPageVisible">
-          <img src="@/assets/images/arrow-right.png" style="max-width: 100%; max-height: 100%;" />
-        </n-icon>
-        <n-icon class="arrow arrow-top" v-show="!isFullPageVisible">
-          <img src="@/assets/images/arrow-top.png" style="max-width: 100%; max-height: 100%;" />
-        </n-icon>
-        <n-icon class="arrow arrow-bottom" v-show="!isFullPageVisible">
-          <img src="@/assets/images/arrow-bottom.png" style="max-width: 100%; max-height: 100%;" />
-        </n-icon>
-        <div class="full-page-container" v-if="isFullPageVisible" v-on:scroll.passive="onScroll">
-          <n-grid cols="1">
-            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
-              <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene" />
-              </transition>
-            </n-grid-item>
-          </n-grid>
+        <div id="toolbar">
+          <n-space justify="space-around" size="large" style="padding: 10px;">
+            <n-button :on-click="() => navigateTo('/')">
+              <template #icon>
+                <n-icon size="25">
+                  <HomeFilled />
+                </n-icon>
+              </template>
+            </n-button>
+            <n-button-group>
+              <n-button @click="showToolbar = false" round :class="{ 'button-toggled': !showToolbar }">
+                <template #icon>
+                  <n-icon size="25">
+                    <SwipeVerticalFilled />
+                  </n-icon>
+                </template>
+              </n-button>
+              <n-button @click="showToolbar = true" round :class="{ 'button-toggled': showToolbar }">
+                <template #icon>
+                  <n-icon size="25">
+                    <ZoomOutMapFilled style="transform: rotate(45deg);" />
+                  </n-icon>
+                </template>
+              </n-button>
+            </n-button-group>
+            <n-button>
+              <template #icon>
+                <n-icon size="25">
+                  <PersonFilled />
+                </n-icon>
+              </template>
+            </n-button>
+          </n-space>
         </div>
+
+        <template v-if="showToolbar">
+          <n-icon class="arrow arrow-left bounce-x-fade" size="50">
+            <KeyboardArrowLeftFilled />
+          </n-icon>
+          <n-icon class="arrow arrow-right bounce-x-fade-reverse" size="50">
+            <KeyboardArrowRightFilled />
+          </n-icon>
+          <n-icon class="arrow arrow-top bounce-y-fade" size="50">
+            <KeyboardArrowUpFilled />
+          </n-icon>
+          <n-icon class="arrow arrow-bottom bounce-y-fade-reverse" size="50">
+            <KeyboardArrowDownFilled />
+          </n-icon>
+        </template>
+        <template v-else>
+          <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
+            <n-grid cols="1">
+              <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
+                <transition name="fade" appear>
+                  <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene" />
+                </transition>
+              </n-grid-item>
+            </n-grid>
+          </div>
+        </template>
       </template>
     </ClientOnly>
   </div>
@@ -48,15 +82,22 @@
 <script setup lang="ts">
 import {
   NGrid,
-  NGridItem
+  NGridItem,
+  NIcon,
+  NSpace,
+  NButtonGroup,
+  NButton,
 } from "naive-ui";
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
-
-const isFullPageVisible = ref(true);
+import {
+  HomeFilled, SwipeVerticalFilled, ZoomOutMapFilled, PersonFilled,
+  KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
+} from "@vicons/material";
+const showToolbar = ref(false);
 
 const constellationsStore = useConstellationsStore();
 const {
@@ -65,7 +106,7 @@ const {
   knownScenes,
   timeline,
   timelineIndex,
-  timelineSource,
+  timelineSource
 } = storeToRefs(constellationsStore);
 
 const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
@@ -78,7 +119,8 @@ const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
 });
 
 const showSwipeAnimation = ref(false);
-const timer = ref<NodeJS.Timer | undefined>(undefined);
+const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
+const fullPageContainerRef = ref(null);
 
 onMounted(() => {
   if (timelineSource.value !== null) {
@@ -87,13 +129,13 @@ onMounted(() => {
     });
   }
 
-  timer.value = setInterval(() => {
+  swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
   }, 5000);
 });
 
 onBeforeUnmount(() => {
-  clearInterval(timer.value);
+  clearInterval(swipeAnimationTimer.value);
 });
 
 function onItemSelected(index: number) {
@@ -103,14 +145,24 @@ function onItemSelected(index: number) {
 function onScroll(event: UIEvent) {
   const target = event.target as HTMLDivElement;
   if (target) {
-    const index = Math.round(target.scrollTop / target.offsetHeight);
+    const index = Math.round(target.scrollTop / (target.offsetHeight));
     onItemSelected(index);
   }
 }
 
-function toggleScroll() {
-  isFullPageVisible.value = !isFullPageVisible.value;
-  console.log(isFullPageVisible.value);
+
+function scrollTo(element: HTMLDivElement, index: number) {
+  if (element) {
+    element.scrollTop = Math.round(index * (element.offsetHeight));
+  }
+}
+
+function centerScene() {
+  const scene = desiredScene.value;
+  desiredScene.value = null;
+  nextTick(() => {
+    desiredScene.value = scene;
+  })
 }
 
 watchEffect(async () => {
@@ -128,11 +180,27 @@ watchEffect(async () => {
     await constellationsStore.ensureTimelineCoverage(8);
   }
 });
+
+
+watch(fullPageContainerRef, () => {
+  if (fullPageContainerRef.value) {
+    const el = fullPageContainerRef.value as HTMLDivElement
+    scrollTo(el, timelineIndex.value);
+    centerScene();
+  }
+});
+
 </script>
 
 <style scoped lang="less">
 #feed-root {
+  height: 100vh;
   pointer-events: all;
+  --footer-height: 60px;
+}
+
+.disable-pe {
+  pointer-events: none !important;
 }
 
 .action-button {
@@ -154,16 +222,18 @@ watchEffect(async () => {
 
 
 .full-page-container {
-  height: 100vh;
+  height: calc(100vh - var(--footer-height));
   overflow: scroll;
   scroll-snap-type: y mandatory;
 }
 
 .full-page {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - var(--footer-height));
   align-items: flex-end;
   scroll-snap-align: start;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .fade-enter-active,
@@ -216,54 +286,192 @@ watchEffect(async () => {
   }
 }
 
-.scroll-button {
-  font-size: 14px; /* Adjust the font size to match the toggle-skymap-btn */
-  padding: 4px 4px; /* Adjust the padding to match the toggle-skymap-btn */
-  position: absolute; /* Use absolute positioning */
-  top: 45px; /* Set the distance from the top */
-  left: 10px; /* Set the distance from the left */
-  z-index: 1000; /* Add a z-index value to ensure it renders above other elements */
-  background-color: #ffffff; /* Change the background color */
-  border: none; /* Remove the border */
-  cursor: pointer; /* Change the cursor to a pointer */
-  transition: all 0.1s ease-in-out; /* Add a transition effect */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
 }
 
-.scroll-button:active {
-  background-color: #d1d1d1; /* Change the background color when active */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) inset; /* Add an inner shadow */
-  transform: translateY(1px); /* Move the button down by 1px */
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(20px);
+}
+
+
+.bounce-x-fade {
+  animation: key-bounce-x-fade 3.5s forwards;
+}
+
+.bounce-x-fade-reverse {
+  animation: key-bounce-x-fade-reverse 3.5s forwards;
+}
+
+@keyframes key-bounce-x-fade {
+  0% {
+    transform: translate3d(0, -50%, 0);
+    opacity: 1;
+  }
+
+  25% {
+    transform: translate3d(10px, -50%, 0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(0, -50%, 0);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translate3d(10px, -50%, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, -50%, 0);
+    opacity: 0;
+    display: none;
+  }
+}
+
+@keyframes key-bounce-x-fade-reverse {
+  0% {
+    transform: translate3d(10px, -50%, 0);
+    opacity: 1;
+  }
+
+  25% {
+    transform: translate3d(0, -50%, 0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(10px, -50%, 0);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translate3d(0, -50%, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(10px, -50%, 0);
+    opacity: 0;
+    display: none;
+  }
+}
+
+
+.bounce-y-fade {
+  animation: key-bounce-y-fade 3.5s forwards;
+}
+
+@keyframes key-bounce-y-fade {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+    opacity: 1;
+  }
+
+  25% {
+    transform: translate3d(-50%, 10px, 0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(-50%, 0, 0);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translate3d(-50% 10px, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(-50%, 10px, 0);
+    opacity: 0;
+    display: none;
+  }
+}
+
+.bounce-y-fade-reverse {
+  animation: key-bounce-y-fade-reverse 3.5s forwards;
+}
+
+@keyframes key-bounce-y-fade-reverse {
+  0% {
+    transform: translate3d(-50%, 10px, 0);
+    opacity: 1;
+  }
+
+  25% {
+    transform: translate3d(-50%, 0, 0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(-50%, 10px, 0);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translate3d(-50% 0, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+    opacity: 0;
+    display: none;
+  }
 }
 
 .arrow {
   position: fixed;
-  // background-color: rgba(0, 0, 0, 0.0);
-  // width: 24px;
-  // height: 24px;
   z-index: 1001;
 }
 
 .arrow-top {
-  top: 20px;
+  top: var(--footer-height);
   left: 50%;
   transform: translate(-50%, 0);
 }
 
 .arrow-bottom {
-  bottom: 0;
+  bottom: calc(20px + var(--footer-height));
   left: 50%;
   transform: translate(-50%, 0);
 }
 
 .arrow-left {
   top: 50%;
-  left: 0;
+  left: 20px;
   transform: translate(0, -50%);
 }
 
 .arrow-right {
   top: 50%;
-  right: 0;
+  right: 20px;
   transform: translate(0, -50%);
+}
+
+#toolbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-height);
+  background-color: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  pointer-events: all !important;
+  z-index: 100;
+}
+
+.button-toggled {
+  background-color: var(--n-text-color-pressed) !important;
+  color: var(--n-text-color) !important;
 }
 </style>
