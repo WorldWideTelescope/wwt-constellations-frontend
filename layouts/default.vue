@@ -25,7 +25,7 @@
             and if we make it client-only, things work. So that's what we do for
             now. -->
           <ClientOnly>
-            <n-drawer v-model:show="drawer" :width="502" :placement="placement">
+            <n-drawer v-model:show="drawer" :width="502" style="max-width: 70%;" :placement="placement">
               <n-drawer-content>
                 <template #header>
                   <n-space :align="'center'" size="small">
