@@ -82,7 +82,6 @@ const { $keycloak } = useNuxtApp();
 
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
-const drawerWidth = ref('502px')
 
 function logInOut() {
   if (!process.client) {
@@ -106,23 +105,6 @@ function logInOut() {
     }).catch((error: Error) => {
       console.log(`Error logging in: ${error.message}`);
     });
-  }
-}
-
-onMounted(() => {
-  updateDrawerWidth();
-  window.addEventListener('resize', updateDrawerWidth);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateDrawerWidth);
-});
-
-function updateDrawerWidth() {
-  if (window.innerWidth < 1000) {
-    drawerWidth.value = `${window.innerWidth * 0.70}px`;
-  } else {
-    drawerWidth.value = '502px';
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="feed-root" :class="{ 'disable-pe': showToolbar }">
+  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
     <ClientOnly>
       <!-- Desktop -->
       <template v-if="!isMobile">
@@ -24,14 +24,14 @@
               </template>
             </n-button>
             <n-button-group>
-              <n-button @click="showToolbar = false" round :class="{ 'button-toggled': !showToolbar }">
+              <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
                 <template #icon>
                   <n-icon size="25">
                     <SwipeVerticalFilled />
                   </n-icon>
                 </template>
               </n-button>
-              <n-button @click="showToolbar = true" round :class="{ 'button-toggled': showToolbar }">
+              <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
                 <template #icon>
                   <n-icon size="25">
                     <ZoomOutMapFilled style="transform: rotate(45deg);" />
@@ -49,7 +49,7 @@
           </n-space>
         </div>
 
-        <template v-if="showToolbar">
+        <template v-if="isExploreMode">
           <n-icon class="arrow arrow-left bounce-x-fade" size="50">
             <KeyboardArrowLeftFilled />
           </n-icon>
@@ -98,7 +98,8 @@ import {
   HomeFilled, SwipeVerticalFilled, ZoomOutMapFilled, PersonFilled,
   KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
-const showToolbar = ref(false);
+
+const isExploreMode = ref(false);
 
 const constellationsStore = useConstellationsStore();
 const {
