@@ -9,20 +9,20 @@
 <script setup lang="ts">
 import { NBreadcrumb, NBreadcrumbItem } from "naive-ui";
 
-const homeCrumb = "WorldWide Telescope";
+const homeCrumb =  computed(() => isMobile.value ? "WWT" : "WorldWide Telescope");
 
 const crumbs = computed<string[]>(() => {
     const route = useRoute();
-
+    console.log("hej: " + isMobile.value);
     if (route.path == "/") {
-        return [homeCrumb];
+        return [homeCrumb.value];
     } else {
-        return (homeCrumb + route.path).split('/');
+        return (homeCrumb.value + route.path).split('/');
     }
 });
 
 function buildRoute(crumb: string, index: number): string {
-    if (crumb == homeCrumb) {
+    if (crumb == homeCrumb.value) {
         return "/";
     } else {
         return "/" + crumbs.value.slice(1, index + 1).join("/");
