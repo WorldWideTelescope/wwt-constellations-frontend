@@ -34,6 +34,20 @@
 
     <n-grid-item>
       <n-text depth="3" style="font-size: smaller;">
+        Aspect ratio:
+      </n-text>
+      <n-slider v-model:value="log_roi_aspect" :min="-100" :max="100" :tooltip="false" />
+    </n-grid-item>
+
+    <n-grid-item>
+      <n-text depth="3" style="font-size: smaller;">
+        Size adjust:
+      </n-text>
+      <n-slider v-model:value="log_roi_adjust" :min="-100" :max="100" :tooltip="false" />
+    </n-grid-item>
+
+    <n-grid-item>
+      <n-text depth="3" style="font-size: smaller;">
         Credits: TBA
       </n-text>
     </n-grid-item>
@@ -52,10 +66,11 @@ import { useResizeObserver } from "@vueuse/core";
 
 import {
   NButton,
+  NInput,
   NGrid,
   NGridItem,
+  NSlider,
   NSpace,
-  NInput,
   NText,
 } from "~/utils/fixnaive.mjs";
 
@@ -115,7 +130,8 @@ async function onUpdateOutgoingUrl() {
 
 // Editing - managing the region-of-interest visualization
 
-const roi_height_deg = ref(props.scene.place.roi_height_deg);
+const orig_roi_height_deg = ref(props.scene.place.roi_height_deg);
+const effective_roi_height_deg = ref(props.scene.place.roi_height_deg);
 const roi_aspect_ratio = ref(props.scene.place.roi_aspect_ratio);
 const { zoomDeg: wwt_zoom_deg } = storeToRefs(getEngineStore());
 const viewport_dimensions = ref([1, 1]);
@@ -126,13 +142,13 @@ watchEffect(() => {
   const cur_vert_pct_per_deg = 600 / wwt_zoom_deg.value;
 
   // The height of the ROI indicator in percentage is therefore:
-  const roi_height_pct = cur_vert_pct_per_deg * roi_height_deg.value;
+  const roi_height_pct = cur_vert_pct_per_deg * effective_roi_height_deg.value;
 
   // Update the displayed height to be that, with clamping:
   roiEditHeightPercentage.value = Math.min(roi_height_pct, 100);
 
   // The width of the ROI in degrees:
-  const roi_width_deg = roi_height_deg.value * roi_aspect_ratio.value;
+  const roi_width_deg = effective_roi_height_deg.value * roi_aspect_ratio.value;
 
   // The horizontal degrees-to-percent conversion factor varies with
   // the viewport aspect ratio, since the WWT display always has pixels
@@ -147,6 +163,22 @@ useResizeObserver(document.body, (entries) => {
   const entry = entries[0];
   viewport_dimensions.value[0] = entry.contentRect.width;
   viewport_dimensions.value[1] = entry.contentRect.height;
+});
+
+const log_roi_aspect = ref(0.0);
+
+watchEffect(() => {
+  // The ROI aspect setting is a logarithmic value going from -100 (=> 10:1
+  // aspect ratio) to +100 (1:10 aspect ratio).
+  roi_aspect_ratio.value = Math.pow(10, -0.01 * log_roi_aspect.value);
+});
+
+const log_roi_adjust = ref(0.0);
+
+watchEffect(() => {
+  // The ROI size adjust setting works like the aspect ratio setting.
+  const adjust = Math.pow(10, 0.01 * log_roi_adjust.value);
+  effective_roi_height_deg.value = orig_roi_height_deg.value * adjust;
 });
 </script>
 

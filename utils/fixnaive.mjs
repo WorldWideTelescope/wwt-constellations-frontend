@@ -1,3 +1,10 @@
+// This file is part of a quasi-hack to get the Naive UI toolkit working with
+// server-side rendering in Nuxt's development server mode. I found that,
+// seemingly due to different JavaScript module system standards, the Naive UI
+// symbols wouldn't import properly in that particular context, leading to
+// undefined values everywhere and breaking everything. See discussion here:
+// https://github.com/WorldWideTelescope/wwt-constellations-frontend/pull/20
+
 import {
   NAvatar,
   NBreadcrumb,
@@ -23,6 +30,7 @@ import {
   NModal,
   NNotificationProvider,
   NRow,
+  NSlider,
   NSpace,
   NStatistic,
   NText,
@@ -54,6 +62,7 @@ export {
   NModal,
   NNotificationProvider,
   NRow,
+  NSlider,
   NSpace,
   NStatistic,
   NText,
