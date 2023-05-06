@@ -116,12 +116,19 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   });
 
+  // Quasi-hacks for the region-of-interest display
+
+  const roiEditHeightPercentage = ref(50);
+  const roiEditWidthPercentage = ref(50);
+
   return {
     describedScene,
     desiredScene,
     ensureTimelineCoverage,
     knownScenes,
     loggedIn,
+    roiEditHeightPercentage,
+    roiEditWidthPercentage,
     showWWT,
     timeline,
     timelineIndex,

@@ -1,4 +1,5 @@
 <template>
+  <div id="roibox" :style="roi_style"></div>
   <MainOverlay :show-scene-editor="true" />
 </template>
 
@@ -45,6 +46,8 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
+  roiEditHeightPercentage,
+  roiEditWidthPercentage,
   timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
@@ -90,4 +93,24 @@ onMounted(() => {
     }
   });
 });
+
+// Managing the region-of-interest overlay
+
+const roi_style = computed(() => {
+  return {
+    width: `${roiEditWidthPercentage.value}vw`,
+    left: `${50 - 0.5 * roiEditWidthPercentage.value}vw`,
+    height: `${roiEditHeightPercentage.value}vh`,
+    top: `${50 - 0.5 * roiEditHeightPercentage.value}vh`,
+  }
+})
+
 </script>
+
+<style>
+#roibox {
+  border: 4px #dddd00 solid;
+  position: fixed;
+  pointer-events: none;
+}
+</style>

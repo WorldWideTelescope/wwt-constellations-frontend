@@ -47,6 +47,9 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useResizeObserver } from "@vueuse/core";
+
 import {
   NButton,
   NGrid,
@@ -57,6 +60,7 @@ import {
 } from "~/utils/fixnaive.mjs";
 
 import { GetSceneResponseT, updateScene } from "~/utils/apis";
+import { useConstellationsStore } from "~/stores/constellations";
 
 const { $backendAuthCall } = useNuxtApp();
 
@@ -65,6 +69,11 @@ const props = defineProps<{
 }>();
 
 const { scene } = toRefs(props);
+
+const {
+  roiEditHeightPercentage,
+  roiEditWidthPercentage,
+} = storeToRefs(useConstellationsStore());
 
 const notification = useNotification();
 
@@ -103,6 +112,42 @@ async function onUpdateOutgoingUrl() {
   notification.success({ content: "URL updated.", duration: 3000 });
   outgoing_url_loading.value = false;
 }
+
+// Editing - managing the region-of-interest visualization
+
+const roi_height_deg = ref(props.scene.place.roi_height_deg);
+const roi_aspect_ratio = ref(props.scene.place.roi_aspect_ratio);
+const { zoomDeg: wwt_zoom_deg } = storeToRefs(getEngineStore());
+const viewport_dimensions = ref([1, 1]);
+
+watchEffect(() => {
+  // The zoom setting is the viewport height in degrees times six,
+  // so the ratio of 1% of the viewport height to degrees is:
+  const cur_vert_pct_per_deg = 600 / wwt_zoom_deg.value;
+
+  // The height of the ROI indicator in percentage is therefore:
+  const roi_height_pct = cur_vert_pct_per_deg * roi_height_deg.value;
+
+  // Update the displayed height to be that, with clamping:
+  roiEditHeightPercentage.value = Math.min(roi_height_pct, 100);
+
+  // The width of the ROI in degrees:
+  const roi_width_deg = roi_height_deg.value * roi_aspect_ratio.value;
+
+  // The horizontal degrees-to-percent conversion factor varies with
+  // the viewport aspect ratio, since the WWT display always has pixels
+  // that are square in angular dimensions.
+  const cur_horz_pct_per_deg = cur_vert_pct_per_deg * viewport_dimensions.value[1] / viewport_dimensions.value[0];
+
+  // The displayed width comes derives from those, also with clamping
+  roiEditWidthPercentage.value = Math.min(roi_width_deg * cur_horz_pct_per_deg, 100);
+});
+
+useResizeObserver(document.body, (entries) => {
+  const entry = entries[0];
+  viewport_dimensions.value[0] = entry.contentRect.width;
+  viewport_dimensions.value[1] = entry.contentRect.height;
+});
 </script>
 
 <style scoped lang="less">
