@@ -360,6 +360,7 @@ export async function scenePermissions(fetcher: $Fetch, id: string): Promise<Sce
 
 export const SceneUpdateRequest = t.partial({
   outgoing_url: t.string,
+  place: PlaceDetails,
   text: t.string,
 });
 
