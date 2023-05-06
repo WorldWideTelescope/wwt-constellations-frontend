@@ -131,7 +131,7 @@ onMounted(() => {
 
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
-  }, 5000);
+  }, 10000);
 });
 
 onBeforeUnmount(() => {
