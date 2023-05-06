@@ -8,7 +8,7 @@
             <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
           </n-grid-item>
           <n-grid-item v-if="describedScene">
-            <ScenePanel :scene="describedScene" />
+            <ScenePanel :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
           </n-grid-item>
         </n-grid>
       </template>
@@ -68,7 +68,8 @@
             <n-grid cols="1">
               <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
                 <transition name="fade" appear>
-                  <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene" />
+                  <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
+                    :potentially-editable="scenePotentiallyEditable" />
                 </transition>
               </n-grid-item>
             </n-grid>
@@ -98,6 +99,10 @@ import {
   HomeFilled, SwipeVerticalFilled, ZoomOutMapFilled, PersonFilled,
   KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
+
+defineProps<{
+  scenePotentiallyEditable: boolean,
+}>();
 
 const isExploreMode = ref(false);
 

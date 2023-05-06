@@ -1,26 +1,15 @@
 <template>
   <ClientOnly>
-    <MainOverlay />
+    <MainOverlay :scene-potentially-editable="true" />
   </ClientOnly>
-
-  <!--
-  <div id="scene-page-root">
-    <div class="info">
-      <h1>@{{ $route.params.handle }}'s scene</h1>
-      <p>{{ text }}</p>
-      <p v-if="can_edit">[Editable!]</p>
-    </div>
-  </div>
-  -->
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { getScene, scenePermissions } from "~/utils/apis";
+import { getScene } from "~/utils/apis";
 
 definePageMeta({
   // Does this page actually exist?
@@ -50,7 +39,7 @@ definePageMeta({
 // Now the main page implementation, which has to repeat some of the work done
 // in the validate callback.
 
-const { $backendCall, $backendAuthCall } = useNuxtApp();
+const { $backendCall } = useNuxtApp();
 
 const nuxtConfig = useRuntimeConfig();
 
@@ -58,7 +47,6 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
-  loggedIn,
   timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
@@ -125,26 +113,6 @@ onMounted(() => {
       };
     }
   });
-});
-
-// Data
-
-const text = computed(() => {
-  return scene_data.value === null ? "Loading ..." : scene_data.value.text;
-});
-
-// Editability
-
-const can_edit = ref(false);
-
-watchEffect(async () => {
-  if (!loggedIn.value) {
-    can_edit.value = false;
-  } else {
-    const fetcher = await $backendAuthCall();
-    const result = await scenePermissions(fetcher, id);
-    can_edit.value = result && result.edit || false;
-  }
 });
 </script>
 
