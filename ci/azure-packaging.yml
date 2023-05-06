@@ -57,7 +57,7 @@ jobs:
 
   # Now build the app package
 
-  - bash: yarn run build
+  - bash: NODE_OPTIONS=--max_old_space_size=16384 yarn run build
     displayName: yarn build
 
   # I don't see a way to tell the ArchiveFiles task to ignore certain

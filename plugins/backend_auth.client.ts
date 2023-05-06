@@ -40,7 +40,7 @@ export default defineNuxtPlugin(_nuxtApp => {
 
     // This creates a "preloaded" fetcher with default values
     return ofetch.create({
-      baseURL: nuxtConfig.apiUrl,
+      baseURL: nuxtConfig.public.apiUrl,
       headers: headers,
     });
   });

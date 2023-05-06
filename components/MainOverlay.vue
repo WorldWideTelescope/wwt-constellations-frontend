@@ -87,7 +87,8 @@ import {
   NSpace,
   NButtonGroup,
   NButton,
-} from "naive-ui";
+} from "~/utils/fixnaive.mjs";
+
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 

@@ -7,13 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import { NBreadcrumb, NBreadcrumbItem } from "naive-ui";
+import { NBreadcrumb, NBreadcrumbItem } from "~/utils/fixnaive.mjs";
 
 const homeCrumb =  computed(() => isMobile.value ? "WWT" : "WorldWide Telescope");
 
 const crumbs = computed<string[]>(() => {
     const route = useRoute();
-    console.log("hej: " + isMobile.value);
     if (route.path == "/") {
         return [homeCrumb.value];
     } else {

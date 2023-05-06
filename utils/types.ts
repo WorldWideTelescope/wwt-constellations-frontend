@@ -62,6 +62,12 @@ export const SceneDisplayInfo = t.type({
 
 export type SceneDisplayInfoT = t.TypeOf<typeof SceneDisplayInfo>;
 
+export const ScenePreviews = t.partial({
+  video: t.string,
+  thumbnail: t.string,
+});
+
+export type ScenePreviewsT = t.TypeOf<typeof ScenePreviews>;
 
 // Older types, potentially to be removed:
 

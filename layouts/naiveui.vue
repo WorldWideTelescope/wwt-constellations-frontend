@@ -11,10 +11,13 @@
 <script setup lang="ts">
 import {
   darkTheme,
-  NConfigProvider,
-  NNotificationProvider,
 } from "naive-ui";
 import { storeToRefs } from "pinia";
+
+import {
+  NConfigProvider,
+  NNotificationProvider,
+} from "~/utils/fixnaive.mjs";
 
 import { useConstellationsStore } from "~/stores/constellations";
 
