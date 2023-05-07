@@ -110,6 +110,7 @@ const roi_style = computed(() => {
 <style>
 #roibox {
   border: 4px #dddd00 solid;
+  box-sizing: border-box;
   position: fixed;
   pointer-events: none;
 }

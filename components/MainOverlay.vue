@@ -204,7 +204,7 @@ watch(fullPageContainerRef, () => {
 
 <style scoped lang="less">
 #feed-root {
-  height: 100vh;
+  height: 100%;
   pointer-events: all;
   --footer-height: 60px;
 }
