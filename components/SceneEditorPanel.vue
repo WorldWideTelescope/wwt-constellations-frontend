@@ -47,15 +47,17 @@
     </n-grid-item>
 
     <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Credits: TBA
-      </n-text>
-    </n-grid-item>
-
-    <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Copyright: TBA
-      </n-text>
+      <n-space justify="space-between">
+        <n-button class="action-button" @click="onRecenter" style="padding-right: 5px">
+          <n-icon size="30">
+            <FilterCenterFocusRound />
+          </n-icon>
+          Recenter
+        </n-button>
+        <n-button :loading="place_loading" @click="onUpdatePlace">
+          Update
+        </n-button>
+      </n-space>
     </n-grid-item>
   </n-grid>
 </template>
@@ -63,9 +65,11 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { useResizeObserver } from "@vueuse/core";
+import { FilterCenterFocusRound } from "@vicons/material";
 
 import {
   NButton,
+  NIcon,
   NInput,
   NGrid,
   NGridItem,
@@ -133,7 +137,13 @@ async function onUpdateOutgoingUrl() {
 const orig_roi_height_deg = ref(props.scene.place.roi_height_deg);
 const effective_roi_height_deg = ref(props.scene.place.roi_height_deg);
 const roi_aspect_ratio = ref(props.scene.place.roi_aspect_ratio);
-const { zoomDeg: wwt_zoom_deg } = storeToRefs(getEngineStore());
+const engineStore = getEngineStore();
+const {
+  decRad: wwt_dec_rad,
+  raRad: wwt_ra_rad,
+  rollRad: wwt_roll_rad,
+  zoomDeg: wwt_zoom_deg,
+} = storeToRefs(engineStore);
 const viewport_dimensions = ref([1, 1]);
 
 watchEffect(() => {
@@ -165,7 +175,7 @@ useResizeObserver(document.body, (entries) => {
   viewport_dimensions.value[1] = entry.contentRect.height;
 });
 
-const log_roi_aspect = ref(0.0);
+const log_roi_aspect = ref(-100 * Math.log10(roi_aspect_ratio.value));
 
 watchEffect(() => {
   // The ROI aspect setting is a logarithmic value going from -100 (=> 10:1
@@ -180,6 +190,39 @@ watchEffect(() => {
   const adjust = Math.pow(10, 0.01 * log_roi_adjust.value);
   effective_roi_height_deg.value = orig_roi_height_deg.value * adjust;
 });
+
+async function onRecenter() {
+  await engineStore.gotoRADecZoom({
+    raRad: scene.value.place.ra_rad,
+    decRad: scene.value.place.dec_rad,
+    zoomDeg: wwt_zoom_deg.value,
+    rollRad: wwt_roll_rad.value,
+    instant: false,
+  });
+}
+
+const place_loading = ref(false);
+
+async function onUpdatePlace() {
+  const place = {
+    ra_rad: wwt_ra_rad.value,
+    dec_rad: wwt_dec_rad.value,
+    roll_rad: wwt_roll_rad.value,
+    roi_height_deg: effective_roi_height_deg.value,
+    roi_aspect_ratio: roi_aspect_ratio.value,
+  };
+
+  const fetcher = await $backendAuthCall();
+  place_loading.value = true;
+  await updateScene(fetcher, scene.value.id, { place });
+  notification.success({ content: "Placement updated.", duration: 3000 });
+
+  place_loading.value = false;
+  scene.value.place = place;
+  orig_roi_height_deg.value = place.roi_height_deg;
+  log_roi_adjust.value = 0.0;
+  effective_roi_height_deg.value = orig_roi_height_deg.value;
+}
 </script>
 
 <style scoped lang="less">
