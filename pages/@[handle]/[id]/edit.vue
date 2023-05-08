@@ -1,5 +1,6 @@
 <template>
-  <MainOverlay :scene-potentially-editable="true" />
+  <div id="roibox" :style="roi_style"></div>
+  <MainOverlay :show-scene-editor="true" />
 </template>
 
 <script setup lang="ts">
@@ -10,6 +11,8 @@ import { useConstellationsStore } from "~/stores/constellations";
 import { getScene } from "~/utils/apis";
 
 definePageMeta({
+  middleware: ["scene-editor"],
+
   // Does this page actually exist?
   validate: async (route: RouteLocationNormalized) => {
     // As far as I can tell, this closure can't use bindings from the outer
@@ -39,12 +42,12 @@ definePageMeta({
 
 const { $backendCall } = useNuxtApp();
 
-const nuxtConfig = useRuntimeConfig();
-
 const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
+  roiEditHeightPercentage,
+  roiEditWidthPercentage,
   timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
@@ -54,28 +57,6 @@ const id = route.params.id as string;
 
 const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
-});
-
-useServerSeoMeta({
-  ogTitle: "WWT Constellations scene",
-  ogUrl: `${nuxtConfig.public.hostUrl}${route.fullPath}`,
-  ogVideo: scene_data.value.previews.video,
-  ogVideoWidth: 800,
-  ogVideoHeight: 600,
-  ogImage: scene_data.value.previews.thumbnail,
-  ogImageWidth: 800,
-  ogImageHeight: 600,
-  ogImageType: "image/png",
-  ogImageAlt: scene_data.value.text,
-  ogType: "website",
-
-  twitterSite: "@wwtelescope",
-  twitterCard: "summary_large_image",
-  twitterImage: scene_data.value.previews.thumbnail,
-  twitterImageAlt: scene_data.value.text,
-  twitterPlayerStream: scene_data.value.previews.video,
-  twitterPlayerWidth: 800,
-  twitterPlayerHeight: 600,
 });
 
 // Managing the "desired scene" state
@@ -112,4 +93,25 @@ onMounted(() => {
     }
   });
 });
+
+// Managing the region-of-interest overlay
+
+const roi_style = computed(() => {
+  return {
+    width: `${roiEditWidthPercentage.value}vw`,
+    left: `${50 - 0.5 * roiEditWidthPercentage.value}vw`,
+    height: `${roiEditHeightPercentage.value}vh`,
+    top: `${50 - 0.5 * roiEditHeightPercentage.value}vh`,
+  }
+})
+
 </script>
+
+<style>
+#roibox {
+  border: 4px #dddd00 solid;
+  box-sizing: border-box;
+  position: fixed;
+  pointer-events: none;
+}
+</style>

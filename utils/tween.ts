@@ -1,8 +1,8 @@
-import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
+import { ImageSetLayer } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { tween } from "femtotween";
 
-import { getEngineStore, raDecForImageset } from "./helpers";
+import { getEngineStore, ViewportShape } from "./helpers";
 import { PlaceDetailsT } from "./types";
 
 const MIN_MOVE_TIME = 2000;
@@ -13,21 +13,10 @@ interface TweenOptions {
   ease?: Function;
 }
 
-export function timeToImageset(imageset: Imageset, zoomDeg: number): number {
-  const store = getEngineStore();
-  const raDecZoom = raDecForImageset(imageset);
-  return store.timeToRADecZoom({ ...raDecZoom, zoomDeg }) * 1000;
-}
-
 /** Returns a time in milliseconds */
-export function timeToPlace(place: PlaceDetailsT): number {
+export function timeToPlace(place: PlaceDetailsT, viewport_shape: ViewportShape): number {
   const store = getEngineStore();
-  return store.timeToRADecZoom({
-    raRad: place.ra_rad,
-    decRad: place.dec_rad,
-    zoomDeg: place.zoom_deg,
-    rollRad: place.roll_rad ?? 0.,
-  }) * 1000;
+  return store.timeToRADecZoom(wwtSetupForPlace(place, viewport_shape)) * 1000;
 }
 
 export function tweenLayerIn(layer: ImageSetLayer, finalOpacity: number, options?: TweenOptions) {

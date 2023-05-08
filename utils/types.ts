@@ -5,8 +5,9 @@ import * as t from "io-ts";
 export const PlaceDetails = t.type({
   ra_rad: t.number,
   dec_rad: t.number,
-  zoom_deg: t.number,
   roll_rad: t.union([t.number, t.undefined]),
+  roi_height_deg: t.number,
+  roi_aspect_ratio: t.number,
 });
 
 export type PlaceDetailsT = t.TypeOf<typeof PlaceDetails>;

@@ -1,8 +1,6 @@
 <template>
   <div id="handle-page-root">
-    <ClientOnly>
-      <MainOverlay />
-    </ClientOnly>
+    <MainOverlay />
   </div>
 </template>
 
@@ -46,10 +44,6 @@ const { data } = await useAsyncData(`handle-${handle}`, async () => {
   return getHandle($backendCall, handle);
 });
 
-const display_name = computed(() => {
-  return data.value === null ? "Loading ..." : data.value.display_name;
-});
-
 const can_dashboard = ref(false);
 
 watchEffect(async () => {
@@ -73,29 +67,5 @@ onMounted(() => {
 <style scoped lang="less">
 #handle-page-root {
   color: #FFF;
-}
-
-#home-link {
-  pointer-events: auto;
-  position: fixed;
-  background: black;
-  border: 1px solid white;
-  text-decoration: none;
-  margin: auto;
-  border-radius: 2px;
-  top: 10px;
-  left: 240px;
-  font-size: 20pt;
-  padding: 3px;
-}
-
-.info {
-  position: absolute;
-  overflow: scroll;
-  z-index: 10;
-  max-width: 12%;
-  min-width: 200px;
-  top: 50px;
-  left: 240px;
 }
 </style>

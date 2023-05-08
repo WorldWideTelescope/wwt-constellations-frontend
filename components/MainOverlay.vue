@@ -1,81 +1,81 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
-    <ClientOnly>
-      <!-- Desktop -->
-      <template v-if="!isMobile">
-        <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
-          <n-grid-item v-if="timelineSource !== null">
-            <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
-          </n-grid-item>
-          <n-grid-item v-if="describedScene">
-            <ScenePanel :scene="describedScene" />
-          </n-grid-item>
-        </n-grid>
-      </template>
-      <!-- Mobile -->
-      <template v-else>
-        <div id="toolbar">
-          <n-space justify="space-around" size="large" style="padding: 10px;">
-            <n-button :on-click="() => navigateTo('/')">
+    <!-- Desktop -->
+    <template v-if="!isMobile">
+      <n-grid ref="desktop_overlay" cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
+        <n-grid-item v-if="timelineSource !== null">
+          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+        </n-grid-item>
+        <n-grid-item v-if="describedScene">
+          <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
+          <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
+        </n-grid-item>
+      </n-grid>
+    </template>
+    <!-- Mobile -->
+    <template v-else>
+      <div id="toolbar">
+        <n-space justify="space-around" size="large" style="padding: 10px;">
+          <n-button :on-click="() => navigateTo('/')">
+            <template #icon>
+              <n-icon size="25">
+                <HomeFilled />
+              </n-icon>
+            </template>
+          </n-button>
+          <n-button-group>
+            <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
               <template #icon>
                 <n-icon size="25">
-                  <HomeFilled />
+                  <SwipeVerticalFilled />
                 </n-icon>
               </template>
             </n-button>
-            <n-button-group>
-              <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
-                <template #icon>
-                  <n-icon size="25">
-                    <SwipeVerticalFilled />
-                  </n-icon>
-                </template>
-              </n-button>
-              <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
-                <template #icon>
-                  <n-icon size="25">
-                    <ZoomOutMapFilled style="transform: rotate(45deg);" />
-                  </n-icon>
-                </template>
-              </n-button>
-            </n-button-group>
-            <n-button>
+            <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
               <template #icon>
                 <n-icon size="25">
-                  <PersonFilled />
+                  <ZoomOutMapFilled style="transform: rotate(45deg);" />
                 </n-icon>
               </template>
             </n-button>
-          </n-space>
-        </div>
+          </n-button-group>
+          <n-button>
+            <template #icon>
+              <n-icon size="25">
+                <PersonFilled />
+              </n-icon>
+            </template>
+          </n-button>
+        </n-space>
+      </div>
 
-        <template v-if="isExploreMode">
-          <n-icon class="arrow arrow-left bounce-x-fade" size="50">
-            <KeyboardArrowLeftFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-right bounce-x-fade-reverse" size="50">
-            <KeyboardArrowRightFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-top bounce-y-fade" size="50">
-            <KeyboardArrowUpFilled />
-          </n-icon>
-          <n-icon class="arrow arrow-bottom bounce-y-fade-reverse" size="50">
-            <KeyboardArrowDownFilled />
-          </n-icon>
-        </template>
-        <template v-else>
-          <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
-            <n-grid cols="1">
-              <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
-                <transition name="fade" appear>
-                  <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene" />
-                </transition>
-              </n-grid-item>
-            </n-grid>
-          </div>
-        </template>
+      <template v-if="isExploreMode">
+        <n-icon class="arrow arrow-left bounce-x-fade" size="50">
+          <KeyboardArrowLeftFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-right bounce-x-fade-reverse" size="50">
+          <KeyboardArrowRightFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-top bounce-y-fade" size="50">
+          <KeyboardArrowUpFilled />
+        </n-icon>
+        <n-icon class="arrow arrow-bottom bounce-y-fade-reverse" size="50">
+          <KeyboardArrowDownFilled />
+        </n-icon>
       </template>
-    </ClientOnly>
+      <template v-else>
+        <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
+          <n-grid cols="1">
+            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
+              <transition name="fade" appear>
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
+                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+              </transition>
+            </n-grid-item>
+          </n-grid>
+        </div>
+      </template>
+    </template>
   </div>
 </template>
 
@@ -91,6 +91,7 @@ import {
 
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
+import { useResizeObserver } from "@vueuse/core";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
@@ -98,6 +99,14 @@ import {
   HomeFilled, SwipeVerticalFilled, ZoomOutMapFilled, PersonFilled,
   KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
+
+const props = withDefaults(defineProps<{
+  scenePotentiallyEditable?: boolean,
+  showSceneEditor?: boolean,
+}>(), {
+  scenePotentiallyEditable: false,
+  showSceneEditor: false,
+});
 
 const isExploreMode = ref(false);
 
@@ -108,7 +117,9 @@ const {
   knownScenes,
   timeline,
   timelineIndex,
-  timelineSource
+  timelineSource,
+  viewportBottomBlockage,
+  viewportLeftBlockage,
 } = storeToRefs(constellationsStore);
 
 const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
@@ -183,7 +194,6 @@ watchEffect(async () => {
   }
 });
 
-
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
     const el = fullPageContainerRef.value as HTMLDivElement
@@ -192,11 +202,56 @@ watch(fullPageContainerRef, () => {
   }
 });
 
+// Managing the `viewport*Blockage` state variables that the WWT code uses to
+// position the camera center appropriately to avoid the various on-screen
+// overlays.
+
+const desktop_overlay = ref<ComponentPublicInstance | null>(null);
+// Initializing this setting to the equivalent Pinia value makes it so that we
+// don't temporarily reset the offset to zero during page transitions.
+const desktop_overlay_width = ref(viewportLeftBlockage.value);
+
+useResizeObserver(desktop_overlay, (entries) => {
+  const entry = entries[0];
+  desktop_overlay_width.value = entry.contentRect.width;
+});
+
+watchEffect(() => {
+  if (isMobile.value || props.showSceneEditor) {
+    viewportLeftBlockage.value = 0;
+  } else {
+    viewportLeftBlockage.value = desktop_overlay_width.value;
+  }
+});
+
+// Right now, the element that we monitor for the mobile overlay size is in a
+// `v-for`, so it comes to us as an array of components rather than a singleton.
+// Also, since the server-side default is desktop mode, the initial value of the
+// ref is null, since the child component is `v-if`ed out of existence.
+const mobile_overlay = ref<ComponentPublicInstance[] | null>(null);
+const mobile_overlay_height = ref(viewportBottomBlockage.value);
+
+watchEffect(() => {
+  if (mobile_overlay.value) {
+    useResizeObserver(mobile_overlay.value[0], (entries) => {
+      const entry = entries[0];
+      mobile_overlay_height.value = entry.contentRect.height;
+    });
+  }
+});
+
+watchEffect(() => {
+  if (isMobile.value && !props.showSceneEditor) {
+    viewportBottomBlockage.value = mobile_overlay_height.value;
+  } else {
+    viewportBottomBlockage.value = 0;
+  }
+});
 </script>
 
 <style scoped lang="less">
 #feed-root {
-  height: 100vh;
+  height: 100%;
   pointer-events: all;
   --footer-height: 60px;
 }

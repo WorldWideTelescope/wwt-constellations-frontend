@@ -116,16 +116,30 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   });
 
+  // Cross-component plumbing for the region-of-interest display
+
+  const roiEditHeightPercentage = ref(50);
+  const roiEditWidthPercentage = ref(50);
+
+  // Cross-component plumbing for positioning the WWT camera
+
+  const viewportLeftBlockage = ref(0);
+  const viewportBottomBlockage = ref(0);
+
   return {
     describedScene,
     desiredScene,
     ensureTimelineCoverage,
     knownScenes,
     loggedIn,
+    roiEditHeightPercentage,
+    roiEditWidthPercentage,
     showWWT,
     timeline,
     timelineIndex,
     timelineSource,
     viewNeedsInitialization,
+    viewportBottomBlockage,
+    viewportLeftBlockage,
   }
 });
