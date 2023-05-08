@@ -1,6 +1,6 @@
 import { ImageSetLayer } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
-import { tween } from "femtotween";
+import { easeOutQuart, tween } from "femtotween";
 
 import { getEngineStore, ViewportShape } from "./helpers";
 import { PlaceDetailsT } from "./types";
@@ -59,9 +59,10 @@ export function tweenToBackground(newBgName: string, duration: number): Function
   const store = getEngineStore();
   const tweenOptions = {
     time: duration,
+    ease: easeOutQuart,
     done: () => {
-      store.setBackgroundImageByName(newBgName);
-      store.setForegroundOpacity(0);
+      //store.setBackgroundImageByName(newBgName);
+      //store.setForegroundOpacity(0);
     }
   };
   const tweenCallback = (value: number) => {
@@ -69,6 +70,8 @@ export function tweenToBackground(newBgName: string, duration: number): Function
   };
 
   store.setForegroundImageByName(newBgName);
+  console.log(store.foregroundImageset);
+  console.log("Set new foreground image");
   return tween(0, 100, tweenCallback, tweenOptions); 
 }
 

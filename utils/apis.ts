@@ -298,7 +298,6 @@ export const GetSceneResponse = t.type({
   text: t.string,
   outgoing_url: t.union([t.string, t.undefined]),
   previews: ScenePreviews,
-  background: ImageDisplayInfo,
 });
 
 export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;

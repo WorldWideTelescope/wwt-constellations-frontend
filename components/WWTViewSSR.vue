@@ -73,9 +73,10 @@ watch(desiredScene, async (newScene) => {
   const setup = wwtSetupForPlace(newScene.place, viewport_shape);
 
   let bgImageset;
-  if (newScene.background) {
-    bgImageset = backgroundInfoToSet(newScene.background);
+  if (newScene.content.background) {
+    bgImageset = backgroundInfoToSet(newScene.content.background);
     engineStore.addImagesetToRepository(bgImageset);
+    console.log(bgImageset);
   }
 
   // If the WWT view is starting out in a pristine state, initialize it to be in
@@ -116,9 +117,12 @@ watch(desiredScene, async (newScene) => {
     }
   });
 
-  if (newScene.background) {
-    tweenToBackground(bgImageset.get_name(), Math.min(moveTime, minMoveTime));
-  }
+  const raDecZoom = {
+    raRad: newScene.place.ra_rad,
+    decRad: newScene.place.dec_rad,
+    zoomDeg: newScene.place.zoom_deg,
+    rollRad: newScene.place.roll_rad ?? 0.,
+  };
 
   // Set up the new layers and fade them in
 
@@ -131,8 +135,17 @@ watch(desiredScene, async (newScene) => {
     }).then((layer) => {
       applyImageSetLayerSetting(layer, ["opacity", 0]);
       tweenInCancellers.push(tweenLayerInForMove(layer, img_info.opacity, moveTime, minMoveTime));
+      if (newScene.content.background) {
+        console.log("About to tween");
+        console.log(engineStore);
+        console.log(bgImageset);
+        const time = engineStore.timeToRADecZoom(raDecZoom) * 1000;
+        tweenToBackground(bgImageset.get_name(), time);
+      }
     });
   }
+
+
 
   // Finally, launch the goto
 
