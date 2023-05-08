@@ -100,7 +100,7 @@ import {
   KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
   showSceneEditor?: boolean,
 }>(), {
@@ -217,7 +217,7 @@ useResizeObserver(desktop_overlay, (entries) => {
 });
 
 watchEffect(() => {
-  if (isMobile.value) {
+  if (isMobile.value || props.showSceneEditor) {
     viewportLeftBlockage.value = 0;
   } else {
     viewportLeftBlockage.value = desktop_overlay_width.value;
@@ -241,7 +241,7 @@ watchEffect(() => {
 });
 
 watchEffect(() => {
-  if (isMobile.value) {
+  if (isMobile.value && !props.showSceneEditor) {
     viewportBottomBlockage.value = mobile_overlay_height.value;
   } else {
     viewportBottomBlockage.value = 0;
