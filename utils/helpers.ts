@@ -45,15 +45,77 @@ export function imageInfoToSet(info: ImageDisplayInfoT): Imageset {
   return img;
 }
 
-export function wwtZoomForPlace(place: PlaceDetailsT, viewport_aspect: number): number {
-  // WWT's definition of its zoom setting is the height of the viewport in
-  // degrees, times six. To figure out the right zoom for a place, we need to
-  // know the shape of the region of interest, and the shape of the viewport, so
-  // that we can be sure everything fits. We then pad that out a little bit so give
-  // a nice margin on the edge.
+export interface ViewportShape {
+  width: number;
+  height: number;
+  left_blockage: number;
+  bottom_blockage: number;
+}
 
-  const PAD_FACTOR = 1.2;
-  const vZoom = place.roi_height_deg;
-  const hZoom = place.roi_height_deg * place.roi_aspect_ratio / viewport_aspect;
-  return Math.max(vZoom, hZoom) * 6 * PAD_FACTOR;
+export interface WWTCameraSetup {
+  raRad: number;
+  decRad: number;
+  rollRad: number;
+  zoomDeg: number;
+}
+
+/** Given a target region of interest, and some current parameters for the
+ * viewport, figure out how we should set up the WWT camera.
+ *
+ * There are two non-trivial items to figure out here. First, WWT's definition
+ * of its zoom setting is the height of the viewport in degrees, times six. To
+ * figure out the right zoom for a place, we need to know the shape of the
+ * region of interest, and the shape of the viewport, so that we can be sure
+ * everything fits. We pad out the number a little bit so give a nice margin on
+ * the edge.
+ *
+ * Second, the WWT canvas might have overlays that we need to avoid. We might
+ * have to offset the effective center of the WWT camera to center the region of
+ * interest in the un-blocked part of the viewport.
+ */
+export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportShape): WWTCameraSetup {
+  const effective_width = Math.max(viewport_shape.width - viewport_shape.left_blockage, 1);
+  const effective_height = Math.max(viewport_shape.height - viewport_shape.bottom_blockage, 1);
+
+  // If the viewport is half blocked on the bottom, the zoom setting should be
+  // double what it would otherwise be (i.e., more zoomed out).
+  const v_height_deg = place.roi_height_deg * viewport_shape.height / effective_height;
+
+  // To calculate the zoom setting that's appropriate for the horizontal aspect,
+  // we have the same considerations as above, plus we need to "translate" from
+  // horizontal to vertical contexts. We can think of the zoom setting as
+  // setting the deg-per-px scale, then multiplying by the viewport height.
+  const roi_width_deg = place.roi_height_deg * place.roi_aspect_ratio;
+  const h_width_deg = roi_width_deg * viewport_shape.width / effective_width;
+  const h_height_deg = h_width_deg * viewport_shape.height / viewport_shape.width;
+
+  // The final zoom is the larger of whichever value we figured out for the
+  // horizontal and vertical axes -- we'd rather have extra empty space around
+  // the image, rather than cutting it off.
+  const ZOOM_PAD_FACTOR = 1.2;
+  const zoomDeg = Math.max(v_height_deg, h_height_deg) * 6 * ZOOM_PAD_FACTOR;
+
+  // If the bottom of the viewport is blocked, tell the WWT camera to move down
+  // such that the ROI will appear to be centered in the unobscured region.
+  const deg_per_px = zoomDeg / (6 * viewport_shape.height);
+  let decRad = place.dec_rad - 0.5 * D2R * viewport_shape.bottom_blockage * deg_per_px;
+  decRad = Math.max(decRad, -0.5 * Math.PI);
+
+  // Likewise if the left side of the viewport is blocked. We have a cos(dec)
+  // term here since an offset in RA/longitude near the poles isn't "really" as
+  // big as it is in the vertical direction, due to the longitude lines
+  // converging.
+  let raRad = place.ra_rad + 0.5 * D2R * viewport_shape.left_blockage * deg_per_px / Math.cos(decRad);
+
+  const TWO_PI = 2 * Math.PI;
+
+  while (raRad >= TWO_PI) {
+    raRad -= TWO_PI;
+  }
+
+  // The rest is easy.
+
+  const rollRad = place.roll_rad ?? 0;
+
+  return { raRad, decRad, rollRad, zoomDeg };
 }

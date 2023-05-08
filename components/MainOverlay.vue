@@ -2,7 +2,7 @@
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
     <!-- Desktop -->
     <template v-if="!isMobile">
-      <n-grid cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
+      <n-grid ref="desktop_overlay" cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
         <n-grid-item v-if="timelineSource !== null">
           <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
@@ -69,7 +69,7 @@
             <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
               <transition name="fade" appear>
                 <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
-                  :potentially-editable="scenePotentiallyEditable" />
+                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
               </transition>
             </n-grid-item>
           </n-grid>
@@ -91,6 +91,7 @@ import {
 
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
+import { useResizeObserver } from "@vueuse/core";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
@@ -116,7 +117,9 @@ const {
   knownScenes,
   timeline,
   timelineIndex,
-  timelineSource
+  timelineSource,
+  viewportBottomBlockage,
+  viewportLeftBlockage,
 } = storeToRefs(constellationsStore);
 
 const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
@@ -191,7 +194,6 @@ watchEffect(async () => {
   }
 });
 
-
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
     const el = fullPageContainerRef.value as HTMLDivElement
@@ -200,6 +202,51 @@ watch(fullPageContainerRef, () => {
   }
 });
 
+// Managing the `viewport*Blockage` state variables that the WWT code uses to
+// position the camera center appropriately to avoid the various on-screen
+// overlays.
+
+const desktop_overlay = ref<ComponentPublicInstance | null>(null);
+// Initializing this setting to the equivalent Pinia value makes it so that we
+// don't temporarily reset the offset to zero during page transitions.
+const desktop_overlay_width = ref(viewportLeftBlockage.value);
+
+useResizeObserver(desktop_overlay, (entries) => {
+  const entry = entries[0];
+  desktop_overlay_width.value = entry.contentRect.width;
+});
+
+watchEffect(() => {
+  if (isMobile.value) {
+    viewportLeftBlockage.value = 0;
+  } else {
+    viewportLeftBlockage.value = desktop_overlay_width.value;
+  }
+});
+
+// Right now, the element that we monitor for the mobile overlay size is in a
+// `v-for`, so it comes to us as an array of components rather than a singleton.
+// Also, since the server-side default is desktop mode, the initial value of the
+// ref is null, since the child component is `v-if`ed out of existence.
+const mobile_overlay = ref<ComponentPublicInstance[] | null>(null);
+const mobile_overlay_height = ref(viewportBottomBlockage.value);
+
+watchEffect(() => {
+  if (mobile_overlay.value) {
+    useResizeObserver(mobile_overlay.value[0], (entries) => {
+      const entry = entries[0];
+      mobile_overlay_height.value = entry.contentRect.height;
+    });
+  }
+});
+
+watchEffect(() => {
+  if (isMobile.value) {
+    viewportBottomBlockage.value = mobile_overlay_height.value;
+  } else {
+    viewportBottomBlockage.value = 0;
+  }
+});
 </script>
 
 <style scoped lang="less">

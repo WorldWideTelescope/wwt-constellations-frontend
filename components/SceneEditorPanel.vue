@@ -192,6 +192,8 @@ watchEffect(() => {
 });
 
 async function onRecenter() {
+  // Note that we intentionally do not use wwtSetupForPlace here, since in the
+  // editor we match the place center with the WWT viewport center.
   await engineStore.gotoRADecZoom({
     raRad: scene.value.place.ra_rad,
     decRad: scene.value.place.dec_rad,

@@ -13,14 +13,16 @@
 import { storeToRefs } from "pinia";
 import { ComponentPublicInstance } from "vue";
 
-import { Place } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
-import { ImageSetType } from "@wwtelescope/engine-types";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();
 const constellationsStore = useConstellationsStore();
-const { desiredScene } = storeToRefs(constellationsStore);
+const {
+  desiredScene,
+  viewportBottomBlockage,
+  viewportLeftBlockage,
+} = storeToRefs(constellationsStore);
 
 const wwt = ref<ComponentPublicInstance | null>(null);
 
@@ -45,20 +47,6 @@ watch(desiredScene, async (newScene) => {
 
   // Set up new engine elements
 
-  const viewport_aspect = wwt.value && wwt.value.$el.offsetHeight > 0
-    ? wwt.value.$el.offsetWidth / wwt.value.$el.offsetHeight
-    : 1.0;
-
-  const place = new Place();
-  place.set_RA(newScene.place.ra_rad * R2H);
-  place.set_dec(newScene.place.dec_rad * R2D);
-  place.set_type(ImageSetType.sky);
-  place.set_zoomLevel(wwtZoomForPlace(newScene.place, viewport_aspect));
-
-  if (newScene.place.roll_rad !== undefined) {
-    place.get_camParams().rotation = newScene.place.roll_rad * R2D;
-  }
-
   const imageset_info = [];
 
   if (newScene.content.image_layers) {
@@ -69,6 +57,18 @@ watch(desiredScene, async (newScene) => {
     }
   }
 
+  // Figure out where we're going, which is a functinon of both the region-of-interest
+  // of the target place as well as the current shape of the viewport.
+
+  const viewport_shape = {
+    width: wwt.value ? wwt.value.$el.offsetWidth : 1,
+    height: wwt.value ? wwt.value.$el.offsetHeight : 1,
+    left_blockage: viewportLeftBlockage.value,
+    bottom_blockage: viewportBottomBlockage.value,
+  };
+
+  const setup = wwtSetupForPlace(newScene.place, viewport_shape);
+
   // If the WWT view is starting out in a pristine state, initialize it to be in
   // a nice position relative to our target scene. We do this up here so that we
   // can correctly calculate the amount of time the camera move will take.
@@ -78,13 +78,13 @@ watch(desiredScene, async (newScene) => {
   // something fancier like a random offset, or maybe even a little roll?
 
   if (constellationsStore.viewNeedsInitialization) {
-    const zoom = Math.max(Math.min(place.get_zoomLevel() * 60, 360), 60);
+    const zoom = Math.max(Math.min(setup.zoomDeg * 60, 360), 60);
 
     await engineStore.gotoRADecZoom({
-      raRad: newScene.place.ra_rad,
-      decRad: newScene.place.dec_rad,
+      raRad: setup.raRad,
+      decRad: setup.decRad,
       zoomDeg: zoom,
-      rollRad: newScene.place.roll_rad ?? 0.,
+      rollRad: setup.rollRad,
       instant: true
     });
 
@@ -93,7 +93,7 @@ watch(desiredScene, async (newScene) => {
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
 
-  const moveTime = timeToPlace(newScene.place, viewport_aspect);
+  const moveTime = timeToPlace(newScene.place, viewport_shape);
   const minMoveTime = 2000;
 
   Object.keys(engineStore.imagesetLayers).forEach((id) => {
@@ -124,10 +124,10 @@ watch(desiredScene, async (newScene) => {
   // Finally, launch the goto
 
   engineStore.gotoRADecZoom({
-    raRad: newScene.place.ra_rad,
-    decRad: newScene.place.dec_rad,
-    zoomDeg: wwtZoomForPlace(newScene.place, viewport_aspect),
-    rollRad: newScene.place.roll_rad ?? 0.,
+    raRad: setup.raRad,
+    decRad: setup.decRad,
+    zoomDeg: setup.zoomDeg,
+    rollRad: setup.rollRad,
     instant: false
   });
 });
