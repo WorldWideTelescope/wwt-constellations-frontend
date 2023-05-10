@@ -14,7 +14,6 @@ definePageMeta({
   validate: async (route: RouteLocationNormalized) => {
     // As far as I can tell, this closure can't use bindings from the outer
     // module, so we have to re-import $backendCall.
-    return true;
     const { $backendCall } = useNuxtApp();
     const handle = route.params.handle as string;
     const id = route.params.id as string;

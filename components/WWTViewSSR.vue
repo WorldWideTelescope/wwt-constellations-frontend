@@ -16,7 +16,7 @@ import { ComponentPublicInstance } from "vue";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { R2H, R2D } from "~/utils/constants";
 import { backgroundInfoToSet, getEngineStore, imageInfoToSet } from "~/utils/helpers";
-import { timeToPlace, tweenLayerInForMove, tweenToBackground } from "~/utils/tween";
+import { timeToPlace, tweenInOptionsForMove, tweenToBackgroundForMove } from "~/utils/tween";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();
@@ -76,7 +76,6 @@ watch(desiredScene, async (newScene) => {
   if (newScene.content.background) {
     bgImageset = backgroundInfoToSet(newScene.content.background);
     engineStore.addImagesetToRepository(bgImageset);
-    console.log(bgImageset);
   }
 
   // If the WWT view is starting out in a pristine state, initialize it to be in
@@ -126,6 +125,10 @@ watch(desiredScene, async (newScene) => {
 
   // Set up the new layers and fade them in
 
+  if (bgImageset) {
+    tweenToBackgroundForMove(bgImageset, moveTime, minMoveTime);
+  }
+
   for (var img_info of imageset_info) {
     engineStore.addImageSetLayer({
       url: img_info.url,
@@ -135,17 +138,8 @@ watch(desiredScene, async (newScene) => {
     }).then((layer) => {
       applyImageSetLayerSetting(layer, ["opacity", 0]);
       tweenInCancellers.push(tweenLayerInForMove(layer, img_info.opacity, moveTime, minMoveTime));
-      if (newScene.content.background) {
-        console.log("About to tween");
-        console.log(engineStore);
-        console.log(bgImageset);
-        const time = engineStore.timeToRADecZoom(raDecZoom) * 1000;
-        tweenToBackground(bgImageset.get_name(), time);
-      }
     });
   }
-
-
 
   // Finally, launch the goto
 

@@ -1,5 +1,5 @@
 import { Imageset } from "@wwtelescope/engine";
-import { ProjectionType } from "@wwtelescope/engine-types";
+import { ImageSetType, ProjectionType } from "@wwtelescope/engine-types";
 
 import { ImageDisplayInfoT, PlaceDetailsT } from "./types";
 import { v5 } from "uuid";
@@ -125,6 +125,9 @@ export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportS
 
 export function backgroundInfoToSet(info: ImageDisplayInfoT): Imageset {
   const img = imageInfoToSet(info);
+  img.set_dataSetType(ImageSetType.sky);
+  img.set_baseLevel(0);
+
   const id = String(img.get_imageSetID());
   const name = v5(id, wwtNamespace);
   img.set_name(name);
