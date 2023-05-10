@@ -73,8 +73,10 @@ watch(desiredScene, async (newScene) => {
   const setup = wwtSetupForPlace(newScene.place, viewport_shape);
 
   let bgImageset;
+  let needBgUpdate = false;
   if (newScene.content.background) {
     bgImageset = backgroundInfoToSet(newScene.content.background);
+    needBgUpdate = bgImageset.get_name() !== engineStore.backgroundImageset?.get_name();
     engineStore.addImagesetToRepository(bgImageset);
   }
 
@@ -116,16 +118,9 @@ watch(desiredScene, async (newScene) => {
     }
   });
 
-  const raDecZoom = {
-    raRad: newScene.place.ra_rad,
-    decRad: newScene.place.dec_rad,
-    zoomDeg: newScene.place.zoom_deg,
-    rollRad: newScene.place.roll_rad ?? 0.,
-  };
-
   // Set up the new layers and fade them in
 
-  if (bgImageset) {
+  if (needBgUpdate) {
     tweenToBackgroundForMove(bgImageset, moveTime, minMoveTime);
   }
 
