@@ -2,7 +2,7 @@
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
       <n-layout style="height: 100%; background: none;">
-        <n-layout-header id="header" :class="{'header-mobile': isMobile}">
+        <n-layout-header id="header" :class="{ 'header-mobile': isMobile }">
           <n-space :align="'center'" :size="'small'">
             <n-button-group>
               <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
@@ -41,7 +41,8 @@
               </n-drawer-content>
             </n-drawer>
           </ClientOnly>
-          <div style="position:relative">
+
+          <div>
             <slot />
           </div>
         </n-layout-content>
@@ -53,7 +54,7 @@
 <script setup lang="ts">
 import { useConstellationsStore } from '../stores/constellations';
 import { storeToRefs } from 'pinia';
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { MenuRound } from "@vicons/material"
 import {
   darkTheme,
@@ -124,5 +125,4 @@ function logInOut() {
 .header-mobile {
   position: absolute !important;
 }
-
 </style>
