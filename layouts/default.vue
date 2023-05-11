@@ -1,7 +1,7 @@
 <template>
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
-      <n-layout style="height: 100%; background: none;">
+      <n-layout style="height: 100%; background: none;" position="absolute">
         <n-layout-header id="header" :class="{ 'header-mobile': isMobile }">
           <n-space :align="'center'" :size="'small'">
             <n-button-group>
@@ -18,7 +18,7 @@
           </n-space>
         </n-layout-header>
 
-        <n-layout-content style="height: 100%; background: none;">
+        <n-layout-content position="absolute" :class="{ 'content': true, 'content-desktop': !isMobile }">
           <!-- NDrawer has some kind of problem that seems to prevent it from
             working in Nuxt SSR dev mode, no matter what I try. But I don't see
             any ways in which it is particularly important to SSR the drawer,
@@ -42,9 +42,7 @@
             </n-drawer>
           </ClientOnly>
 
-          <div>
-            <slot />
-          </div>
+          <slot />
         </n-layout-content>
       </n-layout>
     </n-notification-provider>
@@ -119,10 +117,20 @@ function logInOut() {
   line-height: 1em;
   background: none;
   z-index: 100;
-  position: relative;
 }
 
 .header-mobile {
   position: absolute !important;
+}
+
+.content {
+  background: none;
+  pointer-events: none;
+}
+
+.content-desktop {
+  /* In desktop mode, the main overlay is at the top of the screen, but we need
+   * to make sure that it doesn't overlap the header. */
+  padding-top: 32px;
 }
 </style>
