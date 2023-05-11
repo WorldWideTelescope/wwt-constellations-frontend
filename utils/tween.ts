@@ -1,4 +1,4 @@
-import { ImageSetLayer } from "@wwtelescope/engine";
+import { Imageset, ImageSetLayer } from "@wwtelescope/engine";
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { tween } from "femtotween";
 
