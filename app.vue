@@ -38,14 +38,22 @@ onMounted(() => {
 <style lang="less">
 #app {
   width: 100vw;
-  height: 100vh;
+
+  // We need to use 100% for the height, not 100vh, because on mobile the latter
+  // will include any area dedicated to a browser address bar overlay, so some
+  // of our UI might get obscured. 100%, on the other hand, gives us the height
+  // of the view area not including any overlays.
+  height: 100%;
   margin: 0;
   overflow: hidden;
   position: fixed;
 
   .wwtelescope-component {
-    width: 100vw;
-    height: 100vh;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     border-style: none;
     border-width: 0;
     margin: 0;

@@ -66,7 +66,8 @@
       <template v-else>
         <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
           <n-grid cols="1">
-            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()">
+            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()"
+              :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
                 <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
                   :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
@@ -203,6 +204,21 @@ watch(fullPageContainerRef, () => {
   }
 });
 
+// Managing the height of the grid items in mobile mode. We need each item to be
+// exactly the height of the containing fullPageContainer, but we can't easily
+// know that number a-priori because we don't know the effective screen height.
+// `100vh` is *not* appropriate because if the browser overlays a toolbar at the
+// top or bottom of the screen, that number will include the area obscured by
+// the toolbar, so our content would be partially beneath the toolbar with no
+// way to reveal it.
+
+const mobile_page_height = ref(600);
+
+useResizeObserver(fullPageContainerRef, (entries) => {
+  const entry = entries[0];
+  mobile_page_height.value = entry.contentRect.height;
+});
+
 // Managing the `viewport*Blockage` state variables that the WWT code uses to
 // position the camera center appropriately to avoid the various on-screen
 // overlays.
@@ -285,7 +301,7 @@ watchEffect(() => {
 
 
 .full-page-container {
-  height: calc(100vh - var(--footer-height));
+  height: calc(100% - var(--footer-height));
   overflow: scroll;
   scroll-snap-type: y mandatory;
   pointer-events: all;
@@ -293,7 +309,6 @@ watchEffect(() => {
 
 .full-page {
   display: flex;
-  height: calc(100vh - var(--footer-height));
   align-items: flex-end;
   scroll-snap-align: start;
   padding-left: 10px;
