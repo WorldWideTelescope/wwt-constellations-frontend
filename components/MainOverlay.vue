@@ -114,6 +114,7 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
+  isMobile,
   knownScenes,
   timeline,
   timelineIndex,

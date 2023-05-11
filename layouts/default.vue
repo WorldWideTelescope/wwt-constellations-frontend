@@ -75,7 +75,7 @@ import {
 } from "~/utils/fixnaive.mjs";
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn } = storeToRefs(constellationsStore);
+const { isMobile, loggedIn } = storeToRefs(constellationsStore);
 
 const { $keycloak } = useNuxtApp();
 
