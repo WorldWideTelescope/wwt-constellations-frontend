@@ -1,5 +1,6 @@
 import { $Fetch } from "ofetch";
 import { defineStore } from "pinia";
+import { useBreakpoints } from "@vueuse/core";
 
 import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT } from "~/utils/types";
@@ -7,6 +8,16 @@ import { SceneDisplayInfoT } from "~/utils/types";
 export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // Whether the user is logged in.
   const loggedIn = ref(false);
+
+  // Whether we seem to be in a mobile layout
+
+  const breakpoints = useBreakpoints({
+    tablet: 640,
+    laptop: 1024,
+    desktop: 1280,
+  });
+
+  const isMobile = breakpoints.smaller("laptop");
 
   // Whether the WWT viewer should be shown. This will be false for some
   // administrative screens. This is a state parameter because we don't want to
@@ -130,6 +141,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     describedScene,
     desiredScene,
     ensureTimelineCoverage,
+    isMobile,
     knownScenes,
     loggedIn,
     roiEditHeightPercentage,

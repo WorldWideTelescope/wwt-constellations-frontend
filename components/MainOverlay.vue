@@ -2,7 +2,7 @@
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
     <!-- Desktop -->
     <template v-if="!isMobile">
-      <n-grid ref="desktop_overlay" cols="1" y-gap="5" style="position: absolute; top: 0; padding: 14px; width: 440px;">
+      <n-grid ref="desktop_overlay" cols="1" y-gap="5" class="desktop-panel">
         <n-grid-item v-if="timelineSource !== null">
           <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
@@ -114,6 +114,7 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
+  isMobile,
   knownScenes,
   timeline,
   timelineIndex,
@@ -252,12 +253,17 @@ watchEffect(() => {
 <style scoped lang="less">
 #feed-root {
   height: 100%;
-  pointer-events: all;
   --footer-height: 60px;
 }
 
 .disable-pe {
   pointer-events: none !important;
+}
+
+.desktop-panel {
+  padding: 14px;
+  width: 440px !important;
+  pointer-events: all;
 }
 
 .action-button {
@@ -282,6 +288,7 @@ watchEffect(() => {
   height: calc(100vh - var(--footer-height));
   overflow: scroll;
   scroll-snap-type: y mandatory;
+  pointer-events: all;
 }
 
 .full-page {

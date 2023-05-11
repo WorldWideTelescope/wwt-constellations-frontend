@@ -7,9 +7,14 @@
 </template>
 
 <script setup lang="ts">
-import { NBreadcrumb, NBreadcrumbItem } from "~/utils/fixnaive.mjs";
+import { storeToRefs } from "pinia";
 
-const homeCrumb =  computed(() => isMobile.value ? "WWT" : "WorldWide Telescope");
+import { NBreadcrumb, NBreadcrumbItem } from "~/utils/fixnaive.mjs";
+import { useConstellationsStore } from "~/stores/constellations";
+
+const { isMobile } = storeToRefs(useConstellationsStore());
+
+const homeCrumb = computed(() => isMobile.value ? "WWT" : "WorldWide Telescope");
 
 const crumbs = computed<string[]>(() => {
     const route = useRoute();
