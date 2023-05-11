@@ -14,9 +14,6 @@ import { storeToRefs } from "pinia";
 import { ComponentPublicInstance } from "vue";
 
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
-import { R2H, R2D } from "~/utils/constants";
-import { backgroundInfoToSet, getEngineStore, imageInfoToSet } from "~/utils/helpers";
-import { timeToPlace, tweenInOptionsForMove, tweenToBackgroundForMove } from "~/utils/tween";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();

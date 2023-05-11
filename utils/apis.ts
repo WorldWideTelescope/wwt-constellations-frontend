@@ -306,7 +306,6 @@ export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
 export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponseT | null> {
   try {
     const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`);
-    console.log(data);
     checkForError(data);
     const maybe = GetSceneResponse.decode(data);
 
