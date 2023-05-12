@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
-import { PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
+import { ImageDisplayInfo, PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {

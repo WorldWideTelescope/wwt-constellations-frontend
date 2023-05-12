@@ -69,6 +69,15 @@ watch(desiredScene, async (newScene) => {
 
   const setup = wwtSetupForPlace(newScene.place, viewport_shape);
 
+  let bgImageset;
+  if (newScene.content.background) {
+    bgImageset = backgroundInfoToSet(newScene.content.background);
+    engineStore.addImagesetToRepository(bgImageset);
+  } else {
+    bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
+  }
+  const needBgUpdate = bgImageset.get_name() !== engineStore.backgroundImageset?.get_name();
+
   // If the WWT view is starting out in a pristine state, initialize it to be in
   // a nice position relative to our target scene. We do this up here so that we
   // can correctly calculate the amount of time the camera move will take.
@@ -108,6 +117,10 @@ watch(desiredScene, async (newScene) => {
   });
 
   // Set up the new layers and fade them in
+
+  if (needBgUpdate) {
+    tweenToBackgroundForMove(bgImageset, moveTime, minMoveTime);
+  }
 
   for (var img_info of imageset_info) {
     engineStore.addImageSetLayer({

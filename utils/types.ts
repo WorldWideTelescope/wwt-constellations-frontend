@@ -50,9 +50,14 @@ export const SceneImageLayerHydrated = t.type({
 
 export type SceneImageLayerHydratedT = t.TypeOf<typeof SceneImageLayerHydrated>;
 
-export const SceneContentHydrated = t.type({
-  image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
-});
+export const SceneContentHydrated = t.intersection([
+  t.partial({
+    background: ImageDisplayInfo,
+  }),
+  t.type({
+    image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
+  })
+]);
 
 export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
 
