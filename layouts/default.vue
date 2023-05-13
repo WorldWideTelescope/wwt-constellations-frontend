@@ -5,15 +5,15 @@
         <n-layout-header id="header" :class="{'header-mobile': isMobile}">
           <n-space :align="'center'" :size="'small'">
             <n-button-group>
-              <n-button v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
-                style="padding-right: 0px;">
-                <n-icon size="24">
+              <n-button id="drawer-btn" v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
+                style="padding-right: 0px;" aria-label="Open drawer">
+                <n-icon size="24" aria-labelledby="drawer-btn">
                   <MenuRound />
                 </n-icon>
               </n-button>
             </n-button-group>
             <n-divider vertical style="height: 24px;" />
-            <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" />
+            <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
             <Breadcrumb />
           </n-space>
         </n-layout-header>
@@ -25,11 +25,11 @@
             and if we make it client-only, things work. So that's what we do for
             now. -->
           <ClientOnly>
-            <n-drawer v-model:show="drawer" :width="502" style="max-width: 70%;" :placement="placement">
+            <n-drawer v-model:show="drawer" :width="502" style="max-width: 70%;" :placement="placement" aria-label="Drawer">
               <n-drawer-content>
                 <template #header>
                   <n-space :align="'center'" size="small">
-                    <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" />
+                    <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
                 </template>
