@@ -1,7 +1,7 @@
 <template>
   <div>
     <ClientOnly>
-      <WorldWideTelescope wwt-namespace="wwt-constellations"></WorldWideTelescope>
+      <WorldWideTelescope wwt-namespace="wwt-constellations" ref="wwt"></WorldWideTelescope>
       <template #fallback>
         <div>WorldWide Telescope component</div>
       </template>
@@ -11,18 +11,20 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { Place } from "@wwtelescope/engine";
-import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
-import { ImageSetType } from "@wwtelescope/engine-types";
+import { ComponentPublicInstance } from "vue";
 
-import { R2H, R2D } from "~/utils/constants";
-import { getEngineStore, imageInfoToSet } from "~/utils/helpers";
-import { timeToPlace, tweenLayerInForMove } from "~/utils/tween";
+import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { useConstellationsStore } from "~/stores/constellations";
 
 const engineStore = getEngineStore();
 const constellationsStore = useConstellationsStore();
-const { desiredScene } = storeToRefs(constellationsStore);
+const {
+  desiredScene,
+  viewportBottomBlockage,
+  viewportLeftBlockage,
+} = storeToRefs(constellationsStore);
+
+const wwt = ref<ComponentPublicInstance | null>(null);
 
 const tweenInCancellers: Function[] = [];
 const tweenOutCancellers: Function[] = [];
@@ -45,16 +47,6 @@ watch(desiredScene, async (newScene) => {
 
   // Set up new engine elements
 
-  const place = new Place();
-  place.set_RA(newScene.place.ra_rad * R2H);
-  place.set_dec(newScene.place.dec_rad * R2D);
-  place.set_type(ImageSetType.sky);
-  place.set_zoomLevel(newScene.place.zoom_deg);
-
-  if (newScene.place.roll_rad !== undefined) {
-    place.get_camParams().rotation = newScene.place.roll_rad * R2D;
-  }
-
   const imageset_info = [];
 
   if (newScene.content.image_layers) {
@@ -65,6 +57,27 @@ watch(desiredScene, async (newScene) => {
     }
   }
 
+  // Figure out where we're going, which is a functinon of both the region-of-interest
+  // of the target place as well as the current shape of the viewport.
+
+  const viewport_shape = {
+    width: wwt.value ? wwt.value.$el.offsetWidth : 1,
+    height: wwt.value ? wwt.value.$el.offsetHeight : 1,
+    left_blockage: viewportLeftBlockage.value,
+    bottom_blockage: viewportBottomBlockage.value,
+  };
+
+  const setup = wwtSetupForPlace(newScene.place, viewport_shape);
+
+  let bgImageset;
+  if (newScene.content.background) {
+    bgImageset = backgroundInfoToSet(newScene.content.background);
+    engineStore.addImagesetToRepository(bgImageset);
+  } else {
+    bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
+  }
+  const needBgUpdate = bgImageset.get_name() !== engineStore.backgroundImageset?.get_name();
+
   // If the WWT view is starting out in a pristine state, initialize it to be in
   // a nice position relative to our target scene. We do this up here so that we
   // can correctly calculate the amount of time the camera move will take.
@@ -74,13 +87,13 @@ watch(desiredScene, async (newScene) => {
   // something fancier like a random offset, or maybe even a little roll?
 
   if (constellationsStore.viewNeedsInitialization) {
-    const zoom = Math.max(Math.min(newScene.place.zoom_deg * 60, 360), 60);
+    const zoom = Math.max(Math.min(setup.zoomDeg * 60, 360), 60);
 
     await engineStore.gotoRADecZoom({
-      raRad: newScene.place.ra_rad,
-      decRad: newScene.place.dec_rad,
+      raRad: setup.raRad,
+      decRad: setup.decRad,
       zoomDeg: zoom,
-      rollRad: newScene.place.roll_rad ?? 0.,
+      rollRad: setup.rollRad,
       instant: true
     });
 
@@ -89,7 +102,7 @@ watch(desiredScene, async (newScene) => {
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
 
-  const moveTime = timeToPlace(newScene.place);
+  const moveTime = timeToPlace(newScene.place, viewport_shape);
   const minMoveTime = 2000;
 
   Object.keys(engineStore.imagesetLayers).forEach((id) => {
@@ -104,6 +117,10 @@ watch(desiredScene, async (newScene) => {
   });
 
   // Set up the new layers and fade them in
+
+  if (needBgUpdate) {
+    tweenToBackgroundForMove(bgImageset, moveTime, minMoveTime);
+  }
 
   for (var img_info of imageset_info) {
     engineStore.addImageSetLayer({
@@ -120,10 +137,10 @@ watch(desiredScene, async (newScene) => {
   // Finally, launch the goto
 
   engineStore.gotoRADecZoom({
-    raRad: newScene.place.ra_rad,
-    decRad: newScene.place.dec_rad,
-    zoomDeg: newScene.place.zoom_deg,
-    rollRad: newScene.place.roll_rad ?? 0.,
+    raRad: setup.raRad,
+    decRad: setup.decRad,
+    zoomDeg: setup.zoomDeg,
+    rollRad: setup.rollRad,
     instant: false
   });
 });

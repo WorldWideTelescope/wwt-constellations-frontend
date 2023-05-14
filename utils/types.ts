@@ -5,8 +5,9 @@ import * as t from "io-ts";
 export const PlaceDetails = t.type({
   ra_rad: t.number,
   dec_rad: t.number,
-  zoom_deg: t.number,
   roll_rad: t.union([t.number, t.undefined]),
+  roi_height_deg: t.number,
+  roi_aspect_ratio: t.number,
 });
 
 export type PlaceDetailsT = t.TypeOf<typeof PlaceDetails>;
@@ -49,9 +50,14 @@ export const SceneImageLayerHydrated = t.type({
 
 export type SceneImageLayerHydratedT = t.TypeOf<typeof SceneImageLayerHydrated>;
 
-export const SceneContentHydrated = t.type({
-  image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
-});
+export const SceneContentHydrated = t.intersection([
+  t.partial({
+    background: ImageDisplayInfo,
+  }),
+  t.type({
+    image_layers: t.union([t.array(SceneImageLayerHydrated), t.undefined]),
+  })
+]);
 
 export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
 

@@ -47,14 +47,26 @@
             </n-text>
           </n-button>
         </n-space>
-        <ShareButton v-if="scene" title="WorldWide Telescope" :url="getExternalItemURL(scene)"
-          :description="scene.text" />
+
+        <n-space justify="end">
+          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
+
+          <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
+            <n-button class="action-button" :bordered="false" v-if="can_edit">
+              <n-icon size="30">
+                <ModeEditOutlined />
+              </n-icon>
+            </n-button>
+          </NuxtLink>
+        </n-space>
       </n-space>
     </n-grid-item>
   </n-grid>
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
+
 import {
   NGrid,
   NGridItem,
@@ -64,14 +76,24 @@ import {
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { StarBorderRound, RemoveRedEyeOutlined } from "@vicons/material";
+import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined } from "@vicons/material";
+
+import { useConstellationsStore } from "~/stores/constellations";
 import { GetSceneResponseT } from "~/utils/apis";
 import ShareButton from "./ShareButton.vue";
 
+const { $backendAuthCall } = useNuxtApp();
+
 const nuxtConfig = useRuntimeConfig();
+
+const constellationsStore = useConstellationsStore();
+const {
+  loggedIn,
+} = storeToRefs(constellationsStore);
 
 const props = defineProps<{
   scene: GetSceneResponseT,
+  potentiallyEditable: boolean,
 }>();
 
 const { scene } = toRefs(props);
@@ -93,6 +115,21 @@ function getExternalItemURL(item: GetSceneResponseT): string {
     return "";
   }
 }
+
+// Editability
+
+const can_edit = ref(false);
+
+watchEffect(async () => {
+  if (!loggedIn.value || !props.potentiallyEditable) {
+    can_edit.value = false;
+  } else {
+    const fetcher = await $backendAuthCall();
+    const result = await scenePermissions(fetcher, scene.value.id);
+    can_edit.value = result && result.edit || false;
+  }
+});
+
 </script>
 
 <style scoped lang="less">
