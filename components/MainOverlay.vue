@@ -33,7 +33,7 @@
             </n-button>
             <n-button id="explore-button" @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }" aria-label="Explore">
               <template #icon>
-                <n-icon size="25" -labelledby="explore-button">
+                <n-icon size="25" aria-labelledby="explore-button">
                   <ZoomOutMapFilled style="transform: rotate(45deg);" />
                 </n-icon>
               </template>
