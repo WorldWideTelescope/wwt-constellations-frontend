@@ -6,7 +6,7 @@
           <n-space :align="'center'" :size="'small'">
             <n-button-group>
               <n-button id="drawer-btn" v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
-                style="padding-right: 0px;" aria-label="Open drawer">
+                style="padding-right: 0px;" aria-label="Open drawer button">
                 <n-icon size="24" aria-labelledby="drawer-btn">
                   <MenuRound />
                 </n-icon>
