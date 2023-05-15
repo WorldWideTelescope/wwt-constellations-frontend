@@ -1,9 +1,15 @@
 <template>
     <div id="skymap-root">
-        <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick"></canvas>
+        <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick" aria-label="List of celestial objects">
+                <ul>
+                    <li v-for="co in celestialObjects" :on-click="() => $emit('selected', co.itemIndex)" aria-label="Celestial object" >
+                        {{ co.itemIndex }}
+                    </li>
+                </ul>
+        </canvas>
         <transition name="fade">
-            <template v-if="celestialObjects.some((co) => co.isHovered)">
-                <div id="skymap-details-container" :style="{ left: detailsPosX + 10 + 'px', top: detailsPosY - 70 + 'px' }">
+            <template v-if="celestialObjects.some((co) => co.isHovered)" >
+                <div id="skymap-details-container" :style="{ left: detailsPosX + 10 + 'px', top: detailsPosY - 70 + 'px' }" aria-hidden="true">
                     <img :src="celestialObjectThumbnail" id="skymap-details">
                 </div>
             </template>
