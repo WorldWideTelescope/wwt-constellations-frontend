@@ -33,6 +33,8 @@ import {
   NSlider,
   NSpace,
   NStatistic,
+  NTabs,
+  NTabPane,
   NText,
   useNotification,
 } from "../node_modules/naive-ui";
@@ -65,6 +67,8 @@ export {
   NSlider,
   NSpace,
   NStatistic,
+  NTabs,
+  NTabPane,
   NText,
   useNotification,
 };

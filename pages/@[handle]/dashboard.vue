@@ -32,11 +32,18 @@
 
     <n-divider></n-divider>
 
-    <h2>Scenes</h2>
-
-    <n-data-table remote striped :columns="sceneColumns" :data="sceneData" :loading="sceneIsLoading"
-      :row-key="sceneRowKey" :pagination="scenePagination" @update:page="onSceneTablePageChange">
-    </n-data-table>
+    <n-tabs default-value="my-scenes">
+      <n-tab-pane name="my-scenes" tab="My Scenes">
+        <n-data-table remote striped :columns="sceneColumns" :data="sceneData" :loading="sceneIsLoading"
+          :row-key="sceneRowKey" :pagination="scenePagination" @update:page="onSceneTablePageChange">
+        </n-data-table>
+      </n-tab-pane>
+      <n-tab-pane name="my-images" tab="My Images" display-directive="show:lazy">
+        <n-data-table remote striped :columns="myImagesColumns" :data="myImagesData" :loading="myImagesIsLoading"
+          :row-key="myImagesRowKey" :pagination="myImagesPagination" @update:page="onMyImagesTablePageChange">
+        </n-data-table>
+      </n-tab-pane>
+    </n-tabs>
 
     <n-divider></n-divider>
 
@@ -73,11 +80,14 @@ import {
   NInput,
   NRow,
   NStatistic,
+  NTabs,
+  NTabPane,
   useNotification
 } from "~/utils/fixnaive.mjs";
 
 import {
   getHandle,
+  HandleImageInfoT,
   handleSceneInfo,
   HandleSceneInfoT,
   handleStats,
@@ -150,6 +160,8 @@ onMounted(async () => {
 
 // Scene table
 
+const TABLE_PAGE_SIZE = 10;
+
 const sceneColumns = [
   {
     title: "ID",
@@ -176,13 +188,11 @@ function sceneRowKey(row: HandleSceneInfoT) {
   return row._id;
 }
 
-const SCENE_TABLE_PAGE_SIZE = 10;
-
 const scenePagination = reactive({
   page: 1,
   pageCount: 1,
   itemCount: 0,
-  pageSize: SCENE_TABLE_PAGE_SIZE,
+  pageSize: TABLE_PAGE_SIZE,
 });
 
 async function onSceneTablePageChange(page: number) {
@@ -190,7 +200,7 @@ async function onSceneTablePageChange(page: number) {
     sceneIsLoading.value = true;
 
     const fetcher = await $backendAuthCall();
-    const result = await handleSceneInfo(fetcher, handle, page - 1, SCENE_TABLE_PAGE_SIZE);
+    const result = await handleSceneInfo(fetcher, handle, page - 1, TABLE_PAGE_SIZE);
 
     sceneData.value = result.results;
     scenePagination.page = page;
@@ -204,4 +214,50 @@ onMounted(() => {
   onSceneTablePageChange(1);
 });
 
+// My Images table
+
+const myImagesColumns = [
+  {
+    title: "ID",
+    key: "_id",
+  },
+  {
+    title: "Note",
+    key: "note",
+  },
+];
+
+const myImagesData = ref<HandleImageInfoT[]>([]);
+
+const myImagesIsLoading = ref(true);
+
+function myImagesRowKey(row: HandleImageInfoT) {
+  return row._id;
+}
+
+const myImagesPagination = reactive({
+  page: 1,
+  pageCount: 1,
+  itemCount: 0,
+  pageSize: TABLE_PAGE_SIZE,
+});
+
+async function onMyImagesTablePageChange(page: number) {
+  if (!myImagesIsLoading.value) {
+    myImagesIsLoading.value = true;
+
+    const fetcher = await $backendAuthCall();
+    const result = await handleImageInfo(fetcher, handle, page - 1, TABLE_PAGE_SIZE);
+
+    myImagesData.value = result.results;
+    myImagesPagination.page = page;
+    myImagesPagination.itemCount = result.total_count;
+    myImagesIsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  myImagesIsLoading.value = false;
+  onMyImagesTablePageChange(1);
+});
 </script>

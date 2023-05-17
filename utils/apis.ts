@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
-import { ImageDisplayInfo, PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
+import { ImageStorage, PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -128,6 +128,46 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
     throw err;
   }
+}
+
+
+// Endpoint: GET /handle/:handle/imageinfo?page=$int&pagesize=$int
+
+export const HandleImageInfo = t.type({
+  _id: t.string,
+  handle_id: t.string,
+  creation_date: t.string,
+  note: t.string,
+  storage: ImageStorage,
+});
+
+export type HandleImageInfoT = t.TypeOf<typeof HandleImageInfo>;
+
+export const HandleImageInfoResponse = t.type({
+  total_count: t.number,
+  results: t.array(HandleImageInfo),
+});
+
+export type HandleImageInfoResponseT = t.TypeOf<typeof HandleImageInfoResponse>;
+
+export async function handleImageInfo(
+  fetcher: $Fetch,
+  handle: string,
+  page_num: number,
+  page_size: number
+): Promise<HandleImageInfoResponseT> {
+  const data = await fetcher(
+    `/handle/${encodeURIComponent(handle)}/imageinfo`,
+    { query: { page: page_num, pagesize: page_size } }
+  );
+  checkForError(data);
+  const maybe = HandleImageInfoResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/imageinfo: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
 }
 
 
