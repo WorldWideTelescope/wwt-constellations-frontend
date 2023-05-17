@@ -4,7 +4,7 @@
       <NuxtLink :to="`/@${handle}/`">
         <n-button circle>
           <template #icon>
-            ←
+            <ArrowBackRound />
           </template>
         </n-button>
       </NuxtLink>
@@ -60,6 +60,8 @@
 
 <script setup lang="ts">
 import { RouteLocationNormalized } from "vue-router";
+
+import { ArrowBackRound } from "@vicons/material";
 
 import {
   NButton,
