@@ -9,6 +9,9 @@
     <!-- Desktop -->
     <template v-if="!isMobile">
       <n-grid ref="desktop_overlay" cols="1" y-gap="5" class="desktop-panel">
+        <n-grid-item v-if="describedHandle">
+          <HandlePanel :handle-data="describedHandle" />
+        </n-grid-item>
         <n-grid-item v-if="timelineSource !== null">
           <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
@@ -79,19 +82,22 @@ import {
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
-
-import { useConstellationsStore } from "~/stores/constellations";
 import * as screenfull from "screenfull";
 import {
-  SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound, FullscreenOutlined, FullscreenExitOutlined
+  KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound, FullscreenOutlined, FullscreenExitOutlined
 } from "@vicons/material";
+
+import { useConstellationsStore } from "~/stores/constellations";
+import { GetHandleResponseT } from "~/utils/apis";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
   showSceneEditor?: boolean,
+  describedHandle?: GetHandleResponseT,
 }>(), {
   scenePotentiallyEditable: false,
   showSceneEditor: false,
+  describedHandle: undefined,
 });
 
 const isExploreMode = ref(false);
