@@ -326,6 +326,10 @@ watchEffect(() => {
 #feed-root {
   height: 100%;
   --footer-height: 60px;
+
+  // We only set the position to make the z-index relevant
+  position: relative;
+  z-index: 100;
 }
 
 .disable-pe {

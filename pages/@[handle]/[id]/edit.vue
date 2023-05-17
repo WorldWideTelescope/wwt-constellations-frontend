@@ -115,5 +115,6 @@ const roi_style = computed(() => {
   box-sizing: border-box;
   position: fixed;
   pointer-events: none;
+  opacity: 0.8;
 }
 </style>
