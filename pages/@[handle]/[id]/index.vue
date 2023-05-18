@@ -51,10 +51,19 @@ const store = getEngineStore();
 const route = useRoute();
 
 const id = route.params.id as string;
+const handle = route.params.handle as string;
 
 const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
 });
+
+useHead({
+  title: `@${handle} - WorldWide Telescope`,
+  meta: [{
+    name: 'WorldWide Telescope',
+    content: `Explore images by @${handle}, visualized by the WorldWide Telescope engine`
+  }]
+})
 
 useServerSeoMeta({
   ogTitle: "WWT Constellations scene",

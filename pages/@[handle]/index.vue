@@ -46,6 +46,14 @@ const { data } = await useAsyncData(`handle-${handle}`, async () => {
 
 const can_dashboard = ref(false);
 
+useHead({
+  title: `@${handle} - WorldWide Telescope`,
+  meta: [{
+    name: 'WorldWide Telescope',
+    content: `Explore images by @${handle}, visualized by the WorldWide Telescope engine`
+  }]
+})
+
 watchEffect(async () => {
   if (!loggedIn.value) {
     can_dashboard.value = false;
