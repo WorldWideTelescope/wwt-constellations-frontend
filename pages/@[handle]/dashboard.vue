@@ -95,6 +95,8 @@ import {
   updateHandle,
 } from "~/utils/apis";
 
+import { PlaceDetailsT, SceneContentT, SceneCreationInfoT } from "~/utils/types";
+
 definePageMeta({
   layout: 'naiveui',
 
@@ -167,7 +169,7 @@ const sceneColumns = [
     title: "ID",
     key: "_id",
     render: (row: HandleSceneInfoT) => {
-      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, [row._id]);
+      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, () => [row._id]);
     }
   },
   {
@@ -214,7 +216,60 @@ onMounted(() => {
   onSceneTablePageChange(1);
 });
 
-// My Images table
+// The "My Images" table
+
+async function onNewSceneFromImage(img: HandleImageInfoT) {
+  const fullInfo = await getImage($backendCall, img._id);
+
+  if (!fullInfo) {
+    return;
+  }
+
+  // The place calculations are rough, but the intention is that they'll be
+  // polished up in the scene editor anyway.
+
+  let roi_height_deg = fullInfo.wwt.base_degrees_per_tile;
+
+  if (fullInfo.wwt.projection == "SkyImage") {
+    // For untiled SkyImages, the base_degrees_per_tile is degrees per pixel. We
+    // don't know the image height, though! Let's just guess:
+    roi_height_deg *= 1024;
+  }
+
+  roi_height_deg = Math.min(Math.max(roi_height_deg, 0.01), 60);
+
+  const place: PlaceDetailsT = {
+    ra_rad: fullInfo.wwt.center_x * D2R,
+    dec_rad: fullInfo.wwt.center_y * D2R,
+    roll_rad: 0,
+    roi_height_deg,
+    roi_aspect_ratio: 1,
+  };
+
+  const content: SceneContentT = {
+    image_layers: [
+      {
+        image_id: img._id,
+        opacity: 1.0,
+      }
+    ]
+  };
+
+  const scene: SceneCreationInfoT = {
+    place,
+    content,
+    text: fullInfo.note,
+  };
+
+  const fetcher = await $backendAuthCall();
+
+  try {
+    const result = await createScene(fetcher, handle, scene);
+    navigateTo(`/@${encodeURIComponent(handle)}/${result.id}/edit`);
+  } catch (err) {
+    notification.error({ content: `Error creating scene: ${err}`, duration: 5000 });
+  }
+}
 
 const myImagesColumns = [
   {
@@ -224,6 +279,13 @@ const myImagesColumns = [
   {
     title: "Note",
     key: "note",
+  },
+  {
+    title: "Actions",
+    key: "_id",
+    render: (row: HandleImageInfoT) => {
+      return h(NButton, { onClick: () => onNewSceneFromImage(row) }, () => ["New scene"]);
+    }
   },
 ];
 
