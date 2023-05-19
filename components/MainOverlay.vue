@@ -16,32 +16,32 @@
     <template v-else>
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
-          <n-button :on-click="() => navigateTo('/')">
+          <n-button id="home-button" :on-click="() => navigateTo('/')" aria-label="Home button">
             <template #icon>
-              <n-icon size="25">
+              <n-icon size="25" aria-labelledby="home-button">
                 <HomeFilled />
               </n-icon>
             </template>
           </n-button>
           <n-button-group>
-            <n-button @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }">
+            <n-button id="feed-button" @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
               <template #icon>
-                <n-icon size="25">
+                <n-icon size="25" aria-labelledby="feed-button">
                   <SwipeVerticalFilled />
                 </n-icon>
               </template>
             </n-button>
-            <n-button @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }">
+            <n-button id="explore-button" @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }" aria-label="Explore button">
               <template #icon>
-                <n-icon size="25">
+                <n-icon size="25" aria-labelledby="explore-button">
                   <ZoomOutMapFilled style="transform: rotate(45deg);" />
                 </n-icon>
               </template>
             </n-button>
           </n-button-group>
-          <n-button>
+          <n-button id="profile-button" aria-label="Profile button">
             <template #icon>
-              <n-icon size="25">
+              <n-icon size="25" aria-labelledby="profile-button">
                 <PersonFilled />
               </n-icon>
             </template>

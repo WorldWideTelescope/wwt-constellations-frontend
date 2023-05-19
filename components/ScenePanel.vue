@@ -30,7 +30,7 @@
     <n-grid-item>
       <n-space justify="space-between">
         <n-space justify="start">
-          <n-button class="action-button" :bordered="false">
+          <n-button class="action-button" :bordered="false" aria-label="Like button">
             <n-icon size="30">
               <StarBorderRound />
             </n-icon>
@@ -38,7 +38,7 @@
               {{ scene.likes }}
             </n-text>
           </n-button>
-          <n-button class="action-button" :bordered="false">
+          <n-button class="action-button" :bordered="false" aria-label="Views">
             <n-icon size="30">
               <RemoveRedEyeOutlined />
             </n-icon>
@@ -49,10 +49,10 @@
         </n-space>
 
         <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
+          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" aria-label="Share button"/>
 
           <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
-            <n-button class="action-button" :bordered="false" v-if="can_edit">
+            <n-button class="action-button" :bordered="false" v-if="can_edit" aria-label="Edit scene button">
               <n-icon size="30">
                 <ModeEditOutlined />
               </n-icon>

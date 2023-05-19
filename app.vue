@@ -4,12 +4,13 @@
     <NuxtLayout class="page">
       <NuxtPage />
     </NuxtLayout>
+    <VueAxePopup v-if="showAxePopup" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-
+import { VueAxePopup } from 'vue-axe';
 import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
@@ -17,7 +18,11 @@ const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 
 const { $keycloak } = useNuxtApp();
 
+const showAxePopup = ref(false);
+
 onMounted(() => {
+  showAxePopup.value = process.env.NODE_ENV !== 'production';
+
   // In most cases we need to initialize the Keycloak state, but it is possible
   // that a middleware has already done it.
   //

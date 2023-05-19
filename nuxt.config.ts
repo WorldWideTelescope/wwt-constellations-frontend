@@ -30,7 +30,7 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include:
         process.env.NODE_ENV === "development"
-          ? ["naive-ui", "vueuc", "date-fns-tz/esm/formatInTimeZone"]
+          ? ["naive-ui", "vueuc", "date-fns-tz/esm/formatInTimeZone", "axe-core"]
           : []
     }
   },
@@ -40,5 +40,12 @@ export default defineNuxtConfig({
       keycloakUrl: "http://localhost:8080/",
       hostUrl: "http://localhost:3000"
     }
-  }
+  },
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: "en"
+      }
+    }
+  },
 });
