@@ -16,36 +16,38 @@
     <template v-else>
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
-          <n-button id="home-button" :on-click="() => navigateTo('/')" aria-label="Home button">
-            <template #icon>
-              <n-icon size="25" aria-labelledby="home-button">
-                <HomeFilled />
-              </n-icon>
-            </template>
-          </n-button>
           <n-button-group>
-            <n-button id="feed-button" @click="isExploreMode = false" round :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
+            <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
+              <template #icon>
+                <n-icon size="25" aria-labelledby="prev-button">
+                  <NavigateBeforeRound />
+                </n-icon>
+              </template>
+            </n-button>
+            <n-button id="feed-button" @click="isExploreMode = false" :class="{ 'button-toggled': !isExploreMode }"
+              aria-label="Feed button">
               <template #icon>
                 <n-icon size="25" aria-labelledby="feed-button">
                   <SwipeVerticalFilled />
                 </n-icon>
               </template>
             </n-button>
-            <n-button id="explore-button" @click="isExploreMode = true" round :class="{ 'button-toggled': isExploreMode }" aria-label="Explore button">
+            <n-button id="explore-button" @click="isExploreMode = true" :class="{ 'button-toggled': isExploreMode }"
+              aria-label="Explore button">
               <template #icon>
                 <n-icon size="25" aria-labelledby="explore-button">
                   <ZoomOutMapFilled style="transform: rotate(45deg);" />
                 </n-icon>
               </template>
             </n-button>
+            <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
+              <template #icon>
+                <n-icon size="25" aria-labelledby="next-button">
+                  <NavigateNextRound />
+                </n-icon>
+              </template>
+            </n-button>
           </n-button-group>
-          <n-button id="profile-button" aria-label="Profile button">
-            <template #icon>
-              <n-icon size="25" aria-labelledby="profile-button">
-                <PersonFilled />
-              </n-icon>
-            </template>
-          </n-button>
         </n-space>
       </div>
 
@@ -97,8 +99,7 @@ import { useResizeObserver } from "@vueuse/core";
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
 import {
-  HomeFilled, SwipeVerticalFilled, ZoomOutMapFilled, PersonFilled,
-  KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
+  SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound
 } from "@vicons/material";
 
 const props = withDefaults(defineProps<{
@@ -124,7 +125,7 @@ const {
   viewportLeftBlockage,
 } = storeToRefs(constellationsStore);
 
-const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
+const skymapScenes = computed<any[]>(() => {
   const i0 = Math.max(timelineIndex.value - 5, 0);
   const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
   return timeline.value.slice(i0, i1).map((id, relIndex) => {
@@ -132,6 +133,9 @@ const skymapScenes = computed<SceneDisplayInfoT[]>(() => {
     return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
 });
+
+const hasNext = computed<boolean>(() => (skymapScenes.value.some(x => x.itemIndex > timelineIndex.value)));
+const hasPrev = computed<boolean>(() => (skymapScenes.value.some(x => x.itemIndex < timelineIndex.value)));
 
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
@@ -165,12 +169,13 @@ function onScroll(event: UIEvent) {
   }
 }
 
-
-function scrollTo(element: HTMLDivElement, index: number) {
-  if (element) {
+function scrollTo(index: number) {
+  if (fullPageContainerRef.value) {
+    const element = fullPageContainerRef.value as HTMLDivElement;
     element.scrollTop = Math.round(index * (element.offsetHeight));
   }
 }
+
 
 function centerScene() {
   const scene = desiredScene.value;
@@ -178,6 +183,18 @@ function centerScene() {
   nextTick(() => {
     desiredScene.value = scene;
   })
+}
+
+function goNext() {
+  if (hasNext) {
+    timelineIndex.value++;
+  }
+}
+
+function goPrev() {
+  if (hasPrev) {
+    timelineIndex.value--;
+  }
 }
 
 watchEffect(async () => {
@@ -190,6 +207,8 @@ watchEffect(async () => {
         place: describedScene.value.place,
         content: describedScene.value.content,
       };
+
+      scrollTo(timelineIndex.value);
     }
 
     await constellationsStore.ensureTimelineCoverage(8);
@@ -198,8 +217,7 @@ watchEffect(async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    const el = fullPageContainerRef.value as HTMLDivElement
-    scrollTo(el, timelineIndex.value);
+    scrollTo(timelineIndex.value);
     centerScene();
   }
 });
