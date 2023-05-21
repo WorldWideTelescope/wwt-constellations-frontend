@@ -68,11 +68,12 @@
       <template v-else>
         <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
           <n-grid cols="1">
-            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()"
+            <n-grid-item class="full-page" v-for="(scene, index) in skymapScenes"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
-                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex"
+                  :scene="knownScenes.get(scene.id)" :potentially-editable="scenePotentiallyEditable"
+                  ref="mobile_overlay" />
               </transition>
             </n-grid-item>
           </n-grid>
@@ -130,12 +131,12 @@ const skymapScenes = computed<any[]>(() => {
   const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
   return timeline.value.slice(i0, i1).map((id, relIndex) => {
     const scene = knownScenes.value.get(id)!;
-    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+    return { id: id, itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
 });
 
-const hasNext = computed<boolean>(() => (skymapScenes.value.some(x => x.itemIndex > timelineIndex.value)));
-const hasPrev = computed<boolean>(() => (skymapScenes.value.some(x => x.itemIndex < timelineIndex.value)));
+const hasNext = computed<boolean>(() => (timelineIndex.value < (skymapScenes.value.length - 1)));
+const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
@@ -172,7 +173,10 @@ function onScroll(event: UIEvent) {
 function scrollTo(index: number) {
   if (fullPageContainerRef.value) {
     const element = fullPageContainerRef.value as HTMLDivElement;
-    element.scrollTop = Math.round(index * (element.offsetHeight));
+    if (element) {
+      element.scrollTop = Math.round(index * (element.offsetHeight));
+    }
+
   }
 }
 
@@ -207,7 +211,7 @@ watchEffect(async () => {
         place: describedScene.value.place,
         content: describedScene.value.content,
       };
-
+      
       scrollTo(timelineIndex.value);
     }
 
@@ -221,6 +225,7 @@ watch(fullPageContainerRef, () => {
     centerScene();
   }
 });
+
 
 // Managing the height of the grid items in mobile mode. We need each item to be
 // exactly the height of the containing fullPageContainer, but we can't easily

@@ -49,7 +49,7 @@
         </n-space>
 
         <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" aria-label="Share button"/>
+          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text"/>
 
           <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
             <n-button class="action-button" :bordered="false" v-if="can_edit" aria-label="Edit scene button">
