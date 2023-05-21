@@ -68,11 +68,11 @@
       <template v-else>
         <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
           <n-grid cols="1">
-            <n-grid-item class="full-page" v-for="(scene, index) in skymapScenes"
+            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
                 <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex"
-                  :scene="knownScenes.get(scene.id)" :potentially-editable="scenePotentiallyEditable"
+                  :scene="scene" :potentially-editable="scenePotentiallyEditable"
                   ref="mobile_overlay" />
               </transition>
             </n-grid-item>
@@ -135,7 +135,7 @@ const skymapScenes = computed<any[]>(() => {
   });
 });
 
-const hasNext = computed<boolean>(() => (timelineIndex.value < (skymapScenes.value.length - 1)));
+const hasNext = computed<boolean>(() => (timelineIndex.value < (knownScenes.value.size - 1)));
 const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 const showSwipeAnimation = ref(false);
@@ -191,13 +191,13 @@ function centerScene() {
 
 function goNext() {
   if (hasNext) {
-    timelineIndex.value++;
+    scrollTo(++timelineIndex.value);
   }
 }
 
 function goPrev() {
   if (hasPrev) {
-    timelineIndex.value--;
+    scrollTo(--timelineIndex.value);
   }
 }
 
@@ -211,8 +211,6 @@ watchEffect(async () => {
         place: describedScene.value.place,
         content: describedScene.value.content,
       };
-      
-      scrollTo(timelineIndex.value);
     }
 
     await constellationsStore.ensureTimelineCoverage(8);

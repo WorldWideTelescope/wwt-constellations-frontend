@@ -114,6 +114,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       nextTimelinePage = 0;
       timeline.value = [];
       timelineIndex.value = -1;
+      knownScenes.value = new Map();
     } else if (newSource != oldSource) {
       if (newSource == "") {
         getTimeline = getHomeTimeline;
