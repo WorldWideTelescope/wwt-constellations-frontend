@@ -71,9 +71,8 @@
             <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex"
-                  :scene="scene" :potentially-editable="scenePotentiallyEditable"
-                  ref="mobile_overlay" />
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
+                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
               </transition>
             </n-grid-item>
           </n-grid>
@@ -273,7 +272,9 @@ watchEffect(() => {
   if (mobile_overlay.value) {
     useResizeObserver(mobile_overlay.value[0], (entries) => {
       const entry = entries[0];
-      mobile_overlay_height.value = entry.contentRect.height;
+      if (entry.contentRect.height > 0) {
+        mobile_overlay_height.value = entry.contentRect.height;
+      }
     });
   }
 });
