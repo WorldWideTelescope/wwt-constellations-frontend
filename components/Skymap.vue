@@ -94,6 +94,10 @@ export default defineNuxtComponent({
             }
 
             const canvas = this.$refs.canvasRef as HTMLCanvasElement;
+            if (!canvas || !canvas.clientWidth || !canvas.clientHeight) {
+                return;
+            }
+            
             // Set canvas resolution to size
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
