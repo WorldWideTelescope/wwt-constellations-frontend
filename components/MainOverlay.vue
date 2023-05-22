@@ -10,6 +10,28 @@
           <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
           <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
         </n-grid-item>
+        <n-grid-item>
+          <div>
+            <n-space justify="center">
+              <n-button-group class="nav-bg">
+                <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
+                  <template #icon>
+                    <n-icon size="25" aria-labelledby="prev-button">
+                      <NavigateBeforeRound />
+                    </n-icon>
+                  </template>
+                </n-button>
+                <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
+                  <template #icon>
+                    <n-icon size="25" aria-labelledby="next-button">
+                      <NavigateNextRound />
+                    </n-icon>
+                  </template>
+                </n-button>
+              </n-button-group>
+            </n-space>
+          </div>
+        </n-grid-item>
       </n-grid>
     </template>
     <!-- Mobile -->
@@ -574,5 +596,11 @@ watchEffect(() => {
 .button-toggled {
   background-color: var(--n-text-color-pressed) !important;
   color: var(--n-text-color) !important;
+}
+
+.nav-bg {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 5px;
+  border-radius: 45px;
 }
 </style>
