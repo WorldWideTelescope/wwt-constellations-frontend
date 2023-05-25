@@ -1764,7 +1764,7 @@ __metadata:
     "@vicons/material": ^0.12.0
     "@vueuse/nuxt": ^10.1.2
     "@wwtelescope/astro": ^0.2.2
-    "@wwtelescope/engine": ^7.24.0
+    "@wwtelescope/engine": ^7.26.0
     "@wwtelescope/engine-helpers": ^0.14
     "@wwtelescope/engine-pinia": ^0.6
     "@wwtelescope/engine-types": ^0.6.4
@@ -1835,6 +1835,17 @@ __metadata:
     pako: ^1.0.11
     uuid: ^8.3.2
   checksum: 46f16efb41cabcc3b674799ac247fb0e147003bc279ae82b0e66b69e670118f46c151cd1554cdc4e249cd9fda32dd35aa59936ed04adcb3d7b88985a2b89fe88
+  languageName: node
+  linkType: hard
+
+"@wwtelescope/engine@npm:^7.26.0":
+  version: 7.26.0
+  resolution: "@wwtelescope/engine@npm:7.26.0"
+  dependencies:
+    "@wwtelescope/engine-types": ">=0.6.0"
+    pako: ^1.0.11
+    uuid: ^8.3.2
+  checksum: 3f23d8825de434361674495cf406006d949a78fc7dffcbe88ebacaf84473a6b6c3adc322f5f173c72ee89d09c4e548dd63c92dc34b036da191ea51385f7167d5
   languageName: node
   linkType: hard
 

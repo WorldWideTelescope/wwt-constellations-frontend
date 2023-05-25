@@ -4,7 +4,7 @@
     "@pinia/nuxt": "^0.4.7",
     "@vueuse/nuxt": "^10.1.2",
     "@wwtelescope/astro": "^0.2.2",
-    "@wwtelescope/engine": "^7.24.0",
+    "@wwtelescope/engine": "^7.26.0",
     "@wwtelescope/engine-helpers": "^0.14",
     "@wwtelescope/engine-pinia": "^0.6",
     "@wwtelescope/engine-types": "^0.6.4",
