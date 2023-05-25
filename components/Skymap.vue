@@ -21,6 +21,7 @@
 import { SceneDisplayInfoT } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
+import {URLHelpers, URLRewriteMode} from "@wwtelescope/engine";
 
 interface CelestialObject extends SceneDisplayInfoT {
     itemIndex?: number,
@@ -80,7 +81,7 @@ export default defineNuxtComponent({
         celestialObjectThumbnail() {
             const co = this.celestialObjects.find((co) => co.isHovered);
             if (co?.content?.image_layers && co.content.image_layers.length > 0) {
-                return co.content.image_layers[0].image.wwt.thumbnail_url;
+                return URLHelpers.singleton.rewrite(co.content.image_layers[0].image.wwt.thumbnail_url, URLRewriteMode.AsIfAbsolute);
             } else {
                 return ""; // Some alt. image
             }
