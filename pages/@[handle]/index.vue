@@ -75,5 +75,6 @@ onMounted(() => {
 <style scoped lang="less">
 #handle-page-root {
   color: #FFF;
+  height: 100%;
 }
 </style>
