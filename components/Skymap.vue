@@ -1,6 +1,6 @@
 <template>
     <div id="skymap-root">
-        <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick" aria-label="List of celestial objects">
+        <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick" aria-label="List of celestial objects" :class="{ 'canvas-hovering': isHoveringObject }">
                 <ul>
                     <li v-for="co in celestialObjects" :on-click="() => $emit('selected', co.itemIndex)" aria-label="Celestial object" >
                         {{ co.itemIndex }}
@@ -47,6 +47,7 @@ export default defineNuxtComponent({
             maxObjectRadius: 10,
             backgroundImage: null as HTMLImageElement | null,
             celestialObjects: this.scenes as CelestialObject[],
+            isHoveringObject: false,
             engineRaDeg: 0,
             engineDecDeg: 0,
             engineZoomDeg: 0,
@@ -195,11 +196,14 @@ export default defineNuxtComponent({
 
             if (selectedObject) {
                 selectedObject.isHovered = true;
+                this.isHoveringObject = true;
                 this.detailsPosX = event.clientX;
                 this.detailsPosY = event.clientY;
 
                 this.animateObjectRadius(selectedObject, this.maxObjectRadius);
                 this.redrawCanvas();
+            } else {
+                this.isHoveringObject = false;
             }
 
             const deselectedObject = this.celestialObjects.find((co) => {
@@ -272,6 +276,10 @@ canvas {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
+}
+
+.canvas-hovering{
+    cursor: pointer;
 }
 
 #skymap-root {
