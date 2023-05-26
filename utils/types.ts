@@ -62,6 +62,7 @@ export const SceneContentHydrated = t.intersection([
 export type SceneContentHydratedT = t.TypeOf<typeof SceneContentHydrated>;
 
 export const SceneDisplayInfo = t.type({
+  id: t.string,
   place: PlaceDetails,
   content: SceneContentHydrated,
 });

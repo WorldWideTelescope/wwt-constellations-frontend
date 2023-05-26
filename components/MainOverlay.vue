@@ -119,7 +119,6 @@ import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { SceneDisplayInfoT } from "~/utils/types";
 import {
   SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound
 } from "@vicons/material";
@@ -152,7 +151,7 @@ const skymapScenes = computed<any[]>(() => {
   const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
   return timeline.value.slice(i0, i1).map((id, relIndex) => {
     const scene = knownScenes.value.get(id)!;
-    return { id: id, itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
 });
 
@@ -229,6 +228,7 @@ watchEffect(async () => {
 
     if (describedScene.value) {
       desiredScene.value = {
+        id: describedScene.value.id,
         place: describedScene.value.place,
         content: describedScene.value.content,
       };
