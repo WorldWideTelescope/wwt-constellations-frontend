@@ -13,22 +13,7 @@
         <n-grid-item>
           <div>
             <n-space justify="center">
-              <n-button-group class="nav-bg">
-                <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
-                  <template #icon>
-                    <n-icon size="25" aria-labelledby="prev-button">
-                      <NavigateBeforeRound />
-                    </n-icon>
-                  </template>
-                </n-button>
-                <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
-                  <template #icon>
-                    <n-icon size="25" aria-labelledby="next-button">
-                      <NavigateNextRound />
-                    </n-icon>
-                  </template>
-                </n-button>
-              </n-button-group>
+              <Toolbar @goPrev="goPrev" @goNext="goNext" />
             </n-space>
           </div>
         </n-grid-item>
@@ -38,38 +23,8 @@
     <template v-else>
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
-          <n-button-group>
-            <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="prev-button">
-                  <NavigateBeforeRound />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="feed-button" @click="isExploreMode = false" :class="{ 'button-toggled': !isExploreMode }"
-              aria-label="Feed button">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="feed-button">
-                  <SwipeVerticalFilled />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="explore-button" @click="isExploreMode = true" :class="{ 'button-toggled': isExploreMode }"
-              aria-label="Explore button">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="explore-button">
-                  <ZoomOutMapFilled style="transform: rotate(45deg);" />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="next-button">
-                  <NavigateNextRound />
-                </n-icon>
-              </template>
-            </n-button>
-          </n-button-group>
+          <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
+            :isExploreMode="isExploreMode" />
         </n-space>
       </div>
 
@@ -109,9 +64,7 @@ import {
   NGrid,
   NGridItem,
   NIcon,
-  NSpace,
-  NButtonGroup,
-  NButton,
+  NSpace
 } from "~/utils/fixnaive.mjs";
 
 import { storeToRefs } from "pinia";
@@ -121,7 +74,7 @@ import { useResizeObserver } from "@vueuse/core";
 import { useConstellationsStore } from "~/stores/constellations";
 import { SceneDisplayInfoT } from "~/utils/types";
 import {
-  SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound
+  KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled
 } from "@vicons/material";
 
 const props = withDefaults(defineProps<{
@@ -591,11 +544,6 @@ watchEffect(() => {
   border-top: 1px solid rgba(255, 255, 255, 0.8);
   pointer-events: all !important;
   z-index: 100;
-}
-
-.button-toggled {
-  background-color: var(--n-text-color-pressed) !important;
-  color: var(--n-text-color) !important;
 }
 
 .nav-bg {
