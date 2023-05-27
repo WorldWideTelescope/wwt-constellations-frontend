@@ -146,8 +146,8 @@ watch(desiredScene, async (newScene) => {
     rollRad: setup.rollRad,
     instant: false
   }).then(() => {
-    addImpression($backendCall, newScene.id).then((update) => {
-      if (describedScene.value && update) {
+    addImpression($backendCall, newScene.id).then((success) => {
+      if (describedScene.value && success) {
         describedScene.value.impressions++;
       }
     });

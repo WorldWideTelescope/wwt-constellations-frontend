@@ -417,7 +417,7 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
 
 export const SceneInteractionResponse = t.type({
   id: t.string,
-  update: t.boolean
+  success: t.boolean
 });
 
 export type SceneInteractionResponseT = t.TypeOf<typeof SceneInteractionResponse>;
@@ -431,7 +431,7 @@ export async function addImpression(fetcher: $Fetch, id: string): Promise<boolea
       throw new Error(`POST /scenes/impressions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
 
-    return maybe.right.update;
+    return maybe.right.success;
   });
 }
 
@@ -444,7 +444,7 @@ export async function addLike(fetcher: $Fetch, id: string): Promise<boolean> {
       throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
 
-    return maybe.right.update;
+    return maybe.right.success;
   });
 }
 
@@ -457,7 +457,7 @@ export async function removeLike(fetcher: $Fetch, id: string): Promise<boolean> 
       throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
 
-    return maybe.right.update;
+    return maybe.right.success;
   });
 }
 

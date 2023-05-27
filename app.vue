@@ -17,7 +17,7 @@ import { initializeSession } from "~/utils/apis";
 const constellationsStore = useConstellationsStore();
 const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 
-const { $keycloak, $backendCall} = useNuxtApp();
+const { $keycloak, $backendCall } = useNuxtApp();
 
 const showAxePopup = ref(false);
 
