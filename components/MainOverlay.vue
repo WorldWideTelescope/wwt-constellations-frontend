@@ -1,5 +1,5 @@
 <template>
-  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
+  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <!-- Desktop -->
     <template v-if="!isMobile">
       <n-grid ref="desktop_overlay" cols="1" y-gap="5" class="desktop-panel">
@@ -13,7 +13,7 @@
         <n-grid-item>
           <div>
             <n-space justify="center">
-              <Toolbar @goPrev="goPrev" @goNext="goNext" />
+              <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter" :isCenterButtonEnabled="targetOutsideViewport"/>
             </n-space>
           </div>
         </n-grid-item>
@@ -24,7 +24,7 @@
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
           <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
-            :isExploreMode="isExploreMode" />
+            :isExploreMode="isExploreMode" @centerScene="recenter" :isCenterButtonEnabled="targetOutsideViewport"/>
         </n-space>
       </div>
 
@@ -114,7 +114,16 @@ const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
-const fullPageContainerRef = ref(null);
+const fullPageContainerRef = ref<HTMLDivElement>();
+const feedRootRef = ref<HTMLDivElement>();
+
+const targetOutsideViewport = ref(false);
+
+const engineStore = getEngineStore();
+const {
+  rollRad: wwt_roll_rad,
+  zoomDeg: wwt_zoom_deg,
+} = storeToRefs(engineStore);
 
 onMounted(() => {
   if (timelineSource.value !== null) {
@@ -126,6 +135,18 @@ onMounted(() => {
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
   }, 10000);
+
+  engineStore.$subscribe(() => {
+    const place = describedScene.value?.place
+    const rootDiv = feedRootRef.value
+    if (place && rootDiv) {
+      const screenPoint = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D })
+
+      targetOutsideViewport.value = (screenPoint.x < 0 || screenPoint.x > rootDiv.clientWidth
+        || screenPoint.y < 0 || screenPoint.y > rootDiv.clientHeight);
+    }
+
+  });
 });
 
 onBeforeUnmount(() => {
@@ -154,8 +175,21 @@ function scrollTo(index: number) {
   }
 }
 
+async function recenter() {
+  if (describedScene.value) {
+    await engineStore.gotoRADecZoom({
+      raRad: describedScene.value.place.ra_rad,
+      decRad: describedScene.value.place.dec_rad,
+      zoomDeg: wwt_zoom_deg.value,
+      rollRad: wwt_roll_rad.value,
+      instant: false,
+    });
+  }
+
+}
 
 function centerScene() {
+  getEngineStore().gotoTarget
   const scene = desiredScene.value;
   desiredScene.value = null;
   nextTick(() => {
@@ -194,7 +228,7 @@ watchEffect(async () => {
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
     scrollTo(timelineIndex.value);
-    centerScene();
+    recenter();
   }
 });
 
@@ -550,5 +584,13 @@ watchEffect(() => {
   background: rgba(0, 0, 0, 0.8);
   padding: 5px;
   border-radius: 45px;
+}
+
+.center-button {
+  bottom: calc(60px + var(--footer-height));
+  left: 50%;
+  transform: translate(-50%, 0);
+  position: absolute;
+  pointer-events: all;
 }
 </style>

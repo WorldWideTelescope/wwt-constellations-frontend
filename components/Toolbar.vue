@@ -8,24 +8,31 @@
                     </n-icon>
                 </template>
             </n-button>
-            <template v-if="isMobile">
-                <n-button id="feed-button" @click="$emit('setExploreMode', false)"
-                    :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
+            <n-button id="feed-button" @click="$emit('setExploreMode', false)" v-if="isMobile"
+                :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
+                <template #icon>
+                    <n-icon size="25" aria-labelledby="feed-button">
+                        <SwipeVerticalFilled />
+                    </n-icon>
+                </template>
+            </n-button>
+            <transition name="smooth">
+                <n-button class="center-button" @click="$emit('centerScene')" v-if="isCenterButtonEnabled" round>
                     <template #icon>
-                        <n-icon size="25" aria-labelledby="feed-button">
-                            <SwipeVerticalFilled />
+                        <n-icon size="30">
+                            <CenterFocusWeakFilled />
                         </n-icon>
                     </template>
                 </n-button>
-                <n-button id="explore-button" @click="$emit('setExploreMode', true)"
-                    :class="{ 'button-toggled': isExploreMode }" aria-label="Explore button">
-                    <template #icon>
-                        <n-icon size="25" aria-labelledby="explore-button">
-                            <ZoomOutMapFilled style="transform: rotate(45deg);" />
-                        </n-icon>
-                    </template>
-                </n-button>
-            </template>
+            </transition>
+            <n-button id="explore-button" @click="$emit('setExploreMode', true)" v-if="isMobile"
+                :class="{ 'button-toggled': isExploreMode }" aria-label="Explore button">
+                <template #icon>
+                    <n-icon size="25" aria-labelledby="explore-button">
+                        <ZoomOutMapFilled style="transform: rotate(45deg);" />
+                    </n-icon>
+                </template>
+            </n-button>
             <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" round :disabled="!hasNext">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
@@ -48,7 +55,7 @@ import {
 } from "~/utils/fixnaive.mjs";
 
 import {
-    NavigateNextRound, NavigateBeforeRound, SwipeVerticalFilled, ZoomOutMapFilled
+    NavigateNextRound, NavigateBeforeRound, SwipeVerticalFilled, ZoomOutMapFilled, CenterFocusWeakFilled
 } from "@vicons/material";
 
 import { storeToRefs } from "pinia";
@@ -67,21 +74,23 @@ const hasNext = computed<boolean>(() => (timelineIndex.value < (knownScenes.valu
 const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 withDefaults(defineProps<{
-    isExploreMode?: boolean
+    isExploreMode?: boolean,
+    isCenterButtonEnabled?: boolean
 }>(), {
-    isExploreMode: false
+    isExploreMode: false,
+    isCenterButtonEnabled: false
 });
 
 defineEmits<{
     (event: 'goNext'): void
     (event: 'goPrev'): void
-    (event: 'setExploreMode'): boolean
+    (event: 'setExploreMode'): boolean,
+    (event: 'centerScene'): void
 }>();
 
 </script>
 
 <style type="less">
-
 .nav-panel {
     background: rgba(0, 0, 0, 0.8);
     border-radius: 45px;
@@ -93,7 +102,21 @@ defineEmits<{
 }
 
 .button-toggled {
-  background-color: var(--n-text-color-pressed) !important;
-  color: var(--n-text-color) !important;
+    background-color: var(--n-text-color-pressed) !important;
+    color: var(--n-text-color) !important;
+}
+
+.smooth-enter-active, .smooth-leave-active {
+  transition: padding .1s;
+}
+.smooth-enter, .smooth-leave-to {
+  padding:0;
+
+  
+}
+
+.smooth-enter, .smooth-leave-to > * {
+  opacity: 0;
+  
 }
 </style>
