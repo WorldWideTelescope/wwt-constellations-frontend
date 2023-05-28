@@ -627,6 +627,7 @@ watchEffect(() => {
   position: absolute;
   right: 5px;
   top: 5px;
+  z-index: 110;
 }
 .nav-bg {
   background: rgba(0, 0, 0, 0.8);
