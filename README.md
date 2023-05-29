@@ -56,6 +56,8 @@ Environment variables:
 
 - `NUXT_PUBLIC_API_URL` to set the URL to the backend API server; default
   is `http://localhost:7000`
+- `NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG` to set the tag (of the form `G-XXXXXXXXXX`)
+  used for Google Analytics telemetry. If left unset, the telemetry is disabled.
 - `NUXT_PUBLIC_KEYCLOAK_URL` to set the URL to the Keycloak instance; default
   is `http://localhost:8080/`
 

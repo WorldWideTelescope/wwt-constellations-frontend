@@ -937,6 +937,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nuxtjs/google-analytics@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "@nuxtjs/google-analytics@npm:2.4.0"
+  dependencies:
+    vue-analytics: ^5.22.1
+  checksum: a6196032093fd3306ee8c50b3bb32d860670b3e82b7947b4e410195830a1f5c6f107f90fb3c210d9250ffe1ad465ac397e441c3f9211a48df0267a7898f742b3
+  languageName: node
+  linkType: hard
+
 "@pinia/nuxt@npm:^0.4.7":
   version: 0.4.11
   resolution: "@pinia/nuxt@npm:0.4.11"
@@ -1758,6 +1767,7 @@ __metadata:
   dependencies:
     "@css-render/vue3-ssr": ^0.15.12
     "@nuxt/webpack-builder": ^3.4.3
+    "@nuxtjs/google-analytics": ^2.4.0
     "@pinia/nuxt": ^0.4.7
     "@types/uuid": ^9.0.1
     "@types/xml": ^1.0.8
@@ -1783,10 +1793,12 @@ __metadata:
     pinia: ^2.0.32
     postcss: ^8.4
     postcss-loader: ^7
+    screenfull: ^5
     url-loader: ^4.1
     uuid: ^9.0.0
     vue: ^3
     vue-axe: ^3.1.2
+    vue-gtag: ^2.0.1
     vue-loader: ^17
     vue-slider-component: ^4.1.0-beta.7
     vue-social-sharing: next
@@ -6880,6 +6892,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"screenfull@npm:^5":
+  version: 5.2.0
+  resolution: "screenfull@npm:5.2.0"
+  checksum: 21eae33b780eb4679ea0ea2d14734b11168cf35049c45a2bf24ddeb39c67a788e7a8fb46d8b61ca6d8367fd67ce9dd4fc8bfe476489249c7189c2a79cf83f51a
+  languageName: node
+  linkType: hard
+
 "scule@npm:^1.0.0":
   version: 1.0.0
   resolution: "scule@npm:1.0.0"
@@ -7929,6 +7948,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vue-analytics@npm:^5.22.1":
+  version: 5.22.1
+  resolution: "vue-analytics@npm:5.22.1"
+  checksum: 2948a92428425f0c0f6e4b80a8b5679d152d3f76d35c26df482c903ae6798d6bb1ed110811c58a3123f53c26ff6696c61526f6d37b3cf4299bc83dd9af93a215
+  languageName: node
+  linkType: hard
+
 "vue-axe@npm:^3.1.2":
   version: 3.1.2
   resolution: "vue-axe@npm:3.1.2"
@@ -7970,6 +7996,15 @@ __metadata:
   version: 0.1.0
   resolution: "vue-devtools-stub@npm:0.1.0"
   checksum: 3f19fa2ab6d7f65de459f6c10d8f1d682dcd4ac55934c37617423d4a70efb98aa0a35f290120ec0c429ddcc0bdb7458836f87763ee0b8acfe007e4869f67dbbb
+  languageName: node
+  linkType: hard
+
+"vue-gtag@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "vue-gtag@npm:2.0.1"
+  peerDependencies:
+    vue: ^3.0.0
+  checksum: 949260ae4fbe6db62759d4050fa80c061e39025f7a9f50a97c662cac8d7d8ebf5d60228a7f9aa75d7ea910fb977852e954099a276f432c8cd13a063c40ba4ccd
   languageName: node
   linkType: hard
 
