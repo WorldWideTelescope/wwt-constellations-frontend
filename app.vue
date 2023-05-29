@@ -4,6 +4,16 @@
     <NuxtLayout class="page">
       <NuxtPage />
     </NuxtLayout>
+    <CookieControl locale="en">
+      <template #bar>
+        <h3>Cookie Consent</h3>
+        <p>This website uses cookies. Click 'Accept' to continue or 'Reject' to decline. Read our 
+          <NuxtLink to="https://aas.org/policies/privacy-policy" target="_blank">Privacy Policy</NuxtLink> for more information.</p>
+      </template>
+      <template #cookie="{ config }">
+        <span v-for="c in config" :key="c.id" v-text="c.cookies" />
+      </template>
+    </CookieControl>
     <VueAxePopup v-if="showAxePopup" />
   </div>
 </template>
@@ -77,5 +87,9 @@ onMounted(() => {
   // Don't eat up WWT events by default. Children should re-enable pointer
   // events as needed.
   pointer-events: none;
+}
+
+.cookieControl__ModalClose {
+  display: none;
 }
 </style>

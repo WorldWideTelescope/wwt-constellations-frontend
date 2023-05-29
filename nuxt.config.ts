@@ -23,6 +23,7 @@ export default defineNuxtConfig({
   },
   modules: [
     '@vueuse/nuxt',
+    '@dargmuesli/nuxt-cookie-control'
   ],
   builder: "webpack",
   vite: {
@@ -48,4 +49,31 @@ export default defineNuxtConfig({
       }
     }
   },
+  cookieControl: {
+    colors: {
+      checkboxActiveBackground: '#7fe7c4',
+      barButtonHoverColor: '#7fe7c4',
+      controlButtonHoverBackground: '#7fe7c4',
+    },
+    closeModalOnClickOutside: true,
+    isControlButtonEnabled: false,
+    isDashInDescriptionEnabled: false,
+    cookies: {
+      necessary: [
+        {
+          name: 'Functionality cookies',
+          description: 'These cookies are required for the website to function properly.',
+        },
+      ],
+      optional: [
+        {
+          id: 'ga',
+          name: 'Google Analytics',
+          src: 'https://www.googletagmanager.com/gtag/js?id=<API-KEY>',
+          targetCookieIds: ['cookie_control_consent', 'cookie_control_enabled_cookies']
+        },
+      ],
+    },
+    isCookieIdVisible: false,
+  }
 });
