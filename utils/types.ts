@@ -36,9 +36,22 @@ export const ImageStorage = t.type({
 
 export type ImageStorageT = t.TypeOf<typeof ImageStorage>;
 
+export const ImagePermissions = t.intersection([
+  t.type({
+    copyright: t.string,
+    license: t.string,
+  }),
+  t.partial({
+    credits: t.string,
+  })
+]);
+
+export type ImagePermissionsT = t.TypeOf<typeof ImagePermissions>;
+
 export const ImageDisplayInfo = t.type({
   wwt: ImageWwt,
   storage: ImageStorage,
+  permissions: ImagePermissions,
 });
 
 export type ImageDisplayInfoT = t.TypeOf<typeof ImageDisplayInfo>;
