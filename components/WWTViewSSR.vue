@@ -22,6 +22,7 @@ const {
   desiredScene,
   viewportBottomBlockage,
   viewportLeftBlockage,
+  isMovingToScene
 } = storeToRefs(constellationsStore);
 
 const wwt = ref<ComponentPublicInstance | null>(null);
@@ -135,13 +136,15 @@ watch(desiredScene, async (newScene) => {
   }
 
   // Finally, launch the goto
-
+  isMovingToScene.value = true;
   engineStore.gotoRADecZoom({
     raRad: setup.raRad,
     decRad: setup.decRad,
     zoomDeg: setup.zoomDeg,
     rollRad: setup.rollRad,
     instant: false
+  }).finally(() => {
+    isMovingToScene.value = false;
   });
 });
 </script>

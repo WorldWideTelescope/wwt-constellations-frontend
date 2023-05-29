@@ -13,7 +13,8 @@
         <n-grid-item>
           <div>
             <n-space justify="center">
-              <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter" :isCenterButtonEnabled="targetOutsideViewport"/>
+              <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
+                :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
             </n-space>
           </div>
         </n-grid-item>
@@ -24,7 +25,8 @@
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
           <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
-            :isExploreMode="isExploreMode" @centerScene="recenter" :isCenterButtonEnabled="targetOutsideViewport"/>
+            :isExploreMode="isExploreMode" @centerScene="recenter"
+            :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
         </n-space>
       </div>
 
@@ -98,6 +100,7 @@ const {
   timelineSource,
   viewportBottomBlockage,
   viewportLeftBlockage,
+  isMovingToScene
 } = storeToRefs(constellationsStore);
 
 const skymapScenes = computed<any[]>(() => {

@@ -138,6 +138,9 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   const viewportLeftBlockage = ref(0);
   const viewportBottomBlockage = ref(0);
 
+
+  const isMovingToScene = ref(false);
+
   return {
     describedScene,
     desiredScene,
@@ -154,5 +157,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     viewNeedsInitialization,
     viewportBottomBlockage,
     viewportLeftBlockage,
+    isMovingToScene
   }
 });
