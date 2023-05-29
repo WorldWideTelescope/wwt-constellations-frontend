@@ -111,8 +111,6 @@ defineEmits<{
 }
 .smooth-enter, .smooth-leave-to {
   padding:0;
-
-  
 }
 
 .smooth-enter, .smooth-leave-to > * {

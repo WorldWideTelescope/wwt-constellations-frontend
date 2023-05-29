@@ -185,16 +185,6 @@ async function recenter() {
       instant: false,
     });
   }
-
-}
-
-function centerScene() {
-  getEngineStore().gotoTarget
-  const scene = desiredScene.value;
-  desiredScene.value = null;
-  nextTick(() => {
-    desiredScene.value = scene;
-  })
 }
 
 function goNext() {
