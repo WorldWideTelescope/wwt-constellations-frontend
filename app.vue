@@ -7,8 +7,11 @@
     <CookieControl locale="en">
       <template #bar>
         <h3>Cookie Consent</h3>
-        <p>This website uses cookies. Click 'Accept' to continue or 'Reject' to decline. Read our 
-          <NuxtLink to="https://aas.org/policies/privacy-policy" target="_blank">Privacy Policy</NuxtLink> for more information.</p>
+        <p>This website uses cookies. Click ‘Accept’ to allow cookies from all
+          sources, ‘Decline’ to reject all nonessential cookies, or the ‘Learn more …’
+          for details. For more information, see our
+          <NuxtLink to="https://aas.org/policies/privacy-policy" target="_blank">Privacy Policy</NuxtLink>.
+        </p>
       </template>
       <template #cookie="{ config }">
         <span v-for="c in config" :key="c.id" v-text="c.cookies" />
@@ -31,7 +34,7 @@ const { $keycloak, $backendCall } = useNuxtApp();
 
 const showAxePopup = ref(false);
 
-onMounted(() => {   
+onMounted(() => {
   initializeSession($backendCall);
 
   showAxePopup.value = process.env.NODE_ENV !== 'production';
@@ -90,6 +93,20 @@ onMounted(() => {
   // Don't eat up WWT events by default. Children should re-enable pointer
   // events as needed.
   pointer-events: none;
+}
+
+.cookieControl {
+  a {
+    color: #FFF;
+
+    &:hover {
+      color: #EEF;
+    }
+
+    &:visited {
+      color: #CCE;
+    }
+  }
 }
 
 .cookieControl__ModalClose {
