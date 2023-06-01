@@ -52,6 +52,7 @@ const defaultObjectRadius = ref(4);
 const maxObjectRadius = ref(10);
 const backgroundImage = ref(null as HTMLImageElement | null);
 const celestialObjects = ref(props.scenes as CelestialObject[]);
+const isHoveringObject = ref(false);
 const engineRaDeg = ref(0);
 const engineDecDeg = ref(0);
 const engineZoomDeg = ref(0);
@@ -203,11 +204,14 @@ function onMouseMove(event: MouseEvent) {
 
         if (selectedObject) {
             selectedObject.isHovered = true;
+            isHoveringObject.value = true;
             detailsPosX.value = event.clientX;
             detailsPosY.value = event.clientY;
 
             animateObjectRadius(selectedObject, maxObjectRadius.value);
             redrawCanvas();
+        } else {
+            isHoveringObject.value = false;
         }
 
         const deselectedObject = celestialObjects.value.find((co) => {
