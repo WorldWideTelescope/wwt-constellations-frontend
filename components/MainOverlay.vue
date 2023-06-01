@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import {
+  NButton,
   NGrid,
   NGridItem,
   NIcon,
