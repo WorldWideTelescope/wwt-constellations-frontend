@@ -2,8 +2,8 @@
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
     <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
       <template #icon>
-        <n-icon size="35" aria-label="Exit fullscreen" v-if="fullscreenModeActive" :component="FullscreenExitOutlined"/>
-        <n-icon size="35" aria-label="Enter fullscreen" v-else :component="FullscreenOutlined"/>
+        <n-icon size="35" aria-label="Exit fullscreen" v-if="fullscreenModeActive" :component="FullscreenExitOutlined" />
+        <n-icon size="35" aria-label="Enter fullscreen" v-else :component="FullscreenOutlined" />
       </template>
     </n-button>
     <!-- Desktop -->
@@ -125,7 +125,6 @@ import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { SceneDisplayInfoT } from "~/utils/types";
 import * as screenfull from "screenfull";
 import {
   SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound, FullscreenOutlined, FullscreenExitOutlined
@@ -159,7 +158,7 @@ const skymapScenes = computed<any[]>(() => {
   const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
   return timeline.value.slice(i0, i1).map((id, relIndex) => {
     const scene = knownScenes.value.get(id)!;
-    return { id: id, itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
 });
 
@@ -183,15 +182,15 @@ onMounted(() => {
   }, 10000);
 
   if (screenfull.isEnabled) {
-      screenfull.on("change", onFullscreenEvent);
-    }
+    screenfull.on("change", onFullscreenEvent);
+  }
 });
 
 onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
   if (screenfull.isEnabled) {
-      screenfull.off("change", onFullscreenEvent);
-    }
+    screenfull.off("change", onFullscreenEvent);
+  }
 });
 
 function toggleFullscreen() {
@@ -201,7 +200,7 @@ function toggleFullscreen() {
 }
 
 function onFullscreenEvent() {
-    fullscreenModeActive.value = screenfull.isFullscreen;
+  fullscreenModeActive.value = screenfull.isFullscreen;
 }
 
 function onItemSelected(index: number) {
@@ -253,6 +252,7 @@ watchEffect(async () => {
 
     if (describedScene.value) {
       desiredScene.value = {
+        id: describedScene.value.id,
         place: describedScene.value.place,
         content: describedScene.value.content,
       };
@@ -629,6 +629,7 @@ watchEffect(() => {
   top: 5px;
   z-index: 110;
 }
+
 .nav-bg {
   background: rgba(0, 0, 0, 0.8);
   padding: 5px;
