@@ -16,23 +16,28 @@
     </n-grid-item>
 
     <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Credits: TBA
+      <n-text depth="3" class="permissions">
+        <div>Credits:</div>
+        <div
+          v-for="layer in scene.content.image_layers"
+          v-html="layer.image.permissions.credits"
+        />
       </n-text>
     </n-grid-item>
 
     <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Copyright: TBA
+      <n-text depth="3" class="permissions">
+        {{ `Copyright: ${copyright}` }}
       </n-text>
     </n-grid-item>
 
     <n-grid-item>
       <n-space justify="space-between">
         <n-space justify="start">
-          <n-button class="action-button" :bordered="false" aria-label="Like button">
+          <n-button class="action-button" :on-click="() => toggleLike()" :bordered="false" aria-label="Like button">
             <n-icon size="30">
-              <StarBorderRound />
+              <StarRound v-if="scene.liked" />
+              <StarBorderRound v-else />
             </n-icon>
             <n-text class="action-button-label">
               {{ scene.likes }}
@@ -43,13 +48,13 @@
               <RemoveRedEyeOutlined />
             </n-icon>
             <n-text class="action-button-label">
-              -1
+              {{ scene.impressions }}
             </n-text>
           </n-button>
         </n-space>
 
         <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text"/>
+          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
 
           <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
             <n-button class="action-button" :bordered="false" v-if="can_edit" aria-label="Edit scene button">
@@ -76,13 +81,13 @@ import {
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined } from "@vicons/material";
+import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined, StarRound } from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { GetSceneResponseT } from "~/utils/apis";
+import { GetSceneResponseT, addLike } from "~/utils/apis";
 import ShareButton from "./ShareButton.vue";
 
-const { $backendAuthCall } = useNuxtApp();
+const { $backendAuthCall, $backendCall } = useNuxtApp();
 
 const nuxtConfig = useRuntimeConfig();
 
@@ -116,6 +121,22 @@ function getExternalItemURL(item: GetSceneResponseT): string {
   }
 }
 
+async function toggleLike() {
+  if (scene.value.liked) {
+    const success = await removeLike($backendCall, scene.value.id);
+    if (success) {
+      scene.value.liked = false;
+      scene.value.likes--;
+    }
+  } else {
+    const success = await addLike($backendCall, scene.value.id);
+    if (success) {
+      scene.value.liked = true;
+      scene.value.likes++;
+    }
+  }
+}
+
 // Editability
 
 const can_edit = ref(false);
@@ -130,6 +151,21 @@ watchEffect(async () => {
   }
 });
 
+// Image permissions
+const copyright = computed(() => {
+  const layers = scene.value.content.image_layers;
+  if (!layers) {
+    return "";
+  }
+  const items = [];
+  for (const layer of layers) {
+    const value = layer.image.permissions.copyright;
+    if (value) {
+      items.push(value);
+    }
+  }
+  return items.join("; ");
+});
 </script>
 
 <style scoped lang="less">
@@ -161,5 +197,10 @@ watchEffect(async () => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.permissions {
+  font-size: smaller;
+  overflow-wrap: break-word;
 }
 </style>

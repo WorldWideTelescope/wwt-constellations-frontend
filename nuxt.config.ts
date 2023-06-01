@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: true,
+  telemetry: false,
   css: ["~/assets/main.less"],
   build: {
     transpile:
@@ -25,6 +26,9 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@dargmuesli/nuxt-cookie-control'
   ],
+  buildModules: [
+    ['@nuxtjs/google-analytics'],
+  ],
   builder: "webpack",
   vite: {
     // magic needed by naive-ui:
@@ -39,6 +43,7 @@ export default defineNuxtConfig({
     public: {
       apiUrl: "http://localhost:7000",
       keycloakUrl: "http://localhost:8080/",
+      googleAnalyticsTag: "",
       hostUrl: "http://localhost:3000"
     }
   },

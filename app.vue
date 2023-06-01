@@ -22,15 +22,18 @@
 import { storeToRefs } from "pinia";
 import { VueAxePopup } from 'vue-axe';
 import { useConstellationsStore } from "~/stores/constellations";
+import { initializeSession } from "~/utils/apis";
 
 const constellationsStore = useConstellationsStore();
 const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 
-const { $keycloak } = useNuxtApp();
+const { $keycloak, $backendCall } = useNuxtApp();
 
 const showAxePopup = ref(false);
 
-onMounted(() => {
+onMounted(() => {   
+  initializeSession($backendCall);
+
   showAxePopup.value = process.env.NODE_ENV !== 'production';
 
   // In most cases we need to initialize the Keycloak state, but it is possible

@@ -65,6 +65,7 @@ watch(scene_data, (newData) => {
   if (newData !== null) {
     describedScene.value = newData;
     desiredScene.value = {
+      id: newData.id,
       place: newData.place,
       content: newData.content,
     };
@@ -87,6 +88,7 @@ onMounted(() => {
     if (scene_data.value !== null) {
       describedScene.value = scene_data.value;
       desiredScene.value = {
+        id: scene_data.value.id,
         place: scene_data.value.place,
         content: scene_data.value.content,
       };
