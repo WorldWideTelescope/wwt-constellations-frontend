@@ -15,11 +15,13 @@ import { ComponentPublicInstance } from "vue";
 
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { useConstellationsStore } from "~/stores/constellations";
+import { addImpression } from "~/utils/apis";
 
 const engineStore = getEngineStore();
 const constellationsStore = useConstellationsStore();
 const {
   desiredScene,
+  describedScene,
   viewportBottomBlockage,
   viewportLeftBlockage,
   isMovingToScene
@@ -29,6 +31,8 @@ const wwt = ref<ComponentPublicInstance | null>(null);
 
 const tweenInCancellers: Function[] = [];
 const tweenOutCancellers: Function[] = [];
+
+const { $backendCall } = useNuxtApp();
 
 watch(desiredScene, async (newScene) => {
   // Cancel any pending tweens
@@ -137,6 +141,7 @@ watch(desiredScene, async (newScene) => {
 
   // Finally, launch the goto
   isMovingToScene.value = true;
+
   engineStore.gotoRADecZoom({
     raRad: setup.raRad,
     decRad: setup.decRad,
@@ -145,6 +150,12 @@ watch(desiredScene, async (newScene) => {
     instant: false
   }).finally(() => {
     isMovingToScene.value = false;
+  }).then(() => {
+    addImpression($backendCall, newScene.id).then((success) => {
+      if (describedScene.value && success) {
+        describedScene.value.impressions++;
+      }
+    });
   });
 });
 </script>

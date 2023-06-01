@@ -293,9 +293,11 @@ export const GetSceneResponse = t.type({
   handle: GetHandleResponse,
   creation_date: t.string,
   likes: t.number,
+  impressions: t.number,
   place: PlaceDetails,
   content: SceneContentHydrated,
   text: t.string,
+  liked: t.boolean,
   outgoing_url: t.union([t.string, t.undefined]),
   previews: ScenePreviews,
 });
@@ -305,7 +307,7 @@ export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
 // Returns null if a 404 is returned, i.e. the scene is not found.
 export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponseT | null> {
   try {
-    const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`);
+    const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`, {credentials: 'include'});
     checkForError(data);
     const maybe = GetSceneResponse.decode(data);
 
@@ -388,7 +390,7 @@ export async function getHandleTimeline(
   handle: string,
   page_num: number
 ): Promise<TimelineResponseT> {
-  const data = await fetcher(`/handle/${encodeURIComponent(handle)}/timeline`, { query: { page: page_num } });
+  const data = await fetcher(`/handle/${encodeURIComponent(handle)}/timeline`, { query: { page: page_num }, credentials: 'include' });
   checkForError(data);
   const maybe = TimelineResponse.decode(data);
 
@@ -411,4 +413,56 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
   }
 
   return maybe.right;
+}
+
+export const SceneInteractionResponse = t.type({
+  id: t.string,
+  success: t.boolean
+});
+
+export type SceneInteractionResponseT = t.TypeOf<typeof SceneInteractionResponse>;
+
+export async function addImpression(fetcher: $Fetch, id: string): Promise<boolean> {
+  return fetcher(`/scene/${id}/impressions`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
+    checkForError(data);
+    const maybe = SceneInteractionResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /scenes/impressions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right.success;
+  });
+}
+
+export async function addLike(fetcher: $Fetch, id: string): Promise<boolean> {
+  return fetcher(`/scene/${id}/likes`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
+    checkForError(data);
+    const maybe = SceneInteractionResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right.success;
+  });
+}
+
+export async function removeLike(fetcher: $Fetch, id: string): Promise<boolean> {
+  return fetcher(`/scene/${id}/likes`, { method: 'DELETE', credentials: 'include', cache: 'no-store' }).then((data) => {
+    checkForError(data);
+    const maybe = SceneInteractionResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right.success;
+  });
+}
+
+export async function initializeSession(fetcher: $Fetch): Promise<void> {
+  return fetcher(`/session/init`, { method: 'POST', credentials: 'include' }).then((data) => {
+    checkForError(data);
+  });
 }

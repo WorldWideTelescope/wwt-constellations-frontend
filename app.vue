@@ -4,6 +4,19 @@
     <NuxtLayout class="page">
       <NuxtPage />
     </NuxtLayout>
+    <CookieControl locale="en">
+      <template #bar>
+        <h3>Cookie Consent</h3>
+        <p>This website uses cookies. Click ‘Accept’ to allow cookies from all
+          sources, ‘Decline’ to reject all nonessential cookies, or the ‘Learn more …’
+          for details. For more information, see our
+          <NuxtLink to="https://aas.org/policies/privacy-policy" target="_blank">Privacy Policy</NuxtLink>.
+        </p>
+      </template>
+      <template #cookie="{ config }">
+        <span v-for="c in config" :key="c.id" v-text="c.cookies" />
+      </template>
+    </CookieControl>
     <VueAxePopup v-if="showAxePopup" />
   </div>
 </template>
@@ -12,15 +25,18 @@
 import { storeToRefs } from "pinia";
 import { VueAxePopup } from 'vue-axe';
 import { useConstellationsStore } from "~/stores/constellations";
+import { initializeSession } from "~/utils/apis";
 
 const constellationsStore = useConstellationsStore();
 const { loggedIn, showWWT } = storeToRefs(constellationsStore);
 
-const { $keycloak } = useNuxtApp();
+const { $keycloak, $backendCall } = useNuxtApp();
 
 const showAxePopup = ref(false);
 
 onMounted(() => {
+  initializeSession($backendCall);
+
   showAxePopup.value = process.env.NODE_ENV !== 'production';
 
   // In most cases we need to initialize the Keycloak state, but it is possible
@@ -77,5 +93,23 @@ onMounted(() => {
   // Don't eat up WWT events by default. Children should re-enable pointer
   // events as needed.
   pointer-events: none;
+}
+
+.cookieControl {
+  a {
+    color: #FFF;
+
+    &:hover {
+      color: #EEF;
+    }
+
+    &:visited {
+      color: #CCE;
+    }
+  }
+}
+
+.cookieControl__ModalClose {
+  display: none;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
     <div id="skymap-root">
         <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick"
-            aria-label="List of celestial objects">
+            aria-label="List of celestial objects" :class="{ 'canvas-hovering': isHoveringObject }">
             <ul>
                 <li v-for="co in celestialObjects" :on-click="() => $emit('selected', co.itemIndex)"
                     aria-label="Celestial object">
@@ -34,7 +34,6 @@ interface CelestialObject extends SceneDisplayInfoT {
     radius?: number,
     isHovered?: boolean
 }
-
 
 const props = defineProps<{
     scenes: SceneDisplayInfoT[]
@@ -259,7 +258,6 @@ function animateObjectRadius(co: CelestialObject, targetRadius: number) {
     }
 
     requestAnimationFrame(update);
-
 }
 
 </script>
@@ -273,6 +271,10 @@ canvas {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
+}
+
+.canvas-hovering {
+    cursor: pointer;
 }
 
 #skymap-root {
