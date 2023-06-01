@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@css-render/vue3-ssr": "^0.15.12",
+    "@dargmuesli/nuxt-cookie-control": "^5.9.2",
     "@nuxtjs/google-analytics": "^2.4.0",
     "@types/uuid": "^9.0.1",
     "@types/xml": "^1.0.8",
