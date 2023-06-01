@@ -16,14 +16,18 @@
     </n-grid-item>
 
     <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Credits: TBA
+      <n-text depth="3" class="permissions">
+        <div>Credits:</div>
+        <div
+          v-for="layer in scene.content.image_layers"
+          v-html="layer.image.permissions.credits"
+        />
       </n-text>
     </n-grid-item>
 
     <n-grid-item>
-      <n-text depth="3" style="font-size: smaller;">
-        Copyright: TBA
+      <n-text depth="3" class="permissions">
+        {{ `Copyright: ${copyright}` }}
       </n-text>
     </n-grid-item>
 
@@ -147,6 +151,21 @@ watchEffect(async () => {
   }
 });
 
+// Image permissions
+const copyright = computed(() => {
+  const layers = scene.value.content.image_layers;
+  if (!layers) {
+    return "";
+  }
+  const items = [];
+  for (const layer of layers) {
+    const value = layer.image.permissions.copyright;
+    if (value) {
+      items.push(value);
+    }
+  }
+  return items.join("; ");
+});
 </script>
 
 <style scoped lang="less">
@@ -178,5 +197,10 @@ watchEffect(async () => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.permissions {
+  font-size: smaller;
+  overflow-wrap: break-word;
 }
 </style>
