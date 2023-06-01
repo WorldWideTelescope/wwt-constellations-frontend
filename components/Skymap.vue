@@ -43,14 +43,12 @@ const emits = defineEmits<{
     (event: 'selected', index: number): void
 }>();
 
-
-
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const detailsPosX = ref(0);
 const detailsPosY = ref(0);
 const defaultObjectRadius = ref(4);
 const maxObjectRadius = ref(10);
-const backgroundImage = ref(null as HTMLImageElement | null);
+const backgroundImage = ref<HTMLImageElement | null>(null);
 const celestialObjects = ref(props.scenes as CelestialObject[]);
 const isHoveringObject = ref(false);
 const engineRaDeg = ref(0);
@@ -59,6 +57,7 @@ const engineZoomDeg = ref(0);
 const zoomWrapEnabled = ref(false);
 const zoomMaxSize = ref(50);
 const zoomMinSize = ref(10);
+
 const celestialObjectThumbnail = computed<string>(() => {
     const co = celestialObjects.value.find((co) => co.isHovered);
     if (co?.content?.image_layers && co.content.image_layers.length > 0) {
@@ -86,7 +85,6 @@ onMounted(() => {
             engineZoomDeg.value = Math.min(Math.max(zoom, zoomMinSize.value), zoomMaxSize.value);
             redrawCanvas();
         }
-
     });
 });
 
@@ -142,6 +140,7 @@ function drawCelestialObject(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
     ctx.filter = co.isHovered ? 'blur(6px)' : 'blur(3px)'
     ctx.fill();
 };
+
 function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     const coords = coords2screen(engineRaDeg.value, engineDecDeg.value, canvas.width, canvas.height)
 
@@ -163,9 +162,11 @@ function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D
         }
     }
 };
+
 function coords2screen(raDeg: number, decDeg: number, canvasWidth: number, canvasHeight: number) {
     return { x: ra2screen(raDeg, canvasWidth, canvasHeight), y: dec2screen(decDeg, canvasWidth, canvasHeight) };
 };
+
 function ra2screen(raDeg: number, canvasWidth: number, canvasHeight: number) {
     const raCenter = 0;
     const raScale = canvasWidth / 360; // pixels per degree
@@ -175,6 +176,7 @@ function ra2screen(raDeg: number, canvasWidth: number, canvasHeight: number) {
         ? (raDeg - raCenter) * raScale + raOffset
         : (raDeg - raCenter - 360) * raScale + raOffset;
 };
+
 function dec2screen(decDeg: number, canvasWidth: number, canvasHeight: number) {
     const decCenter = 0;
     const decScale = -canvasHeight / 180; // pixels per degree, negative to flip y-axis
@@ -258,14 +260,13 @@ function animateObjectRadius(co: CelestialObject, targetRadius: number) {
             co.radius = currentRadius;
             requestAnimationFrame(update);
         }
+
         redrawCanvas();
     }
 
     requestAnimationFrame(update);
 }
-
 </script>
-
 
 <style scoped>
 canvas {

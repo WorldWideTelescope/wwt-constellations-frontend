@@ -44,9 +44,7 @@
     </n-row>
 </template>
 
-
 <script setup lang="ts">
-
 import {
     NRow,
     NButtonGroup,
@@ -87,7 +85,6 @@ defineEmits<{
     (event: 'setExploreMode'): boolean,
     (event: 'centerScene'): void
 }>();
-
 </script>
 
 <style type="less">
@@ -106,15 +103,18 @@ defineEmits<{
     color: var(--n-text-color) !important;
 }
 
-.smooth-enter-active, .smooth-leave-active {
-  transition: padding .1s;
-}
-.smooth-enter, .smooth-leave-to {
-  padding:0;
+.smooth-enter-active,
+.smooth-leave-active {
+    transition: padding .1s;
 }
 
-.smooth-enter, .smooth-leave-to > * {
-  opacity: 0;
-  
+.smooth-enter,
+.smooth-leave-to {
+    padding: 0;
+}
+
+.smooth-enter,
+.smooth-leave-to>* {
+    opacity: 0;
 }
 </style>
