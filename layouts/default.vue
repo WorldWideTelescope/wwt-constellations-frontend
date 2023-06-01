@@ -140,6 +140,8 @@ function logInOut() {
   line-height: 1em;
   background: none;
   z-index: 100;
+  /* The fullscreenbutton is 35 pixels wide and occupies the top-right */
+  width: calc(100% - 35px);
 }
 
 .header-mobile {
