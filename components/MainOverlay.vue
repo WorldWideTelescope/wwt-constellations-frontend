@@ -1,5 +1,11 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
+    <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
+      <template #icon>
+        <n-icon size="35" aria-label="Exit fullscreen" v-if="fullscreenModeActive" :component="FullscreenExitOutlined" />
+        <n-icon size="35" aria-label="Enter fullscreen" v-else :component="FullscreenOutlined" />
+      </template>
+    </n-button>
     <!-- Desktop -->
     <template v-if="!isMobile">
       <n-grid ref="desktop_overlay" cols="1" y-gap="5" class="desktop-panel">
@@ -119,8 +125,9 @@ import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 
 import { useConstellationsStore } from "~/stores/constellations";
+import * as screenfull from "screenfull";
 import {
-  SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound
+  SwipeVerticalFilled, ZoomOutMapFilled, KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound, FullscreenOutlined, FullscreenExitOutlined
 } from "@vicons/material";
 
 const props = withDefaults(defineProps<{
@@ -161,6 +168,7 @@ const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref(null);
+const fullscreenModeActive = ref(false);
 
 onMounted(() => {
   if (timelineSource.value !== null) {
@@ -172,11 +180,28 @@ onMounted(() => {
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
   }, 10000);
+
+  if (screenfull.isEnabled) {
+    screenfull.on("change", onFullscreenEvent);
+  }
 });
 
 onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
+  if (screenfull.isEnabled) {
+    screenfull.off("change", onFullscreenEvent);
+  }
 });
+
+function toggleFullscreen() {
+  if (screenfull.isEnabled) {
+    screenfull.toggle();
+  }
+}
+
+function onFullscreenEvent() {
+  fullscreenModeActive.value = screenfull.isFullscreen;
+}
 
 function onItemSelected(index: number) {
   timelineIndex.value = index;
@@ -196,7 +221,6 @@ function scrollTo(index: number) {
     if (element) {
       element.scrollTop = Math.round(index * (element.offsetHeight));
     }
-
   }
 }
 
@@ -596,6 +620,14 @@ watchEffect(() => {
 .button-toggled {
   background-color: var(--n-text-color-pressed) !important;
   color: var(--n-text-color) !important;
+}
+
+.fullscreen-button {
+  pointer-events: all;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  z-index: 110;
 }
 
 .nav-bg {
