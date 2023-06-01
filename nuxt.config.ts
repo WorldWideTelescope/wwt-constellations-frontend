@@ -26,9 +26,6 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@dargmuesli/nuxt-cookie-control'
   ],
-  buildModules: [
-    ['@nuxtjs/google-analytics'],
-  ],
   builder: "webpack",
   vite: {
     // magic needed by naive-ui:
