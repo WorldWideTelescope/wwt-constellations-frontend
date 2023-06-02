@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
 
 import { ArrowBackRound } from "@vicons/material";
@@ -75,6 +76,7 @@ import {
   NCol,
   NDataTable,
   NDivider,
+  NEllipsis,
   NForm,
   NFormItem,
   NInput,
@@ -96,6 +98,14 @@ import {
 } from "~/utils/apis";
 
 import { PlaceDetailsT, SceneContentT, SceneCreationInfoT } from "~/utils/types";
+import { useConstellationsStore } from "~/stores/constellations";
+
+const {
+  describedScene,
+  desiredScene,
+  knownScenes,
+  timelineSource,
+} = storeToRefs(useConstellationsStore());
 
 definePageMeta({
   layout: 'naiveui',
@@ -166,10 +176,12 @@ const TABLE_PAGE_SIZE = 10;
 
 const sceneColumns = [
   {
-    title: "ID",
+    title: "Text",
     key: "_id",
     render: (row: HandleSceneInfoT) => {
-      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, () => [row._id]);
+      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, () =>
+        [h(NEllipsis, { style: "max-width: 30em" }, () => [row.text])]
+      );
     }
   },
   {
@@ -265,7 +277,15 @@ async function onNewSceneFromImage(img: HandleImageInfoT) {
 
   try {
     const result = await createScene(fetcher, handle, scene);
-    navigateTo(`/@${encodeURIComponent(handle)}/${result.id}/edit`);
+    const info = await getScene(fetcher, result.id);
+
+    if (info === null) {
+      throw new Error(`creation succeeded (ID ${result.id}) but fetch did not`);
+    }
+
+    knownScenes.value.set(result.id, info);
+    describedScene.value = info;
+    await navigateTo(`/@${encodeURIComponent(handle)}/${result.id}/edit`);
   } catch (err) {
     notification.error({ content: `Error creating scene: ${err}`, duration: 5000 });
   }
@@ -273,12 +293,11 @@ async function onNewSceneFromImage(img: HandleImageInfoT) {
 
 const myImagesColumns = [
   {
-    title: "ID",
-    key: "_id",
-  },
-  {
     title: "Note",
     key: "note",
+    render: (row: HandleImageInfoT) => {
+      return h(NEllipsis, { style: "max-width: 30em" }, () => [row.note]);
+    }
   },
   {
     title: "Actions",
