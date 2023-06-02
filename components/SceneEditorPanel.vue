@@ -107,9 +107,23 @@ function formatDate(date: string): string {
 }
 
 // Editing - scene text
+//
+// This editor needs to have its own reactive variable for the "text", since we
+// don't want to update the scene's text (even our in-app representation of it)
+// until any changes are committed. However, we should reset the text if/when we
+// change from editing one scene to editing a different scene. As far as I can
+// tell, the reliable way to do this is with a watchEffect as below. In
+// principle we should also have a framework that will prevent navigation away
+// from the scene editor if "text" has been changed but not committed, but for
+// now we're not implementing that.
 
-const text = ref(props.scene.text);
+const text = ref("");
 const text_loading = ref(false);
+
+watchEffect(() => {
+  text.value = scene.value.text;
+  text_loading.value = false;
+});
 
 async function onUpdateText() {
   const fetcher = await $backendAuthCall();
@@ -120,9 +134,17 @@ async function onUpdateText() {
 }
 
 // Editing - outgoing URL
+//
+// This and all other pieces of this editor that depend on the `scene` prop
+// follow the same pattern as above.
 
-const outgoing_url = ref(props.scene.outgoing_url);
+const outgoing_url = ref("");
 const outgoing_url_loading = ref(false);
+
+watchEffect(() => {
+  outgoing_url.value = scene.value.outgoing_url ?? "";
+  outgoing_url_loading.value = false;
+});
 
 async function onUpdateOutgoingUrl() {
   const fetcher = await $backendAuthCall();
@@ -134,31 +156,63 @@ async function onUpdateOutgoingUrl() {
 
 // Editing - managing the region-of-interest visualization
 
-const orig_roi_height_deg = ref(props.scene.place.roi_height_deg);
-const effective_roi_height_deg = ref(props.scene.place.roi_height_deg);
-const roi_aspect_ratio = ref(props.scene.place.roi_aspect_ratio);
 const engineStore = getEngineStore();
+
 const {
   decRad: wwt_dec_rad,
   raRad: wwt_ra_rad,
   rollRad: wwt_roll_rad,
   zoomDeg: wwt_zoom_deg,
 } = storeToRefs(engineStore);
+
 const viewport_dimensions = ref([1, 1]);
 
+useResizeObserver(document.body, (entries) => {
+  const entry = entries[0];
+  viewport_dimensions.value[0] = entry.contentRect.width;
+  viewport_dimensions.value[1] = entry.contentRect.height;
+});
+
+// The ROI aspect setting is a logarithmic value going from -100 (=> 10:1
+// aspect ratio) to +100 (1:10 aspect ratio).
+
+const log_roi_aspect = ref(0.0);
+
+function roi_aspect_ratio(): number {
+  return Math.pow(10, -0.01 * log_roi_aspect.value);
+}
+
+// The ROI size is handled as an "original" value that is then adjusted with a
+// logarithmic setting analogous to the aspect-ratio setting.
+
+const orig_roi_height_deg = ref(1.0);
+const log_roi_adjust = ref(0.0);
+
+function effective_roi_height_deg(): number {
+  return orig_roi_height_deg.value * Math.pow(10, 0.01 * log_roi_adjust.value);
+}
+
+// Reset the ROI variables when the current `scene` changes:
+watchEffect(() => {
+  log_roi_aspect.value = -100 * Math.log10(scene.value.place.roi_aspect_ratio);
+  orig_roi_height_deg.value = scene.value.place.roi_height_deg;
+  log_roi_adjust.value = 0.0;
+});
+
+// Update the the ROI visualization when the internal variables change:
 watchEffect(() => {
   // The zoom setting is the viewport height in degrees times six,
   // so the ratio of 1% of the viewport height to degrees is:
   const cur_vert_pct_per_deg = 600 / wwt_zoom_deg.value;
 
   // The height of the ROI indicator in percentage is therefore:
-  const roi_height_pct = cur_vert_pct_per_deg * effective_roi_height_deg.value;
+  const roi_height_pct = cur_vert_pct_per_deg * effective_roi_height_deg();
 
   // Update the displayed height to be that, with clamping:
   roiEditHeightPercentage.value = Math.min(roi_height_pct, 100);
 
   // The width of the ROI in degrees:
-  const roi_width_deg = effective_roi_height_deg.value * roi_aspect_ratio.value;
+  const roi_width_deg = effective_roi_height_deg() * roi_aspect_ratio();
 
   // The horizontal degrees-to-percent conversion factor varies with
   // the viewport aspect ratio, since the WWT display always has pixels
@@ -169,27 +223,6 @@ watchEffect(() => {
   roiEditWidthPercentage.value = Math.min(roi_width_deg * cur_horz_pct_per_deg, 100);
 });
 
-useResizeObserver(document.body, (entries) => {
-  const entry = entries[0];
-  viewport_dimensions.value[0] = entry.contentRect.width;
-  viewport_dimensions.value[1] = entry.contentRect.height;
-});
-
-const log_roi_aspect = ref(-100 * Math.log10(roi_aspect_ratio.value));
-
-watchEffect(() => {
-  // The ROI aspect setting is a logarithmic value going from -100 (=> 10:1
-  // aspect ratio) to +100 (1:10 aspect ratio).
-  roi_aspect_ratio.value = Math.pow(10, -0.01 * log_roi_aspect.value);
-});
-
-const log_roi_adjust = ref(0.0);
-
-watchEffect(() => {
-  // The ROI size adjust setting works like the aspect ratio setting.
-  const adjust = Math.pow(10, 0.01 * log_roi_adjust.value);
-  effective_roi_height_deg.value = orig_roi_height_deg.value * adjust;
-});
 
 async function onRecenter() {
   // Note that we intentionally do not use wwtSetupForPlace here, since in the
@@ -210,8 +243,8 @@ async function onUpdatePlace() {
     ra_rad: wwt_ra_rad.value,
     dec_rad: wwt_dec_rad.value,
     roll_rad: wwt_roll_rad.value,
-    roi_height_deg: effective_roi_height_deg.value,
-    roi_aspect_ratio: roi_aspect_ratio.value,
+    roi_height_deg: effective_roi_height_deg(),
+    roi_aspect_ratio: roi_aspect_ratio(),
   };
 
   const fetcher = await $backendAuthCall();
@@ -221,9 +254,6 @@ async function onUpdatePlace() {
 
   place_loading.value = false;
   scene.value.place = place;
-  orig_roi_height_deg.value = place.roi_height_deg;
-  log_roi_adjust.value = 0.0;
-  effective_roi_height_deg.value = orig_roi_height_deg.value;
 }
 </script>
 
