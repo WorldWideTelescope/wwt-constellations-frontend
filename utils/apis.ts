@@ -7,7 +7,14 @@ import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 import { $Fetch } from "ofetch";
 
-import { ImageDisplayInfo, PlaceDetails, SceneContentHydrated, ScenePreviews } from "./types";
+import {
+  ImageStorage,
+  ImageWwt,
+  PlaceDetails,
+  SceneContentHydrated,
+  SceneCreationInfoT,
+  ScenePreviews,
+} from "./types";
 
 function checkForError(item: any) {
   if (typeof item.error === "boolean" && item.error) {
@@ -20,6 +27,7 @@ function checkForError(item: any) {
 
   delete item.error;
 }
+
 
 // Endpoint: GET /misc/amisuperuser
 
@@ -45,6 +53,7 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
   });
 }
 
+
 // Endpoint: POST /misc/config-database
 
 //export interface MiscConfigDatabaseRequest { }
@@ -66,6 +75,7 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
     return maybe.right;
   });
 }
+
 
 // Endpoint: GET /handle/:handle
 
@@ -131,6 +141,46 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 }
 
 
+// Endpoint: GET /handle/:handle/imageinfo?page=$int&pagesize=$int
+
+export const HandleImageInfo = t.type({
+  _id: t.string,
+  handle_id: t.string,
+  creation_date: t.string,
+  note: t.string,
+  storage: ImageStorage,
+});
+
+export type HandleImageInfoT = t.TypeOf<typeof HandleImageInfo>;
+
+export const HandleImageInfoResponse = t.type({
+  total_count: t.number,
+  results: t.array(HandleImageInfo),
+});
+
+export type HandleImageInfoResponseT = t.TypeOf<typeof HandleImageInfoResponse>;
+
+export async function handleImageInfo(
+  fetcher: $Fetch,
+  handle: string,
+  page_num: number,
+  page_size: number
+): Promise<HandleImageInfoResponseT> {
+  const data = await fetcher(
+    `/handle/${encodeURIComponent(handle)}/imageinfo`,
+    { query: { page: page_num, pagesize: page_size } }
+  );
+  checkForError(data);
+  const maybe = HandleImageInfoResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/imageinfo: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+}
+
+
 // Endpoint: GET /handle/:handle/sceneinfo?page=$int&pagesize=$int
 
 export const HandleSceneInfo = t.type({
@@ -138,6 +188,7 @@ export const HandleSceneInfo = t.type({
   creation_date: t.string,
   impressions: t.number,
   likes: t.number,
+  text: t.string,
 });
 
 export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
@@ -285,6 +336,45 @@ export async function addHandleOwner(
   });
 }
 
+
+// Endpoint: GET /image/:id
+
+export const GetImageResponse = t.type({
+  id: t.string,
+  handle_id: t.string,
+  handle: GetHandleResponse,
+  creation_date: t.string,
+  wwt: ImageWwt,
+  storage: ImageStorage,
+  note: t.string,
+});
+
+export type GetImageResponseT = t.TypeOf<typeof GetImageResponse>;
+
+// Returns null if a 404 is returned, i.e. the image is not found.
+export async function getImage(fetcher: $Fetch, id: string): Promise<GetImageResponseT | null> {
+  try {
+    const data = await fetcher(`/image/${encodeURIComponent(id)}`);
+    checkForError(data);
+
+    const maybe = GetImageResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /image/:id: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+
 // Endpoint: GET /scene/:id
 
 export const GetSceneResponse = t.type({
@@ -324,6 +414,29 @@ export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSc
 
     throw err;
   }
+}
+
+// Endpoint: POST /handle/:handle/scene
+
+export const CreateSceneResponse = t.type({
+  id: t.string,
+  rel_url: t.string,
+});
+
+export type CreateSceneResponseT = t.TypeOf<typeof CreateSceneResponse>;
+
+export async function createScene(fetcher: $Fetch, handle: string, req: SceneCreationInfoT): Promise<CreateSceneResponseT> {
+  return fetcher(`/handle/${encodeURIComponent(handle)}/scene`, { method: 'POST', body: req }).then((data) => {
+    checkForError(data);
+
+    const maybe = CreateSceneResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle/scene: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  });
 }
 
 

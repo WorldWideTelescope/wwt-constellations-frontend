@@ -1,12 +1,12 @@
 <template>
   <div id="handle-page-root">
-    <MainOverlay />
+    <MainOverlay :described-handle="handle_data || undefined" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { computed, nextTick } from "vue";
+import { nextTick } from "vue";
 import { RouteLocationNormalized } from "vue-router";
 
 import { getHandle, handlePermissions } from "~/utils/apis";
@@ -40,7 +40,7 @@ const { loggedIn, timelineSource } = storeToRefs(constellationsStore);
 const route = useRoute();
 const handle = route.params.handle as string;
 
-const { data } = await useAsyncData(`handle-${handle}`, async () => {
+const { data: handle_data } = await useAsyncData(`handle-${handle}`, async () => {
   return getHandle($backendCall, handle);
 });
 

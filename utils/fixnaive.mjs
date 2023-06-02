@@ -18,6 +18,7 @@ import {
   NDivider,
   NDrawer,
   NDrawerContent,
+  NEllipsis,
   NForm,
   NFormItem,
   NGrid,
@@ -33,6 +34,8 @@ import {
   NSlider,
   NSpace,
   NStatistic,
+  NTabs,
+  NTabPane,
   NText,
   useNotification,
 } from "../node_modules/naive-ui";
@@ -50,6 +53,7 @@ export {
   NDivider,
   NDrawer,
   NDrawerContent,
+  NEllipsis,
   NForm,
   NFormItem,
   NGrid,
@@ -65,6 +69,8 @@ export {
   NSlider,
   NSpace,
   NStatistic,
+  NTabs,
+  NTabPane,
   NText,
   useNotification,
 };

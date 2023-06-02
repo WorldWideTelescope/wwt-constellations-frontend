@@ -56,12 +56,25 @@ export const ImageDisplayInfo = t.type({
 
 export type ImageDisplayInfoT = t.TypeOf<typeof ImageDisplayInfo>;
 
+export const SceneImageLayer = t.type({
+  image_id: t.string,
+  opacity: t.number,
+});
+
+export type SceneImageLayerT = t.TypeOf<typeof SceneImageLayer>;
+
 export const SceneImageLayerHydrated = t.type({
   image: ImageDisplayInfo,
   opacity: t.number,
 });
 
 export type SceneImageLayerHydratedT = t.TypeOf<typeof SceneImageLayerHydrated>;
+
+export const SceneContent = t.type({
+  image_layers: t.array(SceneImageLayer),
+});
+
+export type SceneContentT = t.TypeOf<typeof SceneContent>;
 
 export const SceneContentHydrated = t.intersection([
   t.partial({
@@ -82,6 +95,19 @@ export const SceneDisplayInfo = t.type({
 
 export type SceneDisplayInfoT = t.TypeOf<typeof SceneDisplayInfo>;
 
+export const SceneCreationInfo = t.intersection([
+  t.partial({
+    outgoing_url: t.string,
+  }),
+  t.type({
+    place: PlaceDetails,
+    content: SceneContent,
+    text: t.string,
+  })
+]);
+
+export type SceneCreationInfoT = t.TypeOf<typeof SceneCreationInfo>;
+
 export const ScenePreviews = t.partial({
   video: t.string,
   thumbnail: t.string,
@@ -90,24 +116,6 @@ export const ScenePreviews = t.partial({
 export type ScenePreviewsT = t.TypeOf<typeof ScenePreviews>;
 
 // Older types, potentially to be removed:
-
-export const ImagesetLayerDetails = t.type({
-  url: t.string,
-  name: t.string,
-  opacity: t.number,
-});
-
-export type ImagesetLayerDetailsT = t.TypeOf<typeof ImagesetLayerDetails>;
-
-export const Scene = t.type({
-  name: t.string,
-  imagesetLayers: t.array(ImagesetLayerDetails),
-  background: t.string,
-  user: t.string,
-  place: PlaceDetails,
-});
-
-export type SceneT = t.TypeOf<typeof Scene>;
 
 export interface FitsColorMaps {
   wwt: string;

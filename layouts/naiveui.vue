@@ -2,7 +2,9 @@
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
       <div id="wrapper">
-        <slot />
+        <div id="inner">
+          <slot />
+        </div>
       </div>
     </n-notification-provider>
   </n-config-provider>
@@ -35,6 +37,17 @@ onUnmounted(() => {
 
 <style lang="less">
 #wrapper {
+  pointer-events: auto;
+  overflow-y: scroll;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 6px;
+}
+
+#inner {
   max-width: 40rem;
   margin: 0 auto;
   color: #FFF;

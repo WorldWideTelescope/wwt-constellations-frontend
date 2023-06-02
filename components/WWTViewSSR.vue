@@ -62,7 +62,7 @@ watch(desiredScene, async (newScene) => {
     }
   }
 
-  // Figure out where we're going, which is a functinon of both the region-of-interest
+  // Figure out where we're going, which is a function of both the region-of-interest
   // of the target place as well as the current shape of the viewport.
 
   const viewport_shape = {
@@ -79,8 +79,10 @@ watch(desiredScene, async (newScene) => {
     bgImageset = backgroundInfoToSet(newScene.content.background);
     engineStore.addImagesetToRepository(bgImageset);
   } else {
+    // Note that when we're first starting up, this may be null.
     bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
   }
+
   const needBgUpdate = bgImageset?.get_name() !== engineStore.backgroundImageset?.get_name();
 
   // If the WWT view is starting out in a pristine state, initialize it to be in

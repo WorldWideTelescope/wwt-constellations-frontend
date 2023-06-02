@@ -4,7 +4,7 @@
       <NuxtLink :to="`/@${handle}/`">
         <n-button circle>
           <template #icon>
-            ←
+            <ArrowBackRound />
           </template>
         </n-button>
       </NuxtLink>
@@ -32,11 +32,18 @@
 
     <n-divider></n-divider>
 
-    <h2>Scenes</h2>
-
-    <n-data-table remote striped :columns="sceneColumns" :data="sceneData" :loading="sceneIsLoading"
-      :row-key="sceneRowKey" :pagination="scenePagination" @update:page="onSceneTablePageChange">
-    </n-data-table>
+    <n-tabs default-value="my-scenes">
+      <n-tab-pane name="my-scenes" tab="My Scenes">
+        <n-data-table remote striped :columns="sceneColumns" :data="sceneData" :loading="sceneIsLoading"
+          :row-key="sceneRowKey" :pagination="scenePagination" @update:page="onSceneTablePageChange">
+        </n-data-table>
+      </n-tab-pane>
+      <n-tab-pane name="my-images" tab="My Images" display-directive="show:lazy">
+        <n-data-table remote striped :columns="myImagesColumns" :data="myImagesData" :loading="myImagesIsLoading"
+          :row-key="myImagesRowKey" :pagination="myImagesPagination" @update:page="onMyImagesTablePageChange">
+        </n-data-table>
+      </n-tab-pane>
+    </n-tabs>
 
     <n-divider></n-divider>
 
@@ -59,29 +66,46 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
+
+import { ArrowBackRound } from "@vicons/material";
 
 import {
   NButton,
   NCol,
   NDataTable,
   NDivider,
+  NEllipsis,
   NForm,
   NFormItem,
   NInput,
   NRow,
   NStatistic,
+  NTabs,
+  NTabPane,
   useNotification
 } from "~/utils/fixnaive.mjs";
 
 import {
   getHandle,
+  HandleImageInfoT,
   handleSceneInfo,
   HandleSceneInfoT,
   handleStats,
   HandleStatsResponseT,
   updateHandle,
 } from "~/utils/apis";
+
+import { PlaceDetailsT, SceneContentT, SceneCreationInfoT } from "~/utils/types";
+import { useConstellationsStore } from "~/stores/constellations";
+
+const {
+  describedScene,
+  desiredScene,
+  knownScenes,
+  timelineSource,
+} = storeToRefs(useConstellationsStore());
 
 definePageMeta({
   layout: 'naiveui',
@@ -148,12 +172,16 @@ onMounted(async () => {
 
 // Scene table
 
+const TABLE_PAGE_SIZE = 10;
+
 const sceneColumns = [
   {
-    title: "ID",
+    title: "Text",
     key: "_id",
     render: (row: HandleSceneInfoT) => {
-      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, [row._id]);
+      return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, () =>
+        [h(NEllipsis, { style: "max-width: 30em" }, () => [row.text])]
+      );
     }
   },
   {
@@ -174,13 +202,11 @@ function sceneRowKey(row: HandleSceneInfoT) {
   return row._id;
 }
 
-const SCENE_TABLE_PAGE_SIZE = 10;
-
 const scenePagination = reactive({
   page: 1,
   pageCount: 1,
   itemCount: 0,
-  pageSize: SCENE_TABLE_PAGE_SIZE,
+  pageSize: TABLE_PAGE_SIZE,
 });
 
 async function onSceneTablePageChange(page: number) {
@@ -188,7 +214,7 @@ async function onSceneTablePageChange(page: number) {
     sceneIsLoading.value = true;
 
     const fetcher = await $backendAuthCall();
-    const result = await handleSceneInfo(fetcher, handle, page - 1, SCENE_TABLE_PAGE_SIZE);
+    const result = await handleSceneInfo(fetcher, handle, page - 1, TABLE_PAGE_SIZE);
 
     sceneData.value = result.results;
     scenePagination.page = page;
@@ -202,4 +228,117 @@ onMounted(() => {
   onSceneTablePageChange(1);
 });
 
+// The "My Images" table
+
+async function onNewSceneFromImage(img: HandleImageInfoT) {
+  const fullInfo = await getImage($backendCall, img._id);
+
+  if (!fullInfo) {
+    return;
+  }
+
+  // The place calculations are rough, but the intention is that they'll be
+  // polished up in the scene editor anyway.
+
+  let roi_height_deg = fullInfo.wwt.base_degrees_per_tile;
+
+  if (fullInfo.wwt.projection == "SkyImage") {
+    // For untiled SkyImages, the base_degrees_per_tile is degrees per pixel. We
+    // don't know the image height, though! Let's just guess:
+    roi_height_deg *= 1024;
+  }
+
+  roi_height_deg = Math.min(Math.max(roi_height_deg, 0.01), 60);
+
+  const place: PlaceDetailsT = {
+    ra_rad: fullInfo.wwt.center_x * D2R,
+    dec_rad: fullInfo.wwt.center_y * D2R,
+    roll_rad: 0,
+    roi_height_deg,
+    roi_aspect_ratio: 1,
+  };
+
+  const content: SceneContentT = {
+    image_layers: [
+      {
+        image_id: img._id,
+        opacity: 1.0,
+      }
+    ]
+  };
+
+  const scene: SceneCreationInfoT = {
+    place,
+    content,
+    text: fullInfo.note,
+  };
+
+  const fetcher = await $backendAuthCall();
+
+  try {
+    const result = await createScene(fetcher, handle, scene);
+    const info = await getScene(fetcher, result.id);
+
+    if (info === null) {
+      throw new Error(`creation succeeded (ID ${result.id}) but fetch did not`);
+    }
+
+    knownScenes.value.set(result.id, info);
+    describedScene.value = info;
+    await navigateTo(`/@${encodeURIComponent(handle)}/${result.id}/edit`);
+  } catch (err) {
+    notification.error({ content: `Error creating scene: ${err}`, duration: 5000 });
+  }
+}
+
+const myImagesColumns = [
+  {
+    title: "Note",
+    key: "note",
+    render: (row: HandleImageInfoT) => {
+      return h(NEllipsis, { style: "max-width: 30em" }, () => [row.note]);
+    }
+  },
+  {
+    title: "Actions",
+    key: "_id",
+    render: (row: HandleImageInfoT) => {
+      return h(NButton, { onClick: () => onNewSceneFromImage(row) }, () => ["New scene"]);
+    }
+  },
+];
+
+const myImagesData = ref<HandleImageInfoT[]>([]);
+
+const myImagesIsLoading = ref(true);
+
+function myImagesRowKey(row: HandleImageInfoT) {
+  return row._id;
+}
+
+const myImagesPagination = reactive({
+  page: 1,
+  pageCount: 1,
+  itemCount: 0,
+  pageSize: TABLE_PAGE_SIZE,
+});
+
+async function onMyImagesTablePageChange(page: number) {
+  if (!myImagesIsLoading.value) {
+    myImagesIsLoading.value = true;
+
+    const fetcher = await $backendAuthCall();
+    const result = await handleImageInfo(fetcher, handle, page - 1, TABLE_PAGE_SIZE);
+
+    myImagesData.value = result.results;
+    myImagesPagination.page = page;
+    myImagesPagination.itemCount = result.total_count;
+    myImagesIsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  myImagesIsLoading.value = false;
+  onMyImagesTablePageChange(1);
+});
 </script>
