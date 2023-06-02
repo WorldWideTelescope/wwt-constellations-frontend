@@ -345,6 +345,7 @@ export const GetImageResponse = t.type({
   handle: GetHandleResponse,
   creation_date: t.string,
   wwt: ImageWwt,
+  permissions: ImagePermissions,
   storage: ImageStorage,
   note: t.string,
 });
@@ -375,6 +376,55 @@ export async function getImage(fetcher: $Fetch, id: string): Promise<GetImageRes
 }
 
 
+// Endpoint: GET /image/:id/permissions
+
+export const ImagePermissionsResponse = t.type({
+  id: t.string,
+  edit: t.boolean,
+});
+
+export type ImagePermissionsResponseT = t.TypeOf<typeof ImagePermissionsResponse>;
+
+export async function imagePermissions(fetcher: $Fetch, id: string): Promise<ImagePermissionsResponseT | null> {
+  try {
+    const data = await fetcher(`/image/${encodeURIComponent(id)}/permissions`);
+    checkForError(data);
+    const maybe = ImagePermissionsResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /image/:id/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  } catch (err: any) {
+    // As far as I can tell, this is the only way to probe the HTTP response code in the FetchError???
+    if (typeof err.message === "string" && err.message.includes("404")) {
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+
+// Endpoint: PATCH /image/:id
+
+export const ImageUpdateRequest = t.partial({
+  note: t.string,
+  permissions: ImagePermissions,
+});
+
+export type ImageUpdateRequestT = t.TypeOf<typeof ImageUpdateRequest>;
+
+export async function updateImage(fetcher: $Fetch, id: string, req: ImageUpdateRequestT): Promise<void> {
+  const path = `/image/${encodeURIComponent(id)}`;
+
+  return fetcher(path, { method: 'PATCH', body: req }).then((data) => {
+    checkForError(data);
+  });
+}
+
+
 // Endpoint: GET /scene/:id
 
 export const GetSceneResponse = t.type({
@@ -397,7 +447,7 @@ export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
 // Returns null if a 404 is returned, i.e. the scene is not found.
 export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponseT | null> {
   try {
-    const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`, {credentials: 'include'});
+    const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`, { credentials: 'include' });
     checkForError(data);
     const maybe = GetSceneResponse.decode(data);
 
