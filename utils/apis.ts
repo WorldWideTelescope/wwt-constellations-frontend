@@ -406,6 +406,24 @@ export async function imagePermissions(fetcher: $Fetch, id: string): Promise<Ima
 }
 
 
+// Endpoint: PATCH /image/:id
+
+export const ImageUpdateRequest = t.partial({
+  note: t.string,
+  permissions: ImagePermissions,
+});
+
+export type ImageUpdateRequestT = t.TypeOf<typeof ImageUpdateRequest>;
+
+export async function updateImage(fetcher: $Fetch, id: string, req: ImageUpdateRequestT): Promise<void> {
+  const path = `/image/${encodeURIComponent(id)}`;
+
+  return fetcher(path, { method: 'PATCH', body: req }).then((data) => {
+    checkForError(data);
+  });
+}
+
+
 // Endpoint: GET /scene/:id
 
 export const GetSceneResponse = t.type({
