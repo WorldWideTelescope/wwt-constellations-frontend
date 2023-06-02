@@ -345,6 +345,7 @@ export const GetImageResponse = t.type({
   handle: GetHandleResponse,
   creation_date: t.string,
   wwt: ImageWwt,
+  permissions: ImagePermissions,
   storage: ImageStorage,
   note: t.string,
 });
