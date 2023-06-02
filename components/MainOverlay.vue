@@ -1,5 +1,5 @@
 <template>
-  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }">
+  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
       <template #icon>
         <n-icon size="35" aria-label="Exit fullscreen" v-if="fullscreenModeActive" :component="FullscreenExitOutlined" />
@@ -19,22 +19,8 @@
         <n-grid-item>
           <div>
             <n-space justify="center">
-              <n-button-group class="nav-bg">
-                <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
-                  <template #icon>
-                    <n-icon size="25" aria-labelledby="prev-button">
-                      <NavigateBeforeRound />
-                    </n-icon>
-                  </template>
-                </n-button>
-                <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
-                  <template #icon>
-                    <n-icon size="25" aria-labelledby="next-button">
-                      <NavigateNextRound />
-                    </n-icon>
-                  </template>
-                </n-button>
-              </n-button-group>
+              <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
+                :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
             </n-space>
           </div>
         </n-grid-item>
@@ -44,38 +30,9 @@
     <template v-else>
       <div id="toolbar">
         <n-space justify="space-around" size="large" style="padding: 10px;">
-          <n-button-group>
-            <n-button id="prev-button" @click="goPrev()" aria-label="Go previous button" round :disabled="!hasPrev">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="prev-button">
-                  <NavigateBeforeRound />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="feed-button" @click="isExploreMode = false" :class="{ 'button-toggled': !isExploreMode }"
-              aria-label="Feed button">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="feed-button">
-                  <SwipeVerticalFilled />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="explore-button" @click="isExploreMode = true" :class="{ 'button-toggled': isExploreMode }"
-              aria-label="Explore button">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="explore-button">
-                  <ZoomOutMapFilled style="transform: rotate(45deg);" />
-                </n-icon>
-              </template>
-            </n-button>
-            <n-button id="next-button" @click="goNext()" aria-label="Go next button" round :disabled="!hasNext">
-              <template #icon>
-                <n-icon size="25" aria-labelledby="next-button">
-                  <NavigateNextRound />
-                </n-icon>
-              </template>
-            </n-button>
-          </n-button-group>
+          <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
+            :isExploreMode="isExploreMode" @centerScene="recenter"
+            :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
         </n-space>
       </div>
 
@@ -112,12 +69,11 @@
 
 <script setup lang="ts">
 import {
+  NButton,
   NGrid,
   NGridItem,
   NIcon,
-  NSpace,
-  NButtonGroup,
-  NButton,
+  NSpace
 } from "~/utils/fixnaive.mjs";
 
 import { storeToRefs } from "pinia";
@@ -151,6 +107,7 @@ const {
   timelineSource,
   viewportBottomBlockage,
   viewportLeftBlockage,
+  isMovingToScene
 } = storeToRefs(constellationsStore);
 
 const skymapScenes = computed<any[]>(() => {
@@ -167,7 +124,17 @@ const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
-const fullPageContainerRef = ref(null);
+const fullPageContainerRef = ref<HTMLDivElement>();
+const feedRootRef = ref<HTMLDivElement>();
+
+const targetOutsideViewport = ref(false);
+
+const engineStore = getEngineStore();
+const {
+  rollRad: wwt_roll_rad,
+  zoomDeg: wwt_zoom_deg,
+} = storeToRefs(engineStore);
+
 const fullscreenModeActive = ref(false);
 
 onMounted(() => {
@@ -180,6 +147,18 @@ onMounted(() => {
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
   }, 10000);
+
+  engineStore.$subscribe(() => {
+    const place = describedScene.value?.place
+    const rootDiv = feedRootRef.value
+    if (place && rootDiv) {
+      const screenPoint = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D })
+
+      targetOutsideViewport.value = (screenPoint.x < 0 || screenPoint.x > rootDiv.clientWidth
+        || screenPoint.y < 0 || screenPoint.y > rootDiv.clientHeight);
+    }
+
+  });
 
   if (screenfull.isEnabled) {
     screenfull.on("change", onFullscreenEvent);
@@ -224,13 +203,16 @@ function scrollTo(index: number) {
   }
 }
 
-
-function centerScene() {
-  const scene = desiredScene.value;
-  desiredScene.value = null;
-  nextTick(() => {
-    desiredScene.value = scene;
-  })
+async function recenter() {
+  if (describedScene.value) {
+    await engineStore.gotoRADecZoom({
+      raRad: describedScene.value.place.ra_rad,
+      decRad: describedScene.value.place.dec_rad,
+      zoomDeg: wwt_zoom_deg.value,
+      rollRad: wwt_roll_rad.value,
+      instant: false,
+    });
+  }
 }
 
 function goNext() {
@@ -265,7 +247,7 @@ watchEffect(async () => {
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
     scrollTo(timelineIndex.value);
-    centerScene();
+    recenter();
   }
 });
 
@@ -634,5 +616,13 @@ watchEffect(() => {
   background: rgba(0, 0, 0, 0.8);
   padding: 5px;
   border-radius: 45px;
+}
+
+.center-button {
+  bottom: calc(60px + var(--footer-height));
+  left: 50%;
+  transform: translate(-50%, 0);
+  position: absolute;
+  pointer-events: all;
 }
 </style>

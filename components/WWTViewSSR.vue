@@ -24,6 +24,7 @@ const {
   describedScene,
   viewportBottomBlockage,
   viewportLeftBlockage,
+  isMovingToScene
 } = storeToRefs(constellationsStore);
 
 const wwt = ref<ComponentPublicInstance | null>(null);
@@ -80,7 +81,7 @@ watch(desiredScene, async (newScene) => {
   } else {
     bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
   }
-  const needBgUpdate = bgImageset.get_name() !== engineStore.backgroundImageset?.get_name();
+  const needBgUpdate = bgImageset?.get_name() !== engineStore.backgroundImageset?.get_name();
 
   // If the WWT view is starting out in a pristine state, initialize it to be in
   // a nice position relative to our target scene. We do this up here so that we
@@ -122,7 +123,7 @@ watch(desiredScene, async (newScene) => {
 
   // Set up the new layers and fade them in
 
-  if (needBgUpdate) {
+  if (needBgUpdate && bgImageset) {
     tweenToBackgroundForMove(bgImageset, moveTime, minMoveTime);
   }
 
@@ -139,12 +140,16 @@ watch(desiredScene, async (newScene) => {
   }
 
   // Finally, launch the goto
+  isMovingToScene.value = true;
+
   engineStore.gotoRADecZoom({
     raRad: setup.raRad,
     decRad: setup.decRad,
     zoomDeg: setup.zoomDeg,
     rollRad: setup.rollRad,
     instant: false
+  }).finally(() => {
+    isMovingToScene.value = false;
   }).then(() => {
     addImpression($backendCall, newScene.id).then((success) => {
       if (describedScene.value && success) {
