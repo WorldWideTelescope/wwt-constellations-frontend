@@ -188,6 +188,7 @@ export const HandleSceneInfo = t.type({
   creation_date: t.string,
   impressions: t.number,
   likes: t.number,
+  text: t.string,
 });
 
 export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
