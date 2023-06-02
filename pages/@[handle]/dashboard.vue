@@ -73,6 +73,7 @@ import { ArrowBackRound } from "@vicons/material";
 
 import {
   NButton,
+  NButtonGroup,
   NCol,
   NDataTable,
   NDivider,
@@ -230,6 +231,10 @@ onMounted(() => {
 
 // The "My Images" table
 
+async function onEditImage(img: HandleImageInfoT) {
+  await navigateTo(`/@${encodeURIComponent(handle)}/image/${img._id}/edit`);
+}
+
 async function onNewSceneFromImage(img: HandleImageInfoT) {
   const fullInfo = await getImage($backendCall, img._id);
 
@@ -303,7 +308,10 @@ const myImagesColumns = [
     title: "Actions",
     key: "_id",
     render: (row: HandleImageInfoT) => {
-      return h(NButton, { onClick: () => onNewSceneFromImage(row) }, () => ["New scene"]);
+      return h(NButtonGroup, {}, () => [
+        h(NButton, { onClick: () => onEditImage(row) }, () => ["Edit"]),
+        h(NButton, { onClick: () => onNewSceneFromImage(row) }, () => ["New scene"]),
+      ]);
     }
   },
 ];

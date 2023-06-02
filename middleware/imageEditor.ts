@@ -1,16 +1,19 @@
 // Copyright 2023 the .NET Foundation
 
 // A middleware to redirect the user away if they don't have permissions to edit
-// the current scene, as identified by a URL parameter `id`.
+// the current image, as identified by a URL parameter `id`.
 
 import { storeToRefs } from "pinia";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { scenePermissions } from "~/utils/apis";
+import { imagePermissions } from "~/utils/apis";
 
 export default defineNuxtRouteMiddleware(async (to, _from) => {
   // We only know if we're logged in when we're running on the client, so at the
   // server-side rendering stage we have to OK the access.
+  //
+  // (TODO: my understanding is that we can do better than this! But at the
+  // moment that's how things seem to be working.)
   if (process.server) {
     return;
   }
@@ -34,14 +37,14 @@ export default defineNuxtRouteMiddleware(async (to, _from) => {
     loggedIn.value = $keycloak.authenticated ?? false;
   }
 
-  // Now we can actually check the situation for this specific scene.
+  // Now we can actually check the situation for this specific image.
 
-  const { data: scene_perms_data } = await useAsyncData(`scene-perms-${id}`, async () => {
+  const { data: image_perms_data } = await useAsyncData(`image-perms-${id}`, async () => {
     const fetcher = await $backendAuthCall();
-    return scenePermissions(fetcher, id);
+    return imagePermissions(fetcher, id);
   });
 
-  const allowed = scene_perms_data.value && scene_perms_data.value.edit;
+  const allowed = image_perms_data.value && image_perms_data.value.edit;
 
   if (!allowed) {
     // The abortNavigation() option sounds appealing but seems to yield 500
