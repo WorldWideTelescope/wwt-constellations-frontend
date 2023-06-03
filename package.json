@@ -45,6 +45,9 @@
   },
   "name": "@wwtelescope/constellations-frontend",
   "private": true,
+  "resolutions": {
+    "tslib": "<2.5.3"
+  },
   "scripts": {
     "build": "nuxi build",
     "dev": "nuxi dev",
