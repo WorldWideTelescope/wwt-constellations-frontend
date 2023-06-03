@@ -44,6 +44,7 @@
     "webpack": "^5.0.0"
   },
   "name": "@wwtelescope/constellations-frontend",
+  "packageManager": "yarn@3.6.0",
   "private": true,
   "resolutions": {
     "tslib": "<2.5.3"
@@ -55,6 +56,5 @@
     "preview": "nuxi preview",
     "start": "nuxi start"
   },
-  "version": "0.0.0-dev.0",
-  "packageManager": "yarn@3.5.1"
+  "version": "0.0.0-dev.0"
 }
