@@ -1808,9 +1808,9 @@ __metadata:
     "@vicons/material": ^0.12.0
     "@vueuse/nuxt": ^10.1.2
     "@wwtelescope/astro": ^0.2.2
-    "@wwtelescope/engine": ^7.26.0
-    "@wwtelescope/engine-helpers": ^0.14
-    "@wwtelescope/engine-pinia": ^0.6
+    "@wwtelescope/engine": ^7.27.0
+    "@wwtelescope/engine-helpers": ^0.15
+    "@wwtelescope/engine-pinia": ^0.7
     "@wwtelescope/engine-types": ^0.6.4
     axe-core: ^4.7.1
     css-loader: ^6
@@ -1841,28 +1841,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@wwtelescope/engine-helpers@npm:>=0.14.0, @wwtelescope/engine-helpers@npm:^0.14":
-  version: 0.14.0
-  resolution: "@wwtelescope/engine-helpers@npm:0.14.0"
+"@wwtelescope/engine-helpers@npm:>=0.15.0, @wwtelescope/engine-helpers@npm:^0.15":
+  version: 0.15.0
+  resolution: "@wwtelescope/engine-helpers@npm:0.15.0"
   dependencies:
     "@wwtelescope/astro": ">=0.1.0"
-    "@wwtelescope/engine": ^7.24.0
+    "@wwtelescope/engine": ^7.27.0
     "@wwtelescope/engine-types": ">=0.6.0"
-  checksum: 6c926fcd4c34a1034782260231cf0432f432d7bbe31a75024405cec27678ed4936978c4ea5b6616ed3721842da4310b57fe57edf365de03ed79b92ee9feba4cb
+  checksum: 2b03d9e452e83b5b65cc5a1570fe59febb696be6ded6fdecb7f532f19057439d9af92df035d20a1d362d94c96f88df7c86483b8c4d52d0f799c4694005c2d4d9
   languageName: node
   linkType: hard
 
-"@wwtelescope/engine-pinia@npm:^0.6":
-  version: 0.6.0
-  resolution: "@wwtelescope/engine-pinia@npm:0.6.0"
+"@wwtelescope/engine-pinia@npm:^0.7":
+  version: 0.7.0
+  resolution: "@wwtelescope/engine-pinia@npm:0.7.0"
   dependencies:
     "@wwtelescope/astro": ">=0.2.2"
-    "@wwtelescope/engine": ^7.24.0
-    "@wwtelescope/engine-helpers": ">=0.14.0"
+    "@wwtelescope/engine": ^7.27.0
+    "@wwtelescope/engine-helpers": ">=0.15.0"
     "@wwtelescope/engine-types": ">=0.6.3"
     pinia: ^2.0.22
     vue: ^3
-  checksum: 5874e1a8e58e454504405314a9ddae78d73be0e00b7c1ecdcfa5b3373a7010068abab4ea8c1e72436c0912526e6605a2a37f9dbad9a946c372987729e049fe6d
+  checksum: 71d5104d5d04bcf52c87804034111f48970c574ccc86fedb38b0a8ea7b9288a4c7d2c94fc1de6bbc0767bbe924462b3045765ce4214b62608a9a2820f35beb25
   languageName: node
   linkType: hard
 
@@ -1873,14 +1873,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wwtelescope/engine@npm:^7.24.0, @wwtelescope/engine@npm:^7.26.0":
-  version: 7.26.0
-  resolution: "@wwtelescope/engine@npm:7.26.0"
+"@wwtelescope/engine@npm:^7.27.0":
+  version: 7.27.0
+  resolution: "@wwtelescope/engine@npm:7.27.0"
   dependencies:
     "@wwtelescope/engine-types": ">=0.6.0"
     pako: ^1.0.11
     uuid: ^8.3.2
-  checksum: 3f23d8825de434361674495cf406006d949a78fc7dffcbe88ebacaf84473a6b6c3adc322f5f173c72ee89d09c4e548dd63c92dc34b036da191ea51385f7167d5
+  checksum: 1eebe9db9c88948d3f7e5edac126dffcdff9d86e809b3d00b743192cece5532dd461fd9fb1bed445e02cbe0cb03b26af38765a18f15e2d42b8dee37747037b58
   languageName: node
   linkType: hard
 

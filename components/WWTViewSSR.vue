@@ -56,8 +56,8 @@ watch(desiredScene, async (newScene) => {
 
   if (newScene.content.image_layers) {
     for (var imgdef of newScene.content.image_layers) {
-      const imgset = imageInfoToSet(imgdef.image);
-      engineStore.addImagesetToRepository(imgset);
+      let imgset = imageInfoToSet(imgdef.image);
+      imgset = engineStore.addImagesetToRepository(imgset);
       imageset_info.push({ url: imgset.get_url(), opacity: imgdef.opacity });
     }
   }
@@ -77,7 +77,7 @@ watch(desiredScene, async (newScene) => {
   let bgImageset;
   if (newScene.content.background) {
     bgImageset = backgroundInfoToSet(newScene.content.background);
-    engineStore.addImagesetToRepository(bgImageset);
+    bgImageset = engineStore.addImagesetToRepository(bgImageset);
   } else {
     // Note that when we're first starting up, this may be null.
     bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
