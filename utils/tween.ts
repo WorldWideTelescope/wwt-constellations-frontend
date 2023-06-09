@@ -63,7 +63,7 @@ export function tweenLayerOutToDelete(layer: ImageSetLayer, duration: number): F
   return tweenLayerOut(layer, tweenOptions);
 }
 
-export async function tweenToBackgroundForMove(bgImageset: Imageset, moveTime: number, minMoveTime = MIN_MOVE_TIME): Function {
+export async function tweenToBackgroundForMove(bgImageset: Imageset, moveTime: number, minMoveTime = MIN_MOVE_TIME): Promise<Function> {
   const store = getEngineStore();
 
   const layer = await store.addImageSetLayer({
