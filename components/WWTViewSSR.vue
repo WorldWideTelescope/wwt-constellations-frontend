@@ -96,15 +96,23 @@ watch(desiredScene, async (newScene) => {
   if (constellationsStore.viewNeedsInitialization) {
     const zoom = Math.max(Math.min(setup.zoomDeg * 60, 360), 60);
 
-    await engineStore.gotoRADecZoom({
-      raRad: setup.raRad,
-      decRad: setup.decRad,
-      zoomDeg: zoom,
-      rollRad: setup.rollRad,
-      instant: true
-    });
-
-    constellationsStore.viewNeedsInitialization = false;
+    try {
+      await engineStore.gotoRADecZoom({
+        raRad: setup.raRad,
+        decRad: setup.decRad,
+        zoomDeg: zoom,
+        rollRad: setup.rollRad,
+        instant: true
+      });
+    } catch {
+      // It is possible that another slew request will come in while this one is
+      // executing, in which case it will raise a "superseded" exception. In
+      // that case, we should stop processing and let the superseding request do
+      // its thing.
+      return;
+    } finally {
+      constellationsStore.viewNeedsInitialization = false;
+    }
   }
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
@@ -150,6 +158,8 @@ watch(desiredScene, async (newScene) => {
     zoomDeg: setup.zoomDeg,
     rollRad: setup.rollRad,
     instant: false
+  }).catch(() => {
+    // As above, if this goto is superseded, no problem.
   }).finally(() => {
     isMovingToScene.value = false;
   }).then(() => {
