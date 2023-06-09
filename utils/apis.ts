@@ -544,10 +544,15 @@ export async function scenePermissions(fetcher: $Fetch, id: string): Promise<Sce
 
 // Endpoint: PATCH /scene/:id
 
+const SceneContentUpdateRequest = t.partial({
+  background_id: t.string,
+});
+
 export const SceneUpdateRequest = t.partial({
   outgoing_url: t.string,
   place: PlaceDetails,
   text: t.string,
+  content: SceneContentUpdateRequest,
 });
 
 export type SceneUpdateRequestT = t.TypeOf<typeof SceneUpdateRequest>;
