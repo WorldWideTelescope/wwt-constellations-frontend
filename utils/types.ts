@@ -49,6 +49,7 @@ export const ImagePermissions = t.intersection([
 export type ImagePermissionsT = t.TypeOf<typeof ImagePermissions>;
 
 export const ImageDisplayInfo = t.type({
+  id: t.string,
   wwt: ImageWwt,
   storage: ImageStorage,
   permissions: ImagePermissions,
