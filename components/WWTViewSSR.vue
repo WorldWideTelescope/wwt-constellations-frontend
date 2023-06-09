@@ -56,8 +56,8 @@ watch(desiredScene, async (newScene) => {
 
   if (newScene.content.image_layers) {
     for (var imgdef of newScene.content.image_layers) {
-      const imgset = imageInfoToSet(imgdef.image);
-      engineStore.addImagesetToRepository(imgset);
+      let imgset = imageInfoToSet(imgdef.image);
+      imgset = engineStore.addImagesetToRepository(imgset);
       imageset_info.push({ url: imgset.get_url(), opacity: imgdef.opacity });
     }
   }
@@ -77,7 +77,7 @@ watch(desiredScene, async (newScene) => {
   let bgImageset;
   if (newScene.content.background) {
     bgImageset = backgroundInfoToSet(newScene.content.background);
-    engineStore.addImagesetToRepository(bgImageset);
+    bgImageset = engineStore.addImagesetToRepository(bgImageset);
   } else {
     // Note that when we're first starting up, this may be null.
     bgImageset = engineStore.lookupImageset("Digitized Sky Survey (Color)");
@@ -96,15 +96,23 @@ watch(desiredScene, async (newScene) => {
   if (constellationsStore.viewNeedsInitialization) {
     const zoom = Math.max(Math.min(setup.zoomDeg * 60, 360), 60);
 
-    await engineStore.gotoRADecZoom({
-      raRad: setup.raRad,
-      decRad: setup.decRad,
-      zoomDeg: zoom,
-      rollRad: setup.rollRad,
-      instant: true
-    });
-
-    constellationsStore.viewNeedsInitialization = false;
+    try {
+      await engineStore.gotoRADecZoom({
+        raRad: setup.raRad,
+        decRad: setup.decRad,
+        zoomDeg: zoom,
+        rollRad: setup.rollRad,
+        instant: true
+      });
+    } catch {
+      // It is possible that another slew request will come in while this one is
+      // executing, in which case it will raise a "superseded" exception. In
+      // that case, we should stop processing and let the superseding request do
+      // its thing.
+      return;
+    } finally {
+      constellationsStore.viewNeedsInitialization = false;
+    }
   }
 
   // Figure out move parameters and set up to fade out, then remove, existing layers
@@ -150,6 +158,8 @@ watch(desiredScene, async (newScene) => {
     zoomDeg: setup.zoomDeg,
     rollRad: setup.rollRad,
     instant: false
+  }).catch(() => {
+    // As above, if this goto is superseded, no problem.
   }).finally(() => {
     isMovingToScene.value = false;
   }).then(() => {

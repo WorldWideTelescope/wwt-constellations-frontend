@@ -12,7 +12,8 @@
     </n-grid-item>
 
     <n-grid-item class="text">
-      <n-input v-model:value="text" type="textarea" placeholder="Scene text ..." @change="onUpdateText"></n-input>
+      <n-input v-model:value="text" type="textarea" class="cxinput" placeholder="Scene text ..."
+        @change="onUpdateText"></n-input>
       <n-space justify="end">
         <n-button :loading="text_loading" @click="onUpdateText">
           Update
@@ -24,7 +25,8 @@
       <n-text depth="3" style="font-size: smaller;">
         Outgoing URL:
       </n-text>
-      <n-input v-model:value="outgoing_url" type="text" placeholder="https://..." @change="onUpdateOutgoingUrl"></n-input>
+      <n-input v-model:value="outgoing_url" type="text" class="cxinput" placeholder="https://..."
+        @change="onUpdateOutgoingUrl"></n-input>
       <n-space justify="end">
         <n-button :loading="outgoing_url_loading" @click="onUpdateOutgoingUrl">
           Update
@@ -59,6 +61,19 @@
         </n-button>
       </n-space>
     </n-grid-item>
+
+    <n-grid-item>
+      <n-text depth="3" style="font-size: smaller;">
+        Background:
+      </n-text>
+      <n-select v-model:value="background_selection" :options="background_options" @update:value="onSelectNewBackground"
+        class="cxinput" />
+      <n-space justify="end">
+        <n-button :loading="background_loading" @click="onUpdateBackground">
+          Update
+        </n-button>
+      </n-space>
+    </n-grid-item>
   </n-grid>
 </template>
 
@@ -73,15 +88,16 @@ import {
   NInput,
   NGrid,
   NGridItem,
+  NSelect,
   NSlider,
   NSpace,
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { GetSceneResponseT, updateScene } from "~/utils/apis";
+import { GetSceneResponseT, builtinBackgrounds, updateScene } from "~/utils/apis";
 import { useConstellationsStore } from "~/stores/constellations";
 
-const { $backendAuthCall } = useNuxtApp();
+const { $backendCall, $backendAuthCall } = useNuxtApp();
 
 const props = defineProps<{
   scene: GetSceneResponseT,
@@ -255,6 +271,62 @@ async function onUpdatePlace() {
   place_loading.value = false;
   scene.value.place = place;
 }
+
+// Background selection
+
+const background_selection = ref("");
+const background_options = ref<{ label: string; value: string; }[]>([]);
+const background_loading = ref(false);
+
+const { data: background_data } = await useAsyncData("backgrounds", async () => {
+  // One day the results here might depend on the user login status
+  return builtinBackgrounds($backendCall);
+});
+
+watchEffect(() => {
+  const bgdata = background_data.value;
+
+  if (bgdata) {
+    background_options.value = bgdata.map((item) => {
+      return {
+        label: item.note,
+        value: item._id,
+      };
+    });
+    background_selection.value = bgdata[0]._id;
+  }
+});
+
+watchEffect(async () => {
+  const current_background = scene.value.content.background?.id;
+
+  if (current_background) {
+    background_selection.value = current_background;
+    background_loading.value = false;
+    await onSelectNewBackground(current_background);
+  }
+});
+
+async function onSelectNewBackground(new_id: string) {
+  const image = await getImage($backendCall, new_id);
+
+  if (image === null) {
+    return;
+  }
+
+  let imgset = backgroundInfoToSet(image);
+  imgset = engineStore.addImagesetToRepository(imgset);
+  engineStore.setBackgroundImageByName(imgset.get_name());
+}
+
+async function onUpdateBackground() {
+  const fetcher = await $backendAuthCall();
+  background_loading.value = true;
+  await updateScene(fetcher, scene.value.id, { content: { background_id: background_selection.value } });
+  notification.success({ content: "Background updated.", duration: 3000 });
+  background_loading.value = false;
+}
+
 </script>
 
 <style scoped lang="less">
@@ -263,6 +335,10 @@ async function onUpdatePlace() {
   border-radius: 3px;
   box-sizing: border-box;
   padding: 4px;
+}
+
+.cxinput {
+  margin: 0.5rem 0;
 }
 
 .metadata {

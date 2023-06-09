@@ -143,7 +143,7 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
 // Endpoint: GET /handle/:handle/imageinfo?page=$int&pagesize=$int
 
-export const HandleImageInfo = t.type({
+export const ImageSummary = t.type({
   _id: t.string,
   handle_id: t.string,
   creation_date: t.string,
@@ -151,11 +151,11 @@ export const HandleImageInfo = t.type({
   storage: ImageStorage,
 });
 
-export type HandleImageInfoT = t.TypeOf<typeof HandleImageInfo>;
+export type ImageSummaryT = t.TypeOf<typeof ImageSummary>;
 
 export const HandleImageInfoResponse = t.type({
   total_count: t.number,
-  results: t.array(HandleImageInfo),
+  results: t.array(ImageSummary),
 });
 
 export type HandleImageInfoResponseT = t.TypeOf<typeof HandleImageInfoResponse>;
@@ -425,6 +425,27 @@ export async function updateImage(fetcher: $Fetch, id: string, req: ImageUpdateR
 }
 
 
+// Endpoint: GET /images/builtin-backgrounds
+
+const BuiltinBackgroundsResponse = t.type({
+  results: t.array(ImageSummary),
+});
+
+export async function builtinBackgrounds(
+  fetcher: $Fetch,
+): Promise<ImageSummaryT[]> {
+  const data = await fetcher("/images/builtin-backgrounds");
+  checkForError(data);
+  const maybe = BuiltinBackgroundsResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /images/builtin-backgrounds: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right.results;
+}
+
+
 // Endpoint: GET /scene/:id
 
 export const GetSceneResponse = t.type({
@@ -523,10 +544,15 @@ export async function scenePermissions(fetcher: $Fetch, id: string): Promise<Sce
 
 // Endpoint: PATCH /scene/:id
 
+const SceneContentUpdateRequest = t.partial({
+  background_id: t.string,
+});
+
 export const SceneUpdateRequest = t.partial({
   outgoing_url: t.string,
   place: PlaceDetails,
   text: t.string,
+  content: SceneContentUpdateRequest,
 });
 
 export type SceneUpdateRequestT = t.TypeOf<typeof SceneUpdateRequest>;
