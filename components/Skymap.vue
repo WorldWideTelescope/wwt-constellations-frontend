@@ -127,9 +127,9 @@ function drawCelestialObject(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
 
     ctx.beginPath();
     ctx.arc(coords.x, coords.y, co.radius ?? defaultObjectRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = 'white';
-    ctx.filter = co.isHovered ? 'blur(6px)' : 'blur(3px)'
-    ctx.fill();
+    ctx.strokeStyle = '#70c0e8';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 };
 
 function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
@@ -138,7 +138,8 @@ function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D
     ctx.beginPath();
     ctx.filter = 'none';
     ctx.arc(coords.x, coords.y, engineZoomDeg.value, 0, 2 * Math.PI)
-    ctx.strokeStyle = 'blue';
+    ctx.strokeStyle = '#215276';
+    ctx.lineWidth = 2;
     ctx.stroke();
 };
 
@@ -252,7 +253,7 @@ function animateObjectRadius(co: CelestialObject, targetRadius: number) {
 <style scoped>
 canvas {
     background-color: black;
-    border: 1px solid #777;
+    border: 1px solid #215276;
     border-radius: 3px;
     box-sizing: border-box;
     width: 100%;
@@ -282,8 +283,8 @@ canvas {
 #skymap-details {
     width: 100px;
     height: 70px;
-    border-radius: 10%;
-    border: 1px solid white;
+    border-radius: 5px;
+    border: 1px solid #215276;
 }
 
 .fade-enter-active {
