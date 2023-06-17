@@ -189,7 +189,7 @@ function onFullscreenEvent() {
 }
 
 function onItemSelected(index: number) {
-  timelineIndex.value = index;
+  constellationsStore.setTimelineIndex(index);
 }
 
 function onScroll(event: UIEvent) {
@@ -223,13 +223,17 @@ async function recenter() {
 
 function goNext() {
   if (hasNext) {
-    scrollTo(++timelineIndex.value);
+    const n = timelineIndex.value + 1;
+    constellationsStore.setTimelineIndex(n);
+    scrollTo(n);
   }
 }
 
 function goPrev() {
   if (hasPrev) {
-    scrollTo(--timelineIndex.value);
+    const n = timelineIndex.value - 1;
+    constellationsStore.setTimelineIndex(n);
+    scrollTo(n);
   }
 }
 
