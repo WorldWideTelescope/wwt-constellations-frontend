@@ -184,10 +184,12 @@ function onMouseMove(event: MouseEvent) {
         });
 
         if (selectedObject) {
-            selectedObject.isHovered = true;
-            isHoveringObject.value = true;
-            detailsPosX.value = event.clientX;
-            detailsPosY.value = event.clientY;
+            if (!selectedObject.isHovered) {
+                selectedObject.isHovered = true;
+                isHoveringObject.value = true;
+                detailsPosX.value = event.clientX;
+                detailsPosY.value = event.clientY;
+            }
 
             animateObjectRadius(selectedObject, maxObjectRadius);
             drawCanvas();
