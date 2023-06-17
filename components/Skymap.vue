@@ -20,14 +20,11 @@
     </div>
 </template>
 
-
 <script setup lang="ts">
 import { SceneDisplayInfoT } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
 import { URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
-
-
 
 interface CelestialObject extends SceneDisplayInfoT {
     itemIndex?: number,
@@ -43,20 +40,20 @@ const emits = defineEmits<{
     (event: 'selected', index: number): void
 }>();
 
+const defaultObjectRadius = 4;
+const maxObjectRadius = 10;
+const zoomMaxSize = 50;
+const zoomMinSize = 10;
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const detailsPosX = ref(0);
 const detailsPosY = ref(0);
-const defaultObjectRadius = ref(4);
-const maxObjectRadius = ref(10);
 const backgroundImage = ref<HTMLImageElement | null>(null);
 const celestialObjects = ref(props.scenes as CelestialObject[]);
 const isHoveringObject = ref(false);
 const engineRaDeg = ref(0);
 const engineDecDeg = ref(0);
 const engineZoomDeg = ref(0);
-const zoomWrapEnabled = ref(false);
-const zoomMaxSize = ref(50);
-const zoomMinSize = ref(10);
 
 const celestialObjectThumbnail = computed<string>(() => {
     const co = celestialObjects.value.find((co) => co.isHovered);
@@ -82,17 +79,16 @@ onMounted(() => {
         if (ra != engineRaDeg.value || dec != engineDecDeg.value || zoom != engineZoomDeg.value) {
             engineRaDeg.value = ra;
             engineDecDeg.value = dec;
-            engineZoomDeg.value = Math.min(Math.max(zoom, zoomMinSize.value), zoomMaxSize.value);
-            redrawCanvas();
+            engineZoomDeg.value = Math.min(Math.max(zoom, zoomMinSize), zoomMaxSize);
+            drawCanvas();
         }
     });
 });
 
 watchEffect(() => {
     celestialObjects.value = props.scenes;
-    redrawCanvas();
+    drawCanvas();
 });
-
 
 function drawCanvas() {
     const canvas = canvasRef.value;
@@ -123,19 +119,14 @@ function drawCanvas() {
         drawCelestialObject(canvas, ctx, co, index)
     });
 
-
     drawZoomBorder(canvas, ctx);
-};
-
-function redrawCanvas() {
-    drawCanvas();
 };
 
 function drawCelestialObject(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, co: CelestialObject, index: number) {
     const coords = coords2screen(co.place.ra_rad * R2D, co.place.dec_rad * R2D, canvas.width, canvas.height)
 
     ctx.beginPath();
-    ctx.arc(coords.x, coords.y, co.radius ?? defaultObjectRadius.value, 0, 2 * Math.PI);
+    ctx.arc(coords.x, coords.y, co.radius ?? defaultObjectRadius, 0, 2 * Math.PI);
     ctx.fillStyle = 'white';
     ctx.filter = co.isHovered ? 'blur(6px)' : 'blur(3px)'
     ctx.fill();
@@ -149,18 +140,6 @@ function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D
     ctx.arc(coords.x, coords.y, engineZoomDeg.value, 0, 2 * Math.PI)
     ctx.strokeStyle = 'blue';
     ctx.stroke();
-
-    if (zoomWrapEnabled.value) {
-        if (coords.x + engineZoomDeg.value > canvas.clientWidth) {
-            ctx.beginPath();
-            ctx.arc(coords.x - canvas.width, coords.y, engineZoomDeg.value, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else if (coords.x - engineZoomDeg.value < 0) {
-            ctx.beginPath();
-            ctx.arc(coords.x + canvas.width, coords.y, engineZoomDeg.value, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-    }
 };
 
 function coords2screen(raDeg: number, decDeg: number, canvasWidth: number, canvasHeight: number) {
@@ -201,7 +180,7 @@ function onMouseMove(event: MouseEvent) {
         const selectedObject = celestialObjects.value.find((co) => {
             const coords = coords2screen(co.place.ra_rad * R2D, co.place.dec_rad * R2D, canvas.width, canvas.height)
             const distance = Math.sqrt((x - coords.x) ** 2 + (y - coords.y) ** 2);
-            return distance < (co.radius ?? defaultObjectRadius.value);
+            return distance < (co.radius ?? defaultObjectRadius);
         });
 
         if (selectedObject) {
@@ -210,8 +189,8 @@ function onMouseMove(event: MouseEvent) {
             detailsPosX.value = event.clientX;
             detailsPosY.value = event.clientY;
 
-            animateObjectRadius(selectedObject, maxObjectRadius.value);
-            redrawCanvas();
+            animateObjectRadius(selectedObject, maxObjectRadius);
+            drawCanvas();
         } else {
             isHoveringObject.value = false;
         }
@@ -222,7 +201,7 @@ function onMouseMove(event: MouseEvent) {
 
         if (deselectedObject) {
             deselectedObject.isHovered = false;
-            animateObjectRadius(deselectedObject, defaultObjectRadius.value);
+            animateObjectRadius(deselectedObject, defaultObjectRadius);
         }
     }
 };
@@ -234,18 +213,18 @@ function onMouseLeave() {
         co.isHovered = false;
     }
 
-    redrawCanvas();
+    drawCanvas();
 };
 
 function animateObjectRadius(co: CelestialObject, targetRadius: number) {
-    const startRadius = co.radius ?? defaultObjectRadius.value;
+    const startRadius = co.radius ?? defaultObjectRadius;
     let currentRadius = startRadius;
     let velocity = 0;
     const springConstant = 0.1;
     const damping = 0.8;
 
     function update() {
-        if (!co.isHovered && targetRadius > defaultObjectRadius.value) {
+        if (!co.isHovered && targetRadius > defaultObjectRadius) {
             return;
         }
 
@@ -261,7 +240,7 @@ function animateObjectRadius(co: CelestialObject, targetRadius: number) {
             requestAnimationFrame(update);
         }
 
-        redrawCanvas();
+        drawCanvas();
     }
 
     requestAnimationFrame(update);
