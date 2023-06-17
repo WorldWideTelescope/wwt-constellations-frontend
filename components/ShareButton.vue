@@ -1,7 +1,7 @@
 <template>
     <n-button class="action-button" :bordered="false" @click="showModal = true">
         <n-icon size="30">
-            <RocketLaunchOutlined />
+            <ShareOutlined />
         </n-icon>
     </n-button>
     <n-modal v-model:show="showModal">
@@ -44,7 +44,7 @@ import {
     NSpace
 } from "~/utils/fixnaive.mjs";
 
-import { RocketLaunchOutlined } from '@vicons/material'
+import { ShareOutlined } from '@vicons/material'
 
 
 const props = defineProps<{
