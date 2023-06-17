@@ -3,14 +3,14 @@
         <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick"
             aria-label="List of celestial objects" :class="{ 'canvas-hovering': isHoveringObject }">
             <ul>
-                <li v-for="co in celestialObjects" :on-click="() => $emit('selected', co.itemIndex)"
+                <li v-for="co in scenes" :on-click="() => $emit('selected', co.itemIndex)"
                     aria-label="Celestial object">
                     {{ co.itemIndex }}
                 </li>
             </ul>
         </canvas>
         <transition name="fade">
-            <template v-if="celestialObjects.some((co) => co.isHovered)">
+            <template v-if="scenes.some((co) => co.isHovered)">
                 <div id="skymap-details-container" :style="{ left: detailsPosX + 10 + 'px', top: detailsPosY - 70 + 'px' }"
                     aria-hidden="true">
                     <img :src="celestialObjectThumbnail" id="skymap-details">
@@ -33,7 +33,7 @@ interface CelestialObject extends SceneDisplayInfoT {
 }
 
 const props = defineProps<{
-    scenes: SceneDisplayInfoT[]
+    scenes: CelestialObject[]
 }>();
 
 const emits = defineEmits<{
@@ -45,18 +45,18 @@ const maxObjectRadius = 10;
 const zoomMaxSize = 50;
 const zoomMinSize = 10;
 
+const { scenes } = toRefs(props);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const detailsPosX = ref(0);
 const detailsPosY = ref(0);
 const backgroundImage = ref<HTMLImageElement | null>(null);
-const celestialObjects = ref(props.scenes as CelestialObject[]);
 const isHoveringObject = ref(false);
 const engineRaDeg = ref(0);
 const engineDecDeg = ref(0);
 const engineZoomDeg = ref(0);
 
 const celestialObjectThumbnail = computed<string>(() => {
-    const co = celestialObjects.value.find((co) => co.isHovered);
+    const co = scenes.value.find((co) => co.isHovered);
     if (co?.content?.image_layers && co.content.image_layers.length > 0) {
         return URLHelpers.singleton.rewrite(co.content.image_layers[0].image.wwt.thumbnail_url, URLRewriteMode.AsIfAbsolute);
     } else {
@@ -85,10 +85,7 @@ onMounted(() => {
     });
 });
 
-watchEffect(() => {
-    celestialObjects.value = props.scenes;
-    drawCanvas();
-});
+watch(scenes, drawCanvas);
 
 function drawCanvas() {
     const canvas = canvasRef.value;
@@ -115,7 +112,7 @@ function drawCanvas() {
 
     ctx.drawImage(backgroundImage.value, 0, 0, canvas.width, canvas.height);
 
-    celestialObjects.value.forEach((co: any, index: number) => {
+    scenes.value.forEach((co: any, index: number) => {
         drawCelestialObject(canvas, ctx, co, index)
     });
 
@@ -164,7 +161,7 @@ function dec2screen(decDeg: number, canvasWidth: number, canvasHeight: number) {
 };
 
 function onMouseClick(event: MouseEvent) {
-    const co = celestialObjects.value.find((co) => co.isHovered);
+    const co = scenes.value.find((co) => co.isHovered);
 
     if (co && co.itemIndex) {
         emits("selected", co.itemIndex)
@@ -178,7 +175,7 @@ function onMouseMove(event: MouseEvent) {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        const selectedObject = celestialObjects.value.find((co) => {
+        const selectedObject = scenes.value.find((co) => {
             const coords = coords2screen(co.place.ra_rad * R2D, co.place.dec_rad * R2D, canvas.width, canvas.height)
             const distance = Math.sqrt((x - coords.x) ** 2 + (y - coords.y) ** 2);
             return distance < (co.radius ?? defaultObjectRadius);
@@ -198,7 +195,7 @@ function onMouseMove(event: MouseEvent) {
             isHoveringObject.value = false;
         }
 
-        const deselectedObject = celestialObjects.value.find((co) => {
+        const deselectedObject = scenes.value.find((co) => {
             return co != selectedObject && co.isHovered;
         });
 
@@ -210,7 +207,7 @@ function onMouseMove(event: MouseEvent) {
 };
 
 function onMouseLeave() {
-    const co = celestialObjects.value.find((co) => co.isHovered);
+    const co = scenes.value.find((co) => co.isHovered);
 
     if (co) {
         co.isHovered = false;
