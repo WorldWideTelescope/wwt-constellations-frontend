@@ -73,3 +73,52 @@ setting up the necessary services for local testing. If you use the default
 values there, a simple `yarn dev` should get things going for you here.
 
 [1]: https://github.com/WorldWideTelescope/wwt-constellations-backend/#readme
+
+
+## Color Theme
+
+These are the colors associated with the Naive UI dark theme used by the app. If
+you copy-paste this chunk of code into a CSS style block, your editor might show
+you previews of the various colors.
+
+```css
+
+.palette {
+    /* primary: hover, default, active, suppl */
+    color: #7fe7c4;
+    color: #63e2b7;
+    color: #5acea7;
+    color: #2a947d;
+
+    /* info: hover, default, active, suppl, my darkened variant */
+    color: #8acbec;
+    color: #70c0e8;
+    color: #66afd3;
+    color: #3889c5;
+    color: #215276;
+
+    /* error: hover, default, active, suppl */
+    color: #e98b8b;
+    color: #e88080;
+    color: #e57272;
+    color: #d03a52;
+
+    /* warning: hover, default, active, suppl */
+    color: #f5d599;
+    color: #f2c97d;
+    color: #e6c260;
+    color: #f08a00;
+
+    /* success: hover, default, active, suppl */
+    color: #7fe7c4;
+    color: #63e2b7;
+    color: #5acea7;
+    color: #2a947d;
+
+    /* Gray/blacks for backgrounds */
+    color: #48484e;
+    color: #2c2c32;
+    color: #18181c;
+    color: #101014;
+}
+```
