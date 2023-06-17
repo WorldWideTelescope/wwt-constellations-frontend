@@ -10,7 +10,7 @@
             </ul>
         </canvas>
         <transition name="fade">
-            <template v-if="scenes.some((co) => co.isHovered)">
+            <template v-if="isHoveringObject">
                 <div id="skymap-details-container" :style="{ left: detailsPosX + 10 + 'px', top: detailsPosY - 70 + 'px' }"
                     aria-hidden="true">
                     <img :src="celestialObjectThumbnail" id="skymap-details">
@@ -54,15 +54,7 @@ const isHoveringObject = ref(false);
 const engineRaDeg = ref(0);
 const engineDecDeg = ref(0);
 const engineZoomDeg = ref(0);
-
-const celestialObjectThumbnail = computed<string>(() => {
-    const co = scenes.value.find((co) => co.isHovered);
-    if (co?.content?.image_layers && co.content.image_layers.length > 0) {
-        return URLHelpers.singleton.rewrite(co.content.image_layers[0].image.wwt.thumbnail_url, URLRewriteMode.AsIfAbsolute);
-    } else {
-        return ""; // Some alt. image
-    }
-});
+const celestialObjectThumbnail = ref("");
 
 onMounted(() => {
     backgroundImage.value = new Image()
@@ -187,6 +179,17 @@ function onMouseMove(event: MouseEvent) {
                 isHoveringObject.value = true;
                 detailsPosX.value = event.clientX;
                 detailsPosY.value = event.clientY;
+
+                let t = "";
+
+                if (selectedObject.content?.image_layers && selectedObject.content.image_layers.length > 0) {
+                    t = URLHelpers.singleton.rewrite(
+                        selectedObject.content.image_layers[0].image.wwt.thumbnail_url,
+                        URLRewriteMode.AsIfAbsolute
+                    );
+                }
+
+                celestialObjectThumbnail.value = t;
             }
 
             animateObjectRadius(selectedObject, maxObjectRadius);
