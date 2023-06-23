@@ -82,7 +82,6 @@ you copy-paste this chunk of code into a CSS style block, your editor might show
 you previews of the various colors.
 
 ```css
-
 .palette {
     /* primary: hover, default, active, suppl */
     color: #7fe7c4;
