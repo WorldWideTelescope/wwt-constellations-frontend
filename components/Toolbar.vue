@@ -1,13 +1,15 @@
 <template>
-    <n-row class="nav-panel">
+    <n-space justify="space-between" class="button-bar">
         <n-button-group>
-            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" round :disabled="!hasPrev">
+            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" :disabled="!hasPrev">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="prev-button">
                         <NavigateBeforeRound />
                     </n-icon>
                 </template>
             </n-button>
+        </n-button-group>
+        <n-button-group>
             <n-button id="feed-button" @click="$emit('setExploreMode', false)" v-if="isMobile"
                 :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
                 <template #icon>
@@ -33,7 +35,9 @@
                     </n-icon>
                 </template>
             </n-button>
-            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" round :disabled="!hasNext">
+        </n-button-group>
+        <n-button-group>
+            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" :disabled="!hasNext">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
                         <NavigateNextRound />
@@ -41,15 +45,15 @@
                 </template>
             </n-button>
         </n-button-group>
-    </n-row>
+    </n-space>
 </template>
 
 <script setup lang="ts">
 import {
-    NRow,
     NButtonGroup,
     NButton,
     NIcon,
+    NSpace,
 } from "~/utils/fixnaive.mjs";
 
 import {
@@ -88,14 +92,12 @@ defineEmits<{
 </script>
 
 <style type="less">
-.nav-panel {
+.button-bar {
     background: rgba(0, 0, 0, 0.8);
-    border-radius: 45px;
+    border-radius: 3px;
     box-sizing: border-box;
     padding: 4px;
-    margin: 0 auto !important;
-    justify-content: center;
-    width: fit-content;
+    width: 100%;
 }
 
 .button-toggled {
