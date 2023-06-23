@@ -9,7 +9,7 @@
         <h3>Cookie Consent</h3>
         <p>This website uses cookies. Click ‘Accept’ to allow cookies from all
           sources, ‘Decline’ to reject all nonessential cookies, or the ‘Learn more …’
-          for details. For more information, see our
+          button for details. For more information, see our
           <NuxtLink to="https://aas.org/policies/privacy-policy" target="_blank">Privacy Policy</NuxtLink>.
         </p>
       </template>

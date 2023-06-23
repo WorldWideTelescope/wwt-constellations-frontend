@@ -8,24 +8,20 @@
     </n-button>
     <!-- Desktop -->
     <template v-if="!isMobile">
-      <n-grid ref="desktop_overlay" cols="1" y-gap="5" class="desktop-panel">
+      <n-grid ref="desktop_overlay" cols="1" y-gap="2" class="desktop-panel">
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
         <n-grid-item v-if="timelineSource !== null">
           <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
+        <n-grid-item>
+          <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
+            :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
+        </n-grid-item>
         <n-grid-item v-if="describedScene">
           <SceneEditorPanel v-if="showSceneEditor" :scene="describedScene" />
           <ScenePanel v-else :scene="describedScene" :potentially-editable="scenePotentiallyEditable" />
-        </n-grid-item>
-        <n-grid-item>
-          <div>
-            <n-space justify="center">
-              <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
-                :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
-            </n-space>
-          </div>
         </n-grid-item>
       </n-grid>
     </template>
@@ -189,7 +185,7 @@ function onFullscreenEvent() {
 }
 
 function onItemSelected(index: number) {
-  timelineIndex.value = index;
+  constellationsStore.setTimelineIndex(index);
 }
 
 function onScroll(event: UIEvent) {
@@ -223,13 +219,17 @@ async function recenter() {
 
 function goNext() {
   if (hasNext) {
-    scrollTo(++timelineIndex.value);
+    const n = timelineIndex.value + 1;
+    constellationsStore.setTimelineIndex(n);
+    scrollTo(n);
   }
 }
 
 function goPrev() {
   if (hasPrev) {
-    scrollTo(--timelineIndex.value);
+    const n = timelineIndex.value - 1;
+    constellationsStore.setTimelineIndex(n);
+    scrollTo(n);
   }
 }
 

@@ -2,15 +2,17 @@
     <div id="skymap-root">
         <canvas ref="canvasRef" @mousemove="onMouseMove" @mouseleave="onMouseLeave" @click="onMouseClick"
             aria-label="List of celestial objects" :class="{ 'canvas-hovering': isHoveringObject }">
+            <!-- Note that this links to `scenes`, not the markers; this is OK
+                since the scenes are the actually selectable items of relevance here.
+                -->
             <ul>
-                <li v-for="co in celestialObjects" :on-click="() => $emit('selected', co.itemIndex)"
-                    aria-label="Celestial object">
+                <li v-for="co in scenes" :on-click="() => $emit('selected', co.itemIndex)" aria-label="Celestial object">
                     {{ co.itemIndex }}
                 </li>
             </ul>
         </canvas>
         <transition name="fade">
-            <template v-if="celestialObjects.some((co) => co.isHovered)">
+            <template v-if="isHoveringObject">
                 <div id="skymap-details-container" :style="{ left: detailsPosX + 10 + 'px', top: detailsPosY - 70 + 'px' }"
                     aria-hidden="true">
                     <img :src="celestialObjectThumbnail" id="skymap-details">
@@ -20,258 +22,575 @@
     </div>
 </template>
 
-
 <script setup lang="ts">
-import { SceneDisplayInfoT } from "~/utils/types";
-import { R2D } from "~/utils/constants";
-import { getEngineStore } from "~/utils/helpers";
+import { storeToRefs } from "pinia";
 import { URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 
+import { PlaceDetailsT, SceneContentHydratedT } from "~/utils/types";
+import { R2D } from "~/utils/constants";
+import { getEngineStore } from "~/utils/helpers";
+import { useConstellationsStore } from "~/stores/constellations";
 
-
-interface CelestialObject extends SceneDisplayInfoT {
-    itemIndex?: number,
-    radius?: number,
-    isHovered?: boolean
+interface SkymapSceneInfo {
+    itemIndex: number;
+    place: PlaceDetailsT;
+    content: SceneContentHydratedT;
 }
 
 const props = defineProps<{
-    scenes: SceneDisplayInfoT[]
+    scenes: SkymapSceneInfo[]
 }>();
+
+const { scenes } = toRefs(props);
 
 const emits = defineEmits<{
     (event: 'selected', index: number): void
 }>();
 
+const defaultObjectRadius = 4;
+const hoveredObjectRadius = 8;
+const zoomMaxSize = 50;
+const zoomMinSize = 10;
+
+const { timelineIndex } = storeToRefs(useConstellationsStore());
+const { raRad: engineRaRad, decRad: engineDecRad, zoomDeg: engineZoomDeg } = storeToRefs(getEngineStore());
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const detailsPosX = ref(0);
 const detailsPosY = ref(0);
-const defaultObjectRadius = ref(4);
-const maxObjectRadius = ref(10);
 const backgroundImage = ref<HTMLImageElement | null>(null);
-const celestialObjects = ref(props.scenes as CelestialObject[]);
 const isHoveringObject = ref(false);
-const engineRaDeg = ref(0);
-const engineDecDeg = ref(0);
-const engineZoomDeg = ref(0);
-const zoomWrapEnabled = ref(false);
-const zoomMaxSize = ref(50);
-const zoomMinSize = ref(10);
+const celestialObjectThumbnail = ref("");
 
-const celestialObjectThumbnail = computed<string>(() => {
-    const co = celestialObjects.value.find((co) => co.isHovered);
-    if (co?.content?.image_layers && co.content.image_layers.length > 0) {
-        return URLHelpers.singleton.rewrite(co.content.image_layers[0].image.wwt.thumbnail_url, URLRewriteMode.AsIfAbsolute);
-    } else {
-        return ""; // Some alt. image
+// A helper class for tweening colors. I don't see an built-in type that
+// obviously does what we want here??
+
+class Rgba {
+    // These values are all between 0 and 1!
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+
+    constructor(r: number, g: number, b: number, a: number) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
     }
-});
+
+    static newBlack(): Rgba {
+        return new Rgba(0, 0, 0, 1);
+    }
+
+    asCSS(): string {
+        const r255 = (this.r * 255).toFixed(0);
+        const g255 = (this.g * 255).toFixed(0);
+        const b255 = (this.b * 255).toFixed(0);
+        return `rgba(${r255}, ${g255}, ${b255}, ${this.a.toFixed(2)})`;
+    }
+
+    setTo(other: Rgba) {
+        this.r = other.r;
+        this.g = other.g;
+        this.b = other.b;
+        this.a = other.a;
+    }
+
+    equals(o: Rgba): boolean {
+        return (this.r == o.r) && (this.g == o.g) && (this.b == o.b) && (this.a == o.a);
+    }
+
+    // Returns whether additional steps are needed -- whether we are *not* yet
+    // at the target.
+    stepTowards(target: Rgba, factor: number): boolean {
+        this.r += (target.r - this.r) * factor;
+        this.g += (target.g - this.g) * factor;
+        this.b += (target.b - this.b) * factor;
+        this.a += (target.a - this.a) * factor;
+        return !this.equals(target);
+    }
+}
+
+// The rendering context used by the different elements of the skymap.
+
+class SkymapContext {
+    width: number;
+    height: number;
+    ctx: CanvasRenderingContext2D;
+
+    constructor(width: number, height: number, ctx: CanvasRenderingContext2D) {
+        this.width = width;
+        this.height = height;
+        this.ctx = ctx;
+    }
+
+    skyToCanvas(raDeg: number, decDeg: number): { x: number, y: number } {
+        const raCenter = 0;
+        const raScale = this.width / 360; // pixels per degree
+        const raOffset = this.width / 2; // offset for RA >= 180
+
+        const x = raDeg <= 180
+            ? (raDeg - raCenter) * raScale + raOffset
+            : (raDeg - raCenter - 360) * raScale + raOffset;
+
+        const decCenter = 0;
+        const decScale = -this.height / 180; // pixels per degree, negative to flip y-axis
+        const y = (decDeg - decCenter) * decScale + this.height / 2;
+
+        return { x, y };
+    }
+}
+
+// Markers -- points that show up on the map.
+//
+// Some of these correspond to the scenes that we are supposed to show, which we
+// know from our `scenes` prop. But since we want to fade out markers for scenes
+// as they go away, the list of markers is a separate thing. The markers are
+// *not* reactive because they don't connect to the DOM -- they are only used
+// when rendering the canvas.
+
+const ANIMATION_DURATION_MS = 5000; // milliseconds
+const GENERAL_SCENE_COLOR = new Rgba(0.44, 0.44, 0.48, 1.0); // #6f6f7a
+const NEXT_SCENE_COLOR = new Rgba(0.12, 0.75, 0.54, 1.0); // #1fbf89
+const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
+
+class Marker {
+    // The scene that this marker corresponds to, identified by its index in the
+    // timeline.
+    readonly timelineIndex: number;
+    readonly raDeg: number;
+    readonly decDeg: number;
+    readonly content: SceneContentHydratedT;
+
+    isHovered: boolean = false;
+    isBeingRemoved: boolean = false;
+    needsAnimation: boolean = false;
+
+    currentTimestamp: number | null = null;
+    currentRadius: number;
+    currentLineWidth: number;
+    currentColor: Rgba;
+
+    targetTimestamp: number | null = null;
+    targetRadius: number;
+    targetLineWidth: number;
+    targetColor: Rgba;
+
+    constructor(scene: SkymapSceneInfo) {
+        this.timelineIndex = scene.itemIndex;
+        this.raDeg = scene.place.ra_rad * R2D;
+        this.decDeg = scene.place.dec_rad * R2D;
+        this.content = scene.content;
+
+        this.currentColor = Rgba.newBlack();
+        this.currentLineWidth = 1;
+        this.currentRadius = defaultObjectRadius;
+
+        this.targetColor = Rgba.newBlack();
+        this.targetLineWidth = this.currentLineWidth;
+        this.targetRadius = this.currentRadius;
+    }
+
+    render(context: SkymapContext) {
+        const coords = context.skyToCanvas(this.raDeg, this.decDeg);
+        context.ctx.beginPath();
+        context.ctx.arc(coords.x, coords.y, this.currentRadius, 0, 2 * Math.PI);
+        context.ctx.strokeStyle = this.currentColor.asCSS();
+        context.ctx.lineWidth = this.currentLineWidth;
+        context.ctx.stroke();
+    }
+
+    sendToDesiredScene(curTimelineIndex: number) {
+        const d = this.timelineIndex - curTimelineIndex;
+
+        if (d == 0) {
+            this.targetColor.setTo(CURRENT_SCENE_COLOR);
+            this.targetLineWidth = 2;
+        } else if (d == 1) {
+            this.targetColor.setTo(NEXT_SCENE_COLOR);
+            this.targetLineWidth = 1;
+        } else {
+            this.targetColor.setTo(GENERAL_SCENE_COLOR);
+            this.targetLineWidth = 1;
+        }
+
+        this.needsAnimation = true;
+        this.isBeingRemoved = false;
+    }
+
+    sendToDestruction() {
+        this.targetColor.setTo(this.currentColor);
+        this.targetColor.a = 0;
+        this.targetLineWidth = 1;
+        this.needsAnimation = true;
+        this.isBeingRemoved = true;
+    }
+
+    setHoverStatus(isHovered: boolean) {
+        if (isHovered != this.isHovered) {
+            this.targetRadius = isHovered ? hoveredObjectRadius : defaultObjectRadius;
+            this.needsAnimation = true;
+        }
+
+        this.isHovered = isHovered;
+    }
+
+    // This updates `this.needsAnimation` depending on whether additional
+    // animation will be needed.
+    animate(now: number) {
+        // Time should never move backwards, but just in case ...
+        if (this.currentTimestamp === null || now < this.currentTimestamp) {
+            this.currentTimestamp = now;
+        }
+
+        if (this.targetTimestamp === null) {
+            this.targetTimestamp = now + ANIMATION_DURATION_MS;
+        }
+
+        this.needsAnimation = false;
+
+        if (now >= this.targetTimestamp) {
+            // We are done; or, we have to be done.
+            this.currentColor.setTo(this.targetColor);
+        } else {
+            // This is how far we should step from `current` towards `target`, as a
+            // number between 0 and 1. Once again, this number should never be out
+            // of bounds, but if something terrible has happened, make sure it has a
+            // safe value.
+
+            const rawFactor = (now - this.currentTimestamp) / (this.targetTimestamp - this.currentTimestamp);
+            const factor = (rawFactor >= 0 && rawFactor <= 1) ? rawFactor : 0;
+
+            // Now we can actually step our different parameters.
+
+            this.needsAnimation ||= this.currentColor.stepTowards(this.targetColor, factor);
+
+            this.currentLineWidth += (this.targetLineWidth - this.currentLineWidth) * factor;
+            this.needsAnimation ||= (this.currentLineWidth != this.targetLineWidth);
+
+            this.currentRadius += (this.targetRadius - this.currentRadius) * factor;
+            this.needsAnimation ||= (this.currentRadius != this.targetRadius);
+        }
+
+        if (!this.needsAnimation) {
+            this.currentTimestamp = null;
+            this.targetTimestamp = null;
+        }
+    }
+}
+
+// The marker collection handles our markers, their animations, and
+// synchronization with the list of scenes handed down through our props.
+
+interface AssessMarkerHoversResult {
+    selected: Marker | null;
+    selectedAlreadyHovered: boolean;
+    anythingChanged: boolean;
+}
+
+class MarkerCollection {
+    readonly markers: Map<number, Marker> = new Map();
+    needsAnimation: boolean = false;
+
+    syncWithScenes(scenes: SkymapSceneInfo[], curTimelineIndex: number) {
+        this.needsAnimation = false;
+
+        // Any marker that we don't catch below should go away
+        for (var marker of this.markers.values()) {
+            marker.isBeingRemoved = true;
+        }
+
+        for (var scene of scenes) {
+            let marker = this.markers.get(scene.itemIndex);
+
+            if (marker === undefined) {
+                marker = new Marker(scene);
+                this.markers.set(scene.itemIndex, marker);
+            }
+
+            marker.sendToDesiredScene(curTimelineIndex);
+        }
+
+        for (var marker of this.markers.values()) {
+            if (marker.isBeingRemoved) {
+                marker.sendToDestruction();
+            }
+
+            this.needsAnimation ||= marker.needsAnimation;
+        }
+    }
+
+    render(context: SkymapContext) {
+        for (var marker of this.markers.values()) {
+            marker.render(context);
+        }
+    }
+
+    // This updates `this.needsAnimation` depending on whether additional
+    // animation will be needed.
+    animate(now: number) {
+        this.needsAnimation = false;
+        const markersToRemove = [];
+
+        // We make three passes over the list because we want to draw items from
+        // "least important" to "most important", since stacked markers will
+        // overwrite one another. This seems easier (and faster?) than trying to
+        // sort the list.
+
+        const tlidx = timelineIndex.value;
+        const filterPass1 = (m: Marker) => (m.timelineIndex < tlidx) || (m.timelineIndex > tlidx + 1);
+        const filterPass2 = (m: Marker) => (m.timelineIndex == tlidx + 1);
+        const filterPass3 = (m: Marker) => (m.timelineIndex == tlidx);
+
+        for (var filter of [filterPass1, filterPass2, filterPass3]) {
+            for (var marker of this.markers.values()) {
+                if (!filter(marker)) {
+                    continue;
+                }
+
+                marker.animate(now);
+                this.needsAnimation ||= marker.needsAnimation;
+
+                // If this marker is on its way towards removal, and it has gotten
+                // there, we can get rid of it.
+                if (!marker.needsAnimation && marker.isBeingRemoved) {
+                    markersToRemove.push(marker.timelineIndex);
+                }
+            }
+        }
+
+        for (var key of markersToRemove) {
+            this.markers.delete(key);
+        }
+    }
+
+    getSelectedIndex(): number | null {
+        for (var marker of this.markers.values()) {
+            if (marker.isHovered) {
+                return marker.timelineIndex;
+            }
+        }
+
+        return null;
+    }
+
+    // Update the `isHovered` flags of the markers, and return information about
+    // the current hover situation.
+    //
+    // Here we *don't* try to identify the marker that is the very closest to
+    // the cursor, since they're so small that it's not worthwhile anyway. We do
+    // try to select the one that was already hovered, though.
+    assessHovers(x: number, y: number, ctx: SkymapContext): AssessMarkerHoversResult {
+        let selected: Marker | null = null;
+        let selectedAlreadyHovered = false;
+        let anythingChanged = false;
+
+        for (var marker of this.markers.values()) {
+            const pos = ctx.skyToCanvas(marker.raDeg, marker.decDeg);
+            const distanceSquared = (x - pos.x) ** 2 + (y - pos.y) ** 2;
+            const isHovered = (distanceSquared < marker.currentRadius ** 2);
+
+            if (isHovered) {
+                if (selected === null || marker.isHovered) {
+                    selected = marker;
+                    selectedAlreadyHovered = marker.isHovered;
+                }
+
+                anythingChanged ||= !marker.isHovered;
+            } else {
+                anythingChanged ||= marker.isHovered;
+            }
+
+            marker.setHoverStatus(isHovered);
+        }
+
+        return { selected, selectedAlreadyHovered, anythingChanged };
+    }
+
+    // Set all markers to un-hovered status. We return a boolean indicating if
+    // anything changed.
+    clearHovers(): boolean {
+        let anythingChanged = false;
+
+        for (var marker of this.markers.values()) {
+            if (marker.isHovered) {
+                anythingChanged = true;
+                marker.setHoverStatus(false);
+            }
+        }
+
+        return anythingChanged;
+    }
+}
+
+const markerCollection = new MarkerCollection();
+
+// Finally, the logic that ties together our different animation elements with
+// the reactive component system.
+
+class SkymapRenderer {
+    // The spec stats that animation request IDs are never zero.
+    private animationRequestId: number = 0;
+
+    // Returns true if additional draws are needed. This could be because we
+    // didn't have what we needed to actually draw anything, just yet.
+    private tryDrawNow = (): boolean => {
+        // Do we have what we need to actually draw it all?
+
+        if (!backgroundImage.value) {
+            return true;
+        }
+
+        const skycontext = this.trySetupContext(true);
+        if (skycontext == null) {
+            return true;
+        }
+
+        // Yes, we do! Draw and tell our caller whether additional animation is needed.
+
+        skycontext.ctx.drawImage(backgroundImage.value, 0, 0, skycontext.width, skycontext.height);
+        markerCollection.render(skycontext);
+        this.renderFov(skycontext);
+        return markerCollection.needsAnimation;
+    };
+
+    private trySetupContext = (isRendering: boolean): SkymapContext | null => {
+        const canvas = canvasRef.value;
+        if (canvas === null || !canvas.clientWidth || !canvas.clientHeight) {
+            return null;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return null;
+        }
+
+        // Maybe sync the canvas resolution with its size. This clears the
+        // canvas even if it's a noop, so only do that if rendering.
+        if (isRendering) {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+
+        return new SkymapContext(canvas.width, canvas.height, ctx);
+    };
+
+    private renderFov = (skycontext: SkymapContext) => {
+        const coords = skycontext.skyToCanvas(engineRaRad.value * R2D, engineDecRad.value * R2D);
+
+        skycontext.ctx.beginPath();
+        skycontext.ctx.filter = 'none';
+        skycontext.ctx.arc(coords.x, coords.y, Math.min(Math.max(engineZoomDeg.value, zoomMinSize), zoomMaxSize), 0, 2 * Math.PI)
+        skycontext.ctx.strokeStyle = '#215276';
+        skycontext.ctx.lineWidth = 2;
+        skycontext.ctx.stroke();
+    };
+
+    private animate = (now: number) => {
+        this.animationRequestId = 0;
+
+        // Update animations. This will update the needsAnimation fields of the
+        // contained objects.
+
+        markerCollection.animate(now);
+
+        // Actually render (hopefully), and queue again if we need to. This
+        // might be because an animation is still in progress, or because we
+        // weren't actually able to draw anything just yet.
+
+        if (this.tryDrawNow()) {
+            this.queueRender();
+        }
+    };
+
+    queueRender = () => {
+        if (!process.server && this.animationRequestId == 0) {
+            this.animationRequestId = requestAnimationFrame(this.animate);
+        }
+    };
+
+    onMouseMove = (event: MouseEvent) => {
+        const ctx = this.trySetupContext(false);
+        if (ctx == null) {
+            return;
+        }
+
+        const rect = canvasRef.value!.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const { selected, selectedAlreadyHovered, anythingChanged } = markerCollection.assessHovers(x, y, ctx);
+        isHoveringObject.value = (selected !== null);
+
+        if (selected !== null && !selectedAlreadyHovered) {
+            detailsPosX.value = event.clientX;
+            detailsPosY.value = event.clientY;
+
+            let t = "";
+
+            if (selected.content.image_layers && selected.content.image_layers.length > 0) {
+                t = URLHelpers.singleton.rewrite(
+                    selected.content.image_layers[0].image.wwt.thumbnail_url,
+                    URLRewriteMode.AsIfAbsolute
+                );
+            }
+
+            celestialObjectThumbnail.value = t;
+        }
+
+        if (anythingChanged) {
+            this.queueRender();
+        }
+    }
+
+    onMouseLeave = () => {
+        if (markerCollection.clearHovers()) {
+            this.queueRender();
+        }
+    }
+}
+
+const renderer = new SkymapRenderer();
 
 onMounted(() => {
     backgroundImage.value = new Image()
     backgroundImage.value.src = require('~/assets/images/skymap_bg.jpg')
-    backgroundImage.value.onload = () => {
-        drawCanvas();
-    }
-
-    getEngineStore().$subscribe(() => {
-        const ra = getEngineStore().raRad * R2D;
-        const dec = getEngineStore().decRad * R2D;
-        const zoom = getEngineStore().zoomDeg;
-
-        if (ra != engineRaDeg.value || dec != engineDecDeg.value || zoom != engineZoomDeg.value) {
-            engineRaDeg.value = ra;
-            engineDecDeg.value = dec;
-            engineZoomDeg.value = Math.min(Math.max(zoom, zoomMinSize.value), zoomMaxSize.value);
-            redrawCanvas();
-        }
-    });
+    backgroundImage.value.onload = renderer.queueRender;
 });
+
+watch(engineRaRad, renderer.queueRender);
+watch(engineDecRad, renderer.queueRender);
+watch(engineZoomDeg, renderer.queueRender);
 
 watchEffect(() => {
-    celestialObjects.value = props.scenes;
-    redrawCanvas();
+    markerCollection.syncWithScenes(scenes.value, timelineIndex.value);
+    renderer.queueRender();
 });
 
+// Mousing over the canvas for previews -- breaking encapsulation a bit here
 
-function drawCanvas() {
-    const canvas = canvasRef.value;
+function onMouseClick(_event: MouseEvent) {
+    const index = markerCollection.getSelectedIndex();
 
-    if (canvasRef === null || !canvas?.clientWidth || !canvas?.clientHeight) {
-        return;
+    if (index !== null) {
+        emits("selected", index);
     }
-
-    // Set canvas resolution to size
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-        console.error('Canvas context not found');
-        return;
-    }
-
-    if (!backgroundImage.value) {
-        console.error('Canvas background image is not loaded');
-        return;
-    }
-
-    ctx.drawImage(backgroundImage.value, 0, 0, canvas.width, canvas.height);
-
-    celestialObjects.value.forEach((co: any, index: number) => {
-        drawCelestialObject(canvas, ctx, co, index)
-    });
-
-
-    drawZoomBorder(canvas, ctx);
-};
-
-function redrawCanvas() {
-    drawCanvas();
-};
-
-function drawCelestialObject(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, co: CelestialObject, index: number) {
-    const coords = coords2screen(co.place.ra_rad * R2D, co.place.dec_rad * R2D, canvas.width, canvas.height)
-
-    ctx.beginPath();
-    ctx.arc(coords.x, coords.y, co.radius ?? defaultObjectRadius.value, 0, 2 * Math.PI);
-    ctx.fillStyle = 'white';
-    ctx.filter = co.isHovered ? 'blur(6px)' : 'blur(3px)'
-    ctx.fill();
-};
-
-function drawZoomBorder(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-    const coords = coords2screen(engineRaDeg.value, engineDecDeg.value, canvas.width, canvas.height)
-
-    ctx.beginPath();
-    ctx.filter = 'none';
-    ctx.arc(coords.x, coords.y, engineZoomDeg.value, 0, 2 * Math.PI)
-    ctx.strokeStyle = 'blue';
-    ctx.stroke();
-
-    if (zoomWrapEnabled.value) {
-        if (coords.x + engineZoomDeg.value > canvas.clientWidth) {
-            ctx.beginPath();
-            ctx.arc(coords.x - canvas.width, coords.y, engineZoomDeg.value, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else if (coords.x - engineZoomDeg.value < 0) {
-            ctx.beginPath();
-            ctx.arc(coords.x + canvas.width, coords.y, engineZoomDeg.value, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-    }
-};
-
-function coords2screen(raDeg: number, decDeg: number, canvasWidth: number, canvasHeight: number) {
-    return { x: ra2screen(raDeg, canvasWidth, canvasHeight), y: dec2screen(decDeg, canvasWidth, canvasHeight) };
-};
-
-function ra2screen(raDeg: number, canvasWidth: number, canvasHeight: number) {
-    const raCenter = 0;
-    const raScale = canvasWidth / 360; // pixels per degree
-    const raOffset = canvasWidth / 2; // offset for RA >= 180
-
-    return raDeg <= 180
-        ? (raDeg - raCenter) * raScale + raOffset
-        : (raDeg - raCenter - 360) * raScale + raOffset;
-};
-
-function dec2screen(decDeg: number, canvasWidth: number, canvasHeight: number) {
-    const decCenter = 0;
-    const decScale = -canvasHeight / 180; // pixels per degree, negative to flip y-axis
-    return (decDeg - decCenter) * decScale + canvasHeight / 2;
-};
-
-function onMouseClick(event: MouseEvent) {
-    const co = celestialObjects.value.find((co) => co.isHovered);
-
-    if (co && co.itemIndex) {
-        emits("selected", co.itemIndex)
-    }
-};
+}
 
 function onMouseMove(event: MouseEvent) {
-    const canvas = canvasRef.value;
-    if (canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        const selectedObject = celestialObjects.value.find((co) => {
-            const coords = coords2screen(co.place.ra_rad * R2D, co.place.dec_rad * R2D, canvas.width, canvas.height)
-            const distance = Math.sqrt((x - coords.x) ** 2 + (y - coords.y) ** 2);
-            return distance < (co.radius ?? defaultObjectRadius.value);
-        });
-
-        if (selectedObject) {
-            selectedObject.isHovered = true;
-            isHoveringObject.value = true;
-            detailsPosX.value = event.clientX;
-            detailsPosY.value = event.clientY;
-
-            animateObjectRadius(selectedObject, maxObjectRadius.value);
-            redrawCanvas();
-        } else {
-            isHoveringObject.value = false;
-        }
-
-        const deselectedObject = celestialObjects.value.find((co) => {
-            return co != selectedObject && co.isHovered;
-        });
-
-        if (deselectedObject) {
-            deselectedObject.isHovered = false;
-            animateObjectRadius(deselectedObject, defaultObjectRadius.value);
-        }
-    }
-};
+    renderer.onMouseMove(event);
+}
 
 function onMouseLeave() {
-    const co = celestialObjects.value.find((co) => co.isHovered);
-
-    if (co) {
-        co.isHovered = false;
-    }
-
-    redrawCanvas();
+    renderer.onMouseLeave();
 };
-
-function animateObjectRadius(co: CelestialObject, targetRadius: number) {
-    const startRadius = co.radius ?? defaultObjectRadius.value;
-    let currentRadius = startRadius;
-    let velocity = 0;
-    const springConstant = 0.1;
-    const damping = 0.8;
-
-    function update() {
-        if (!co.isHovered && targetRadius > defaultObjectRadius.value) {
-            return;
-        }
-
-        const force = (targetRadius - currentRadius) * springConstant;
-        velocity += force;
-        velocity *= damping;
-        currentRadius += velocity;
-
-        if (Math.abs(currentRadius - targetRadius) < 0.1) {
-            co.radius = targetRadius;
-        } else {
-            co.radius = currentRadius;
-            requestAnimationFrame(update);
-        }
-
-        redrawCanvas();
-    }
-
-    requestAnimationFrame(update);
-}
 </script>
 
 <style scoped>
 canvas {
     background-color: black;
-    border: 1px solid #777;
+    border: 1px solid #215276;
     border-radius: 3px;
     box-sizing: border-box;
     width: 100%;
@@ -301,8 +620,8 @@ canvas {
 #skymap-details {
     width: 100px;
     height: 70px;
-    border-radius: 10%;
-    border: 1px solid white;
+    border-radius: 5px;
+    border: 1px solid #215276;
 }
 
 .fade-enter-active {

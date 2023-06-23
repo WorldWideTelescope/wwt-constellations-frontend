@@ -64,7 +64,8 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   const timelineSource = ref<string | null>("");
 
   var getTimeline: typeof getHomeTimeline | null = getHomeTimeline;
-  var nextTimelinePage = 0;
+  var timelineSequence = 0;
+  var nextNeededTimelinePage = 0;
 
   // Ensure that the timeline data structure extends at least `n` items past the
   // current index. If the timeline was initially empty, this will set the
@@ -80,6 +81,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     const init_index = (timelineIndex.value < 0);
     const target_length = init_index ? n : timelineIndex.value + n;
+    const our_sequence = timelineSequence;
     const MAX_ATTEMPTS = 5;
 
     // Note that we are currently using $backendCall, not $backendAuthCall,
@@ -89,18 +91,36 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     const { $backendCall } = useNuxtApp();
 
     for (var attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      // If, during one of our asynchronous attempts, the app has
+      // moved on to caring about a different timeline altogether,
+      // go home.
+      if (timelineSequence != our_sequence) {
+        return;
+      }
+
+      // If we're in the same sequence but we've gotten enough items, we're
+      // done.
       if (timeline.value.length >= target_length) {
         break;
       }
 
-      const result = await getTimeline($backendCall, nextTimelinePage);
+      // Try to get the next page that we think is needed.
+      const our_page = nextNeededTimelinePage;
+      const result = await getTimeline($backendCall, our_page);
 
-      for (var scene of result.results) {
-        knownScenes.value.set(scene.id, scene);
-        timeline.value.push(scene.id);
+      // Due to the "await", some unknowable amount of time has passed since we
+      // put in the API request, and someone else may already have filled in the
+      // timeline or switched us to a new timeline. Only edit the global
+      // structure if it appears that our results are still wanted and needed.
+
+      if (timelineSequence == our_sequence && nextNeededTimelinePage == our_page) {
+        for (var scene of result.results) {
+          knownScenes.value.set(scene.id, scene);
+          timeline.value.push(scene.id);
+        }
+
+        nextNeededTimelinePage += 1;
       }
-
-      nextTimelinePage += 1;
     }
 
     if (init_index) {
@@ -108,10 +128,16 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   }
 
+  async function setTimelineIndex(n: number) {
+    timelineIndex.value = n;
+    await ensureTimelineCoverage(n + 5);
+  }
+
   watch(timelineSource, async (newSource, oldSource) => {
     if (newSource == null) {
       getTimeline = null;
-      nextTimelinePage = 0;
+      nextNeededTimelinePage = 0;
+      timelineSequence += 1;
       timeline.value = [];
       timelineIndex.value = -1;
       knownScenes.value = new Map();
@@ -122,7 +148,8 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
         getTimeline = (fetcher: $Fetch, page: number) => getHandleTimeline(fetcher, newSource, page);
       }
 
-      nextTimelinePage = 0;
+      nextNeededTimelinePage = 0;
+      timelineSequence += 1;
       timeline.value = [];
       timelineIndex.value = -1;
     }
@@ -150,6 +177,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     loggedIn,
     roiEditHeightPercentage,
     roiEditWidthPercentage,
+    setTimelineIndex,
     showWWT,
     timeline,
     timelineIndex,
