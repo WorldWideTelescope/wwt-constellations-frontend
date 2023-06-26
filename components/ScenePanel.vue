@@ -15,20 +15,8 @@
       {{ scene.text }}
     </n-grid-item>
 
-    <n-grid-item>
-      <n-text depth="3" class="permissions">
-        <div>Credits:</div>
-        <div
-          v-for="layer in scene.content.image_layers"
-          v-html="layer.image.permissions.credits"
-        />
-      </n-text>
-    </n-grid-item>
-
-    <n-grid-item>
-      <n-text depth="3" class="permissions">
-        {{ `Copyright: ${copyright}` }}
-      </n-text>
+    <n-grid-item v-show="permissions_text">
+      <n-text depth="3" class="permissions">{{ permissions_text }}</n-text>
     </n-grid-item>
 
     <n-grid-item>
@@ -70,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import * as escapeHtml from "escape-html";
 import { storeToRefs } from "pinia";
 
 import {
@@ -152,19 +141,37 @@ watchEffect(async () => {
 });
 
 // Image permissions
-const copyright = computed(() => {
+
+const permissions_text = computed(() => {
   const layers = scene.value.content.image_layers;
   if (!layers) {
     return "";
   }
+
+  // This will need improvement when we actually support multi-image scenes.
+
   const items = [];
+
   for (const layer of layers) {
-    const value = layer.image.permissions.copyright;
-    if (value) {
-      items.push(value);
+    const c = layer.image.permissions.credits;
+    if (c) {
+      items.push(`Image credits: ${c}.`);
+    }
+
+    // Credits are delivered as restricted HTML, and so this value gets
+    // exposed as `v-html`. But copyright is plain text, so we need
+    // to escape it
+
+    const o = layer.image.permissions.copyright;
+    if (o) {
+      items.push(`${escapeHtml(o)}.`);
     }
   }
-  return items.join("; ");
+
+  if (items.length == 0)
+    return "";
+
+  return items.join(" ");
 });
 </script>
 
@@ -200,7 +207,7 @@ const copyright = computed(() => {
 }
 
 .permissions {
-  font-size: smaller;
+  font-size: 80%;
   overflow-wrap: break-word;
 }
 </style>
