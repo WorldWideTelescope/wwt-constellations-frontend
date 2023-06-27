@@ -15,20 +15,12 @@
       {{ scene.text }}
     </n-grid-item>
 
-    <n-grid-item>
-      <n-text depth="3" class="permissions">
-        <div>Credits:</div>
-        <div
-          v-for="layer in scene.content.image_layers"
-          v-html="layer.image.permissions.credits"
-        />
-      </n-text>
+    <n-grid-item class="outgoing" v-if="outgoingUrl">
+      <i>Learn more at <a :href="outgoingUrl" target="_blank">{{ outgoingLinkText }}</a></i> 🚀
     </n-grid-item>
 
-    <n-grid-item>
-      <n-text depth="3" class="permissions">
-        {{ `Copyright: ${copyright}` }}
-      </n-text>
+    <n-grid-item v-show="permissionsText">
+      <n-text depth="3" class="permissions">{{ permissionsText }}</n-text>
     </n-grid-item>
 
     <n-grid-item>
@@ -54,7 +46,8 @@
         </n-space>
 
         <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
+          <ShareButton title="WorldWide Telescope" :url="externalItemUrl" :description="scene.text"
+            :handle="scene.handle.handle" />
 
           <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
             <n-button class="action-button" :bordered="false" v-if="can_edit" aria-label="Edit scene button">
@@ -70,7 +63,9 @@
 </template>
 
 <script setup lang="ts">
+import * as escapeHtml from "escape-html";
 import { storeToRefs } from "pinia";
+import { format as formatTimeAgo } from 'timeago.js';
 
 import {
   NGrid,
@@ -81,7 +76,12 @@ import {
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined, StarRound } from "@vicons/material";
+import {
+  ModeEditOutlined,
+  RemoveRedEyeOutlined,
+  StarBorderRound,
+  StarRound,
+} from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetSceneResponseT, addLike } from "~/utils/apis";
@@ -104,22 +104,44 @@ const props = defineProps<{
 const { scene } = toRefs(props);
 
 function formatDate(date: string): string {
-  const now = Date.now();
-  const then = Date.parse(date);
-  const daysBetween = Math.floor((now - then) / 86400000);
-
-  return daysBetween > 10
-    ? new Date(then).toLocaleDateString()
-    : daysBetween + " days ago"
+  return formatTimeAgo(Date.parse(date));
 }
 
-function getExternalItemURL(item: GetSceneResponseT): string {
+const externalItemUrl = computed(() => {
   if (scene.value) {
     return `${nuxtConfig.public.hostUrl}/@${encodeURIComponent(scene.value.handle.handle)}/${scene.value.id}`;
   } else {
     return "";
   }
-}
+});
+
+const outgoingUrl = computed(() => {
+  // For some reason, I seem to need to wrap the scene's parameter in this
+  // computed property in order to get proper updating when navigating a
+  // timeline. The toggling of the visibility also seems to require a v-if, not
+  // just a v-show.
+
+  if (scene.value.outgoing_url) {
+    return scene.value.outgoing_url;
+  }
+
+  return "";
+});
+
+const outgoingLinkText = computed(() => {
+  if (!scene.value.outgoing_url) {
+    return "";
+  }
+
+  const parsed = new URL(scene.value.outgoing_url);
+  const host = parsed.hostname;
+
+  if (host.startsWith("www.")) {
+    return host.substring(4);
+  }
+
+  return host;
+});
 
 async function toggleLike() {
   if (scene.value.liked) {
@@ -152,19 +174,37 @@ watchEffect(async () => {
 });
 
 // Image permissions
-const copyright = computed(() => {
+
+const permissionsText = computed(() => {
   const layers = scene.value.content.image_layers;
   if (!layers) {
     return "";
   }
+
+  // This will need improvement when we actually support multi-image scenes.
+
   const items = [];
+
   for (const layer of layers) {
-    const value = layer.image.permissions.copyright;
-    if (value) {
-      items.push(value);
+    const c = layer.image.permissions.credits;
+    if (c) {
+      items.push(`Image credits: ${c}.`);
+    }
+
+    // Credits are delivered as restricted HTML, and so this value gets
+    // exposed as `v-html`. But copyright is plain text, so we need
+    // to escape it
+
+    const o = layer.image.permissions.copyright;
+    if (o) {
+      items.push(`${escapeHtml(o)}.`);
     }
   }
-  return items.join("; ");
+
+  if (items.length == 0)
+    return "";
+
+  return items.join(" ");
 });
 </script>
 
@@ -199,8 +239,29 @@ const copyright = computed(() => {
   margin-left: 5px;
 }
 
+.outgoing {
+  width: 100%;
+  text-align: right;
+  box-sizing: border-box;
+  padding: 0.2rem;
+
+  a {
+    text-decoration: none;
+    color: #7fe7c4;
+
+    &:hover {
+      color: #5acea7;
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: #7fe7c4;
+    }
+  }
+}
+
 .permissions {
-  font-size: smaller;
+  font-size: 80%;
   overflow-wrap: break-word;
 }
 </style>

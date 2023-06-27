@@ -5,7 +5,7 @@
         </n-icon>
     </n-button>
     <n-modal v-model:show="showModal">
-        <n-card style="width: 600px" title="Share" :bordered="false" size="huge" role="dialog" aria-modal="true">
+        <n-card style="width: 600px" :title="modalTitle" :bordered="false" size="huge" role="dialog" aria-modal="true">
             <div class="share-network-list">
                 <n-space justify="space-around" size="large">
                     <ShareNetwork v-for="network in networks" :network="network.network" :key="network.network"
@@ -27,13 +27,22 @@
                 </n-space>
             </div>
             <template #footer>
-                {{ sharing.description }}
+                <div class="url-prompt">Or send the following URL:</div>
+                <n-space align="center" horizontal class="sharing-url-container">
+                    <span class="sharing-url" tabindex="0" @keyup.enter="copyURL">{{ sharing.url }}</span>
+                    <n-button aria-label="Copy URL to clipboard" @click="copyURL" @keyup.enter="copyURL">
+                        <n-icon size="18">
+                            <ContentCopyOutlined />
+                        </n-icon>
+                    </n-button>
+                </n-space>
             </template>
         </n-card>
     </n-modal>
 </template>
 
 <script setup lang="ts">
+import { ContentCopyOutlined, ShareOutlined } from "@vicons/material";
 
 import {
     NButton,
@@ -44,13 +53,13 @@ import {
     NSpace
 } from "~/utils/fixnaive.mjs";
 
-import { ShareOutlined } from '@vicons/material'
-
+const notification = useNotification();
 
 const props = defineProps<{
-    url?: string,
-    title?: string,
-    description?: string,
+    url: string,
+    title: string,
+    description: string,
+    handle: string,
 }>();
 
 const showModal = ref(false);
@@ -59,9 +68,13 @@ const sharing = {
     url: props.url,
     title: props.title,
     description: props.description,
-    hashtags: 'WWTelescope,AAS',
+    hashtags: 'WorldWideTelescope',
     twitterUser: 'WWTelescope'
 };
+
+const modalTitle = computed(() => {
+    return `Share @${props.handle}’s post`;
+});
 
 const networks = [
     { network: 'facebook', name: 'Facebook', viewBox: "0 0 350 512", icon: 'M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z', color: '#1877f2' },
@@ -70,11 +83,60 @@ const networks = [
     { network: 'email', name: 'Email', viewBox: "0 0 512 512", icon: 'M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7c22.4 17.4 52.1 39.5 154.1 113.6c21.1 15.4 56.7 47.8 92.2 47.6c35.7.3 72-32.8 92.3-47.6c102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4c132.7-96.3 142.8-104.7 173.4-128.7c5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9c30.6 23.9 40.7 32.4 173.4 128.7c16.8 12.2 50.2 41.8 73.4 41.4z', color: '#333333' }
 ]
 
+async function copyURL() {
+    try {
+        await navigator.clipboard.writeText(props.url);
+        notification.success({ content: "Link copied!", duration: 3000 });
+        showModal.value = false;
+    } catch (e: any) {
+        notification.error({ content: `Failed to copy link: ${e}`, duration: 3000 });
+    }
+}
 </script>
 
-
 <style type="less">
+.action-button {
+    padding: 0;
+}
+
 .network-name {
     color: white;
+}
+
+.url-prompt {
+    margin-bottom: 0.3rem;
+    font-size: 90%;
+}
+
+.sharing-url-container div:first-child {
+    flex: 1;
+}
+
+.sharing-url {
+    /* Manually copying Naive UI stuff here; there's probably a way to avoid that? */
+    display: block;
+    box-sizing: border-box;
+    height: 34px;
+
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 3px;
+    color: #AAA;
+
+    font-size: 90%;
+    white-space: nowrap;
+    overflow: scroll;
+    font-family: monospace;
+
+    /* Firefox */
+    scrollbar-width: none;
+
+    /* Edge, IE */
+    -ms-overflow-style: none;
+
+    /* Chrome, Safari, Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 </style>
