@@ -42,7 +42,8 @@
         </n-space>
 
         <n-space justify="end">
-          <ShareButton title="WorldWide Telescope" :url="getExternalItemURL(scene)" :description="scene.text" />
+          <ShareButton title="WorldWide Telescope" :url="externalItemUrl" :description="scene.text"
+            :handle="scene.handle.handle" />
 
           <NuxtLink :to="`/@${encodeURIComponent(scene.handle.handle)}/${scene.id}/edit`">
             <n-button class="action-button" :bordered="false" v-if="can_edit" aria-label="Edit scene button">
@@ -97,13 +98,13 @@ function formatDate(date: string): string {
   return formatTimeAgo(Date.parse(date));
 }
 
-function getExternalItemURL(item: GetSceneResponseT): string {
+const externalItemUrl = computed(() => {
   if (scene.value) {
     return `${nuxtConfig.public.hostUrl}/@${encodeURIComponent(scene.value.handle.handle)}/${scene.value.id}`;
   } else {
     return "";
   }
-}
+});
 
 async function toggleLike() {
   if (scene.value.liked) {
