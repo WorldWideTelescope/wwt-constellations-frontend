@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import * as escapeHtml from "escape-html";
 import { storeToRefs } from "pinia";
+import { format as formatTimeAgo } from 'timeago.js';
 
 import {
   NGrid,
@@ -93,13 +94,7 @@ const props = defineProps<{
 const { scene } = toRefs(props);
 
 function formatDate(date: string): string {
-  const now = Date.now();
-  const then = Date.parse(date);
-  const daysBetween = Math.floor((now - then) / 86400000);
-
-  return daysBetween > 10
-    ? new Date(then).toLocaleDateString()
-    : daysBetween + " days ago"
+  return formatTimeAgo(Date.parse(date));
 }
 
 function getExternalItemURL(item: GetSceneResponseT): string {

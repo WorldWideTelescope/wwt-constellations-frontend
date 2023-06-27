@@ -1837,6 +1837,7 @@ __metadata:
     postcss: ^8.4
     postcss-loader: ^7
     screenfull: ^5
+    timeago.js: ^4.0.2
     url-loader: ^4.1
     uuid: ^9.0.0
     vue: ^3
@@ -7476,6 +7477,13 @@ __metadata:
   peerDependencies:
     webpack: ">=4.0.0"
   checksum: cacce280d2b7f912ebb9f418e8bf05c11dfd73fb93dabb592acbd9338f9ca42192bc3e975f4e77b9eb982845ac896859c5d1b024bb665ff451070d319b0dd7dc
+  languageName: node
+  linkType: hard
+
+"timeago.js@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "timeago.js@npm:4.0.2"
+  checksum: c785a06988717cb5a00bb96b00ebaa56e83f4b5ed5d87c4c3931fb1bb2591a0e13a7ddc4b6c12c6ee7de64b440ed903c7bd4e0edddb37aade9bfc9ceab5d0db3
   languageName: node
   linkType: hard
 
