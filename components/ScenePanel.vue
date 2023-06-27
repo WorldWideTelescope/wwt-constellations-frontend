@@ -15,8 +15,12 @@
       {{ scene.text }}
     </n-grid-item>
 
-    <n-grid-item v-show="permissions_text">
-      <n-text depth="3" class="permissions">{{ permissions_text }}</n-text>
+    <n-grid-item class="outgoing" v-if="outgoingUrl">
+      <i>Learn more at <a :href="outgoingUrl" target="_blank">{{ outgoingLinkText }}</a></i> 🚀
+    </n-grid-item>
+
+    <n-grid-item v-show="permissionsText">
+      <n-text depth="3" class="permissions">{{ permissionsText }}</n-text>
     </n-grid-item>
 
     <n-grid-item>
@@ -72,7 +76,12 @@ import {
   NText,
 } from "~/utils/fixnaive.mjs";
 
-import { ModeEditOutlined, StarBorderRound, RemoveRedEyeOutlined, StarRound } from "@vicons/material";
+import {
+  ModeEditOutlined,
+  RemoveRedEyeOutlined,
+  StarBorderRound,
+  StarRound,
+} from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetSceneResponseT, addLike } from "~/utils/apis";
@@ -104,6 +113,34 @@ const externalItemUrl = computed(() => {
   } else {
     return "";
   }
+});
+
+const outgoingUrl = computed(() => {
+  // For some reason, I seem to need to wrap the scene's parameter in this
+  // computed property in order to get proper updating when navigating a
+  // timeline. The toggling of the visibility also seems to require a v-if, not
+  // just a v-show.
+
+  if (scene.value.outgoing_url) {
+    return scene.value.outgoing_url;
+  }
+
+  return "";
+});
+
+const outgoingLinkText = computed(() => {
+  if (!scene.value.outgoing_url) {
+    return "";
+  }
+
+  const parsed = new URL(scene.value.outgoing_url);
+  const host = parsed.hostname;
+
+  if (host.startsWith("www.")) {
+    return host.substring(4);
+  }
+
+  return host;
 });
 
 async function toggleLike() {
@@ -138,7 +175,7 @@ watchEffect(async () => {
 
 // Image permissions
 
-const permissions_text = computed(() => {
+const permissionsText = computed(() => {
   const layers = scene.value.content.image_layers;
   if (!layers) {
     return "";
@@ -200,6 +237,27 @@ const permissions_text = computed(() => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.outgoing {
+  width: 100%;
+  text-align: right;
+  box-sizing: border-box;
+  padding: 0.2rem;
+
+  a {
+    text-decoration: none;
+    color: #7fe7c4;
+
+    &:hover {
+      color: #5acea7;
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: #7fe7c4;
+    }
+  }
 }
 
 .permissions {
