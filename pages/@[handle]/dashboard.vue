@@ -288,6 +288,7 @@ async function onNewSceneFromImage(img: HandleImageInfoT) {
       throw new Error(`creation succeeded (ID ${result.id}) but fetch did not`);
     }
 
+    // TODO: maybe this can/should become a call to setupForSingleScene()?
     knownScenes.value.set(result.id, info);
     describedScene.value = info;
     await navigateTo(`/@${encodeURIComponent(handle)}/${result.id}/edit`);

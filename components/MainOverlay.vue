@@ -53,8 +53,8 @@
             <n-grid-item class="mobile-full-page" v-for="(scene, index) in knownScenes.values()"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
-                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="timelineIndex < 0 || index == timelineIndex"
+                  :scene="scene" :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
               </transition>
             </n-grid-item>
           </n-grid>

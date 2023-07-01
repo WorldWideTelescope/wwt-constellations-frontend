@@ -67,6 +67,22 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   var timelineSequence = 0;
   var nextNeededTimelinePage = 0;
 
+  // Set up state for a single scene. NOTE: before calling this function, you
+  // must have already set timelineSource to null and let a render clock tick
+  // elapse! This is because the watcher for changes to `timelineSource` below
+  // will reset knownScenes. This is all quite gnarly and gross and should be
+  // rationalized.
+  function setupForSingleScene(scene: GetSceneResponseT) {
+    timelineIndex.value = -1;
+    describedScene.value = scene;
+    desiredScene.value = {
+      id: scene.id,
+      place: scene.place,
+      content: scene.content,
+    };
+    knownScenes.value.set(scene.id, scene);
+  }
+
   // Ensure that the timeline data structure extends at least `n` items past the
   // current index. If the timeline was initially empty, this will set the
   // current index to the first position. If something fails badly in the
@@ -141,6 +157,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       timeline.value = [];
       timelineIndex.value = -1;
       knownScenes.value = new Map();
+
+      if (describedScene.value !== null) {
+        knownScenes.value.set(describedScene.value.id, describedScene.value);
+      }
     } else if (newSource != oldSource) {
       if (newSource == "") {
         getTimeline = getHomeTimeline;
@@ -178,6 +198,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     roiEditHeightPercentage,
     roiEditWidthPercentage,
     setTimelineIndex,
+    setupForSingleScene,
     showWWT,
     timeline,
     timelineIndex,
