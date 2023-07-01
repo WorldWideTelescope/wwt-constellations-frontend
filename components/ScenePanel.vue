@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import * as escapeHtml from "escape-html";
+import escapeHtml from "escape-html";
 import { storeToRefs } from "pinia";
 import { format as formatTimeAgo } from 'timeago.js';
 
