@@ -152,10 +152,16 @@ onMounted(() => {
     const place = describedScene.value?.place
     const rootDiv = feedRootRef.value
     if (place && rootDiv) {
-      const screenPoint = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D })
-
-      targetOutsideViewport.value = (screenPoint.x < 0 || screenPoint.x > rootDiv.clientWidth
-        || screenPoint.y < 0 || screenPoint.y > rootDiv.clientHeight);
+      try {
+        const screenPoint = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D })
+        targetOutsideViewport.value = (screenPoint.x < 0 || screenPoint.x > rootDiv.clientWidth
+          || screenPoint.y < 0 || screenPoint.y > rootDiv.clientHeight);
+      } catch {
+        // The above function can sometimes throw an exception (TypeError:
+        // matrix1 is undefined) if one of the WWT engine is just starting up.
+        // We should fix the API not to do that, but in the meantime, silence
+        // the issue.
+      }
     }
 
   });
