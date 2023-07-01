@@ -28,7 +28,7 @@
     <!-- Mobile -->
     <template v-else>
       <div id="toolbar">
-        <n-space justify="space-around" size="large" style="padding: 10px;">
+        <n-space justify="space-around" size="large">
           <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
             :isExploreMode="isExploreMode" @centerScene="recenter"
             :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
@@ -325,7 +325,7 @@ watchEffect(() => {
 <style scoped lang="less">
 #feed-root {
   height: 100%;
-  --footer-height: 60px;
+  --footer-height: 42px;
 
   // We only set the position to make the z-index relevant
   position: relative;
