@@ -20,7 +20,7 @@
     </n-grid-item>
 
     <n-grid-item v-show="permissionsText">
-      <n-text depth="3" class="permissions">{{ permissionsText }}</n-text>
+      <n-text depth="3" class="permissions" v-html="permissionsText"></n-text>
     </n-grid-item>
 
     <n-grid-item>
