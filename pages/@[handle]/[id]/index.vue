@@ -89,14 +89,9 @@ useServerSeoMeta({
 
 // Managing the "desired scene" state
 
-watch(scene_data, (newData) => {
-  if (newData !== null) {
-    describedScene.value = newData;
-    desiredScene.value = {
-      id: newData.id,
-      place: newData.place,
-      content: newData.content,
-    };
+watchEffect(() => {
+  if (scene_data.value !== null) {
+    constellationsStore.setupForSingleScene(scene_data.value);
   }
 });
 

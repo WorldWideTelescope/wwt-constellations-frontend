@@ -9,10 +9,10 @@ export default defineNuxtConfig({
       (process.env.NODE_ENV === "production"
         ? [
           "naive-ui",
-          "vueuc",
           "@css-render/vue3-ssr",
         ] : []).concat(
           [
+            "vueuc",
             "date-fns",
             "@juggle/resize-observer",
             "@wwtelescope/engine",
