@@ -12,7 +12,9 @@
     </n-grid-item>
 
     <n-grid-item class="description">
-      {{ scene.text }}
+      <n-scrollbar trigger="none">
+        {{ scene.text }}
+      </n-scrollbar>
     </n-grid-item>
 
     <n-grid-item class="outgoing" v-if="outgoingUrl">
@@ -71,6 +73,7 @@ import {
   NGrid,
   NGridItem,
   NButton,
+  NScrollbar,
   NSpace,
   NIcon,
   NText,
@@ -216,7 +219,7 @@ const permissionsText = computed(() => {
   padding: 4px;
 }
 
-.mobile-full-page>.scene-panel {
+.mobile-full-page .scene-panel {
   font-size: 70%;
   line-height: 1.15;
 }
@@ -234,6 +237,11 @@ const permissionsText = computed(() => {
 .description {
   color: #ffffff;
   font-size: 120%;
+  max-height: 10rem;
+}
+
+.mobile-full-page .description {
+  max-height: 6rem;
 }
 
 .action-button {
