@@ -28,11 +28,9 @@
     <!-- Mobile -->
     <template v-else>
       <div id="toolbar">
-        <n-space justify="space-around" size="large">
-          <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
-            :isExploreMode="isExploreMode" @centerScene="recenter"
-            :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
-        </n-space>
+        <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
+          :isExploreMode="isExploreMode" @centerScene="recenter"
+          :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
       </div>
 
       <template v-if="isExploreMode">
