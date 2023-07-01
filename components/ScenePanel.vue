@@ -21,7 +21,7 @@
       <i>Learn more at <a :href="outgoingUrl" target="_blank">{{ outgoingLinkText }}</a></i> 🚀
     </n-grid-item>
 
-    <n-grid-item v-show="permissionsText">
+    <n-grid-item v-show="permissionsText" class="permissions-wrapper">
       <n-text depth="3" class="permissions" v-html="permissionsText"></n-text>
     </n-grid-item>
 
@@ -271,6 +271,10 @@ const permissionsText = computed(() => {
       color: #7fe7c4;
     }
   }
+}
+
+.permissions-wrapper {
+  line-height: 1;
 }
 
 .permissions {
