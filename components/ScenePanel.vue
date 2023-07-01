@@ -12,15 +12,17 @@
     </n-grid-item>
 
     <n-grid-item class="description">
-      {{ scene.text }}
+      <n-scrollbar trigger="none">
+        {{ scene.text }}
+      </n-scrollbar>
     </n-grid-item>
 
     <n-grid-item class="outgoing" v-if="outgoingUrl">
       <i>Learn more at <a :href="outgoingUrl" target="_blank">{{ outgoingLinkText }}</a></i> 🚀
     </n-grid-item>
 
-    <n-grid-item v-show="permissionsText">
-      <n-text depth="3" class="permissions">{{ permissionsText }}</n-text>
+    <n-grid-item v-show="permissionsText" class="permissions-wrapper">
+      <n-text depth="3" class="permissions" v-html="permissionsText"></n-text>
     </n-grid-item>
 
     <n-grid-item>
@@ -63,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import * as escapeHtml from "escape-html";
+import escapeHtml from "escape-html";
 import { storeToRefs } from "pinia";
 import { format as formatTimeAgo } from 'timeago.js';
 
@@ -71,6 +73,7 @@ import {
   NGrid,
   NGridItem,
   NButton,
+  NScrollbar,
   NSpace,
   NIcon,
   NText,
@@ -216,6 +219,11 @@ const permissionsText = computed(() => {
   padding: 4px;
 }
 
+.mobile-full-page .scene-panel {
+  font-size: 70%;
+  line-height: 1.15;
+}
+
 .metadata {
   text-decoration: none;
   color: #999;
@@ -229,6 +237,11 @@ const permissionsText = computed(() => {
 .description {
   color: #ffffff;
   font-size: 120%;
+  max-height: 10rem;
+}
+
+.mobile-full-page .description {
+  max-height: 6rem;
 }
 
 .action-button {
@@ -258,6 +271,10 @@ const permissionsText = computed(() => {
       color: #7fe7c4;
     }
   }
+}
+
+.permissions-wrapper {
+  line-height: 1;
 }
 
 .permissions {

@@ -28,11 +28,9 @@
     <!-- Mobile -->
     <template v-else>
       <div id="toolbar">
-        <n-space justify="space-around" size="large" style="padding: 10px;">
-          <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
-            :isExploreMode="isExploreMode" @centerScene="recenter"
-            :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
-        </n-space>
+        <Toolbar @goPrev="goPrev" @goNext="goNext" @setExploreMode="(iem: boolean) => isExploreMode = iem"
+          :isExploreMode="isExploreMode" @centerScene="recenter"
+          :isCenterButtonEnabled="targetOutsideViewport && !isMovingToScene" />
       </div>
 
       <template v-if="isExploreMode">
@@ -50,9 +48,9 @@
         </n-icon>
       </template>
       <template v-else>
-        <div class="full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
+        <div class="mobile-full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
           <n-grid cols="1">
-            <n-grid-item class="full-page" v-for="(scene, index) in knownScenes.values()"
+            <n-grid-item class="mobile-full-page" v-for="(scene, index) in knownScenes.values()"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
                 <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="index == timelineIndex" :scene="scene"
@@ -325,7 +323,7 @@ watchEffect(() => {
 <style scoped lang="less">
 #feed-root {
   height: 100%;
-  --footer-height: 60px;
+  --footer-height: 42px;
 
   // We only set the position to make the z-index relevant
   position: relative;
@@ -360,14 +358,14 @@ watchEffect(() => {
 }
 
 
-.full-page-container {
+.mobile-full-page-container {
   height: calc(100% - var(--footer-height));
   overflow: scroll;
   scroll-snap-type: y mandatory;
   pointer-events: all;
 }
 
-.full-page {
+.mobile-full-page {
   display: flex;
   align-items: flex-end;
   scroll-snap-align: start;

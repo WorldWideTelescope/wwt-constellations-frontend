@@ -86,7 +86,7 @@ withDefaults(defineProps<{
 defineEmits<{
     (event: 'goNext'): void
     (event: 'goPrev'): void
-    (event: 'setExploreMode'): boolean,
+    (event: 'setExploreMode', setting: boolean): void,
     (event: 'centerScene'): void
 }>();
 </script>
