@@ -216,6 +216,11 @@ const permissionsText = computed(() => {
   padding: 4px;
 }
 
+.mobile-full-page>.scene-panel {
+  font-size: 70%;
+  line-height: 1.15;
+}
+
 .metadata {
   text-decoration: none;
   color: #999;
