@@ -1,11 +1,5 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
-    <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
-      <template #icon>
-        <n-icon size="35" aria-label="Exit fullscreen" v-if="fullscreenModeActive" :component="FullscreenExitOutlined" />
-        <n-icon size="35" aria-label="Enter fullscreen" v-else :component="FullscreenOutlined" />
-      </template>
-    </n-button>
     <!-- Desktop -->
     <template v-if="!isMobile">
       <n-grid ref="desktop_overlay" cols="1" y-gap="2" class="desktop-panel">
@@ -75,14 +69,11 @@ import {
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
-import * as screenfull from "screenfull";
 import {
   KeyboardArrowDownFilled,
   KeyboardArrowUpFilled,
   KeyboardArrowLeftFilled,
   KeyboardArrowRightFilled,
-  FullscreenOutlined,
-  FullscreenExitOutlined
 } from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
@@ -177,8 +168,6 @@ const {
   zoomDeg: wwt_zoom_deg,
 } = storeToRefs(engineStore);
 
-const fullscreenModeActive = ref(false);
-
 onMounted(() => {
   if (timelineSource.value !== null) {
     nextTick(() => {
@@ -207,28 +196,11 @@ onMounted(() => {
     }
 
   });
-
-  if (screenfull.isEnabled) {
-    screenfull.on("change", onFullscreenEvent);
-  }
 });
 
 onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
-  if (screenfull.isEnabled) {
-    screenfull.off("change", onFullscreenEvent);
-  }
 });
-
-function toggleFullscreen() {
-  if (screenfull.isEnabled) {
-    screenfull.toggle();
-  }
-}
-
-function onFullscreenEvent() {
-  fullscreenModeActive.value = screenfull.isFullscreen;
-}
 
 function onItemSelected(index: number) {
   constellationsStore.setTimelineIndex(index);
@@ -661,14 +633,6 @@ watchEffect(() => {
 .button-toggled {
   background-color: var(--n-text-color-pressed) !important;
   color: var(--n-text-color) !important;
-}
-
-.fullscreen-button {
-  pointer-events: all;
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  z-index: 110;
 }
 
 .nav-bg {

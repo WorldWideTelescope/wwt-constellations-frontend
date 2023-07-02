@@ -2,20 +2,30 @@
   <n-config-provider inline-theme-disabled :theme="darkTheme">
     <n-notification-provider>
       <n-layout style="height: 100%; background: none;" position="absolute">
+        <!-- Can't figure out how to use n-space to get the internal spacing to work out how I want here -->
         <n-layout-header id="header" :class="{ 'header-mobile': isMobile }">
-          <n-space :align="'center'" :size="'small'">
-            <n-button-group>
-              <n-button id="drawer-btn" v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
-                style="padding-right: 0px;" aria-label="Open drawer button">
-                <n-icon size="24" aria-labelledby="drawer-btn">
-                  <MenuRound />
-                </n-icon>
-              </n-button>
-            </n-button-group>
-            <n-divider vertical style="height: 24px;" />
-            <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
-            <Breadcrumb />
-          </n-space>
+          <n-button id="drawer-btn" v-model="drawer" @click="drawer = !drawer" :bordered="false" size="small"
+            style="padding-right: 0px;" aria-label="Open drawer button">
+            <n-icon size="24" aria-labelledby="drawer-btn">
+              <MenuRound />
+            </n-icon>
+          </n-button>
+
+          <n-divider vertical style="height: 24px;" />
+
+          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
+
+          <Breadcrumb />
+
+          <div style="flex: 1;"></div>
+
+          <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
+            <template #icon>
+              <n-icon size="24" aria-label="Exit fullscreen" v-if="fullscreenModeActive"
+                :component="FullscreenExitOutlined" />
+              <n-icon size="24" aria-label="Enter fullscreen" v-else :component="FullscreenOutlined" />
+            </template>
+          </n-button>
         </n-layout-header>
 
         <n-layout-content position="absolute" :class="{ 'content': true, 'content-desktop': !isMobile }">
@@ -55,10 +65,16 @@
 </template>
 
 <script setup lang="ts">
-import { useConstellationsStore } from '../stores/constellations';
-import { storeToRefs } from 'pinia';
-import { ref } from 'vue'
-import { MenuRound } from "@vicons/material"
+import * as screenfull from "screenfull";
+import { storeToRefs } from "pinia";
+import { ref } from "vue";
+
+import {
+  FullscreenOutlined,
+  FullscreenExitOutlined,
+  MenuRound,
+} from "@vicons/material";
+
 import {
   darkTheme,
   DrawerPlacement,
@@ -66,7 +82,6 @@ import {
 
 import {
   NButton,
-  NButtonGroup,
   NConfigProvider,
   NDivider,
   NDrawer,
@@ -78,6 +93,8 @@ import {
   NNotificationProvider,
   NSpace,
 } from "~/utils/fixnaive.mjs";
+
+import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
 const { isMobile, loggedIn } = storeToRefs(constellationsStore);
@@ -98,7 +115,6 @@ interface MenuItem {
   name: string,
   url: string
 }
-
 
 function logInOut() {
   if (!process.client) {
@@ -125,8 +141,33 @@ function logInOut() {
   }
 }
 
-</script>
+// Fullscreen handling
 
+const fullscreenModeActive = ref(false);
+
+onMounted(() => {
+  if (screenfull.isEnabled) {
+    fullscreenModeActive.value = screenfull.isFullscreen;
+    screenfull.on("change", onFullscreenEvent);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (screenfull.isEnabled) {
+    screenfull.off("change", onFullscreenEvent);
+  }
+});
+
+function toggleFullscreen() {
+  if (screenfull.isEnabled) {
+    screenfull.toggle();
+  }
+}
+
+function onFullscreenEvent() {
+  fullscreenModeActive.value = screenfull.isFullscreen;
+}
+</script>
 
 <style type="less">
 #header {
@@ -135,8 +176,12 @@ function logInOut() {
   line-height: 1em;
   background: none;
   z-index: 100;
-  /* The fullscreenbutton is 35 pixels wide and occupies the top-right */
-  width: calc(100% - 35px);
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px 8px;
+  flex-wrap: wrap;
 }
 
 .header-mobile {
