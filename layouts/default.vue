@@ -29,7 +29,7 @@
               aria-label="Drawer">
               <n-drawer-content header-style="justify-content:center">
                 <template #header>
-                  <n-space align="center">
+                  <n-space :align="'center'">
                     <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
                       alt="World Wide Telescope logo" />
                     WorldWide Telescope

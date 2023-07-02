@@ -11,7 +11,7 @@
                     <ShareNetwork v-for="network in networks" :network="network.network" :key="network.network"
                         :url="sharing.url" :title="sharing.title" :description="sharing.description"
                         :hashtags="sharing.hashtags" :twitterUser="sharing.twitterUser" style="text-decoration: none;">
-                        <n-space align="center" vertical>
+                        <n-space :align="'center'" vertical>
                             <n-avatar :style="{ backgroundColor: network.color }" strong circle>
                                 <n-icon size="20">
                                     <svg xmlns="http://www.w3.org/2000/svg" :viewBox="network.viewBox">
@@ -28,7 +28,7 @@
             </div>
             <template #footer>
                 <div class="url-prompt">Or send the following URL:</div>
-                <n-space align="center" horizontal class="sharing-url-container">
+                <n-space :align="'center'" horizontal class="sharing-url-container">
                     <span class="sharing-url" tabindex="0" @keyup.enter="copyURL">{{ sharing.url }}</span>
                     <n-button aria-label="Copy URL to clipboard" @click="copyURL" @keyup.enter="copyURL">
                         <n-icon size="18">
