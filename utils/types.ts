@@ -116,6 +116,12 @@ export const ScenePreviews = t.partial({
 
 export type ScenePreviewsT = t.TypeOf<typeof ScenePreviews>;
 
+export interface SkymapSceneInfo {
+  itemIndex: number;
+  place: PlaceDetailsT;
+  content: SceneContentHydratedT;
+}
+
 // Older types, potentially to be removed:
 
 export interface FitsColorMaps {

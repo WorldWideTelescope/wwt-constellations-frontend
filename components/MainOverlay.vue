@@ -50,11 +50,11 @@
       <template v-else>
         <div class="mobile-full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
           <n-grid cols="1">
-            <n-grid-item class="mobile-full-page" v-for="(scene, index) in knownScenes.values()"
+            <n-grid-item class="mobile-full-page" v-for="scene in contextScenes"
               :style="{ 'height': mobile_page_height + 'px' }">
               <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="timelineIndex < 0 || index == timelineIndex"
-                  :scene="scene" :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="scene.currentlyShown" :scene="scene"
+                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
               </transition>
             </n-grid-item>
           </n-grid>
@@ -70,7 +70,6 @@ import {
   NGrid,
   NGridItem,
   NIcon,
-  NSpace
 } from "~/utils/fixnaive.mjs";
 
 import { storeToRefs } from "pinia";
@@ -78,11 +77,17 @@ import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 import * as screenfull from "screenfull";
 import {
-  KeyboardArrowDownFilled, KeyboardArrowUpFilled, KeyboardArrowLeftFilled, KeyboardArrowRightFilled, NavigateNextRound, NavigateBeforeRound, FullscreenOutlined, FullscreenExitOutlined
+  KeyboardArrowDownFilled,
+  KeyboardArrowUpFilled,
+  KeyboardArrowLeftFilled,
+  KeyboardArrowRightFilled,
+  FullscreenOutlined,
+  FullscreenExitOutlined
 } from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { GetHandleResponseT } from "~/utils/apis";
+import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
+import { SkymapSceneInfo } from "~/utils/types";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -110,13 +115,53 @@ const {
   isMovingToScene
 } = storeToRefs(constellationsStore);
 
-const skymapScenes = computed<any[]>(() => {
+// The list of scenes shown in the skymap; just a subset of the timeline.
+const skymapScenes = computed<SkymapSceneInfo[]>(() => {
   const i0 = Math.max(timelineIndex.value - 5, 0);
   const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
+
   return timeline.value.slice(i0, i1).map((id, relIndex) => {
     const scene = knownScenes.value.get(id)!;
     return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
   });
+});
+
+interface ContextSceneInfo extends GetSceneResponseT {
+  currentlyShown: boolean;
+}
+
+// The list of scenes used to construct the set of ScenePanels in mobile mode.
+// In timeline mode, this grows indefinitely to make the Instagram-style
+// infinite scroll possible. When we're not in timeline mode, it contains just
+// the scene that's currently being viewed. This list should almost never be
+// empty, but it can be empty when the app is starting up and no data have been
+// loaded.
+const contextScenes = computed<ContextSceneInfo[]>(() => {
+  // Maybe this is silly, but pull values out of all of the refs that we use
+  // up-front, so that this value is recomputed the same way regardless of which
+  // mode we're in.
+  const tlsource = timelineSource.value;
+  const tlindex = timelineIndex.value;
+  const desc = describedScene.value;
+  const tldata = timeline.value;
+  const known = knownScenes.value;
+
+  if (tlsource === null || tlindex < 0) {
+    if (desc === null) {
+      return [];
+    }
+
+    return [{
+      currentlyShown: true,
+      ...desc,
+    }];
+  } else {
+    return tldata.map((id, itemIndex) => {
+      const scene = known.get(id)!;
+      const currentlyShown = itemIndex == tlindex;
+      return { currentlyShown, itemIndex, ...scene };
+    });
+  }
 });
 
 const hasNext = computed<boolean>(() => (timelineIndex.value < (knownScenes.value.size - 1)));
