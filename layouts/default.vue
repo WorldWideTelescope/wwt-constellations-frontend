@@ -25,29 +25,24 @@
             and if we make it client-only, things work. So that's what we do for
             now. -->
           <ClientOnly>
-            <n-drawer v-model:show="drawer" :width="502" style="max-width: 70%;" :placement="placement" aria-label="Drawer">
+            <n-drawer v-model:show="drawer" :width="502" style="max-width: 70%;" :placement="placement"
+              aria-label="Drawer">
               <n-drawer-content header-style="justify-content:center">
                 <template #header>
                   <n-space align="center">
-                    <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
+                    <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
+                      alt="World Wide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
                 </template>
-                <n-button
-                  v-for="menuItem in menuItems"
-                  text
-                  tag="a"
-                  :href=menuItem.url
-                  target="_blank"
-                  class="menu-item"
-                >
-                  {{menuItem.name}}
+                <n-button v-for="menuItem in menuItems" text tag="a" :href=menuItem.url target="_blank" class="menu-item">
+                  {{ menuItem.name }}
                 </n-button>
-              <template #footer>
-                <n-button @click="logInOut">
-                  {{ loggedIn ? 'Log out' : 'Log in' }}
-                </n-button>
-              </template>
+                <template #footer>
+                  <n-button @click="logInOut">
+                    {{ loggedIn ? 'Log out' : 'Log in' }}
+                  </n-button>
+                </template>
               </n-drawer-content>
             </n-drawer>
           </ClientOnly>
@@ -92,12 +87,12 @@ const { $keycloak } = useNuxtApp();
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
 const menuItems: Array<MenuItem> = [
-  {name: "About WWT", url: "https://worldwidetelescope.org/about/"},
-  {name: "Acknowledgements", url: "https://worldwidetelescope.org/about/acknowledgments/"},
-  {name: "Privacy Policy", url: "#"},
-  {name: "Terms of Use", url: "https://worldwidetelescope.org/terms/"},
-  {name: "WWT Home", url: "https://worldwidetelescope.org/home/"},
-  {name: "WWT Webclient", url: "https://worldwidetelescope.org/webclient/"},
+  { name: "About WWT", url: "https://worldwidetelescope.org/about/" },
+  { name: "Acknowledgements", url: "https://worldwidetelescope.org/about/acknowledgments/" },
+  { name: "Privacy Policy", url: "#" },
+  { name: "Terms of Use", url: "https://worldwidetelescope.org/terms/" },
+  { name: "WWT Home", url: "https://worldwidetelescope.org/home/" },
+  { name: "WWT Webclient", url: "https://worldwidetelescope.org/webclient/" },
 ]
 interface MenuItem {
   name: string,
@@ -164,5 +159,4 @@ function logInOut() {
   width: 100%;
   padding: 10px 0px;
 }
-
 </style>
