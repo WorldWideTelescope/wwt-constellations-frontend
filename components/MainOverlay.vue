@@ -368,7 +368,6 @@ watchEffect(() => {
   height: calc(100% - var(--footer-height));
   overflow: scroll;
   scroll-snap-type: y mandatory;
-  pointer-events: all;
 }
 
 .mobile-full-page {
