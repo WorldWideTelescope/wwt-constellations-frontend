@@ -72,7 +72,7 @@ const {
     timelineIndex
 } = storeToRefs(constellationsStore);
 
-const hasNext = computed<boolean>(() => (timelineIndex.value < (knownScenes.value.size - 1)));
+const hasNext = computed<boolean>(() => (timelineIndex.value >= 0 && timelineIndex.value < (knownScenes.value.size - 1)));
 const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
 
 withDefaults(defineProps<{

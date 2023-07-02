@@ -164,9 +164,6 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   }
 });
 
-const hasNext = computed<boolean>(() => (timelineIndex.value < (knownScenes.value.size - 1)));
-const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
-
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
@@ -267,16 +264,20 @@ async function recenter() {
 }
 
 function goNext() {
-  if (hasNext) {
-    const n = timelineIndex.value + 1;
+  const idx = timelineIndex.value;
+
+  if (idx >= 0 && idx < (knownScenes.value.size - 1)) {
+    const n = idx + 1;
     constellationsStore.setTimelineIndex(n);
     scrollTo(n);
   }
 }
 
 function goPrev() {
-  if (hasPrev) {
-    const n = timelineIndex.value - 1;
+  const idx = timelineIndex.value;
+
+  if (idx > 0) {
+    const n = idx - 1;
     constellationsStore.setTimelineIndex(n);
     scrollTo(n);
   }
