@@ -1,7 +1,7 @@
 <template>
     <n-breadcrumb id="breadcrumb-root">
-        <n-breadcrumb-item v-for="(crumb, index) in crumbs" :on-click="() => navigate(crumb, index)">
-            {{ crumb }}
+        <n-breadcrumb-item v-for="(dcrumb, index) in displayCrumbs" :on-click="() => navigate(index)">
+            {{ dcrumb }}
         </n-breadcrumb-item>
     </n-breadcrumb>
 </template>
@@ -16,25 +16,40 @@ const { isMobile } = storeToRefs(useConstellationsStore());
 
 const homeCrumb = computed(() => isMobile.value ? "WWT" : "WorldWide Telescope");
 
-const crumbs = computed<string[]>(() => {
+// This is the literal route broken into pieces
+//
+// "/" maps to [""], ["/foo/"] and ["/foo"] map to ["", "foo"], etc.
+const literalCrumbs = computed<string[]>(() => {
     const route = useRoute();
-    if (route.path == "/") {
-        return [homeCrumb.value];
-    } else {
-        return (homeCrumb.value + route.path).split('/');
-    }
+    return route.path.replace(/\/$/, "").split('/');
 });
 
-function buildRoute(crumb: string, index: number): string {
-    if (crumb == homeCrumb.value) {
+// Here we take the literal crumbs and tweak them for display to the user
+
+const HANDLE_RE = /^@/;
+const ID_RE = /^[0-9a-fA-F]+$/;
+
+const displayCrumbs = computed<string[]>(() => {
+    const dcrumbs = [...literalCrumbs.value];
+    dcrumbs[0] = homeCrumb.value;
+
+    if (dcrumbs.length > 2 && HANDLE_RE.test(dcrumbs[1]) && ID_RE.test(dcrumbs[2])) {
+        dcrumbs[2] = "Scene";
+    }
+
+    return dcrumbs;
+});
+
+function buildRoute(index: number): string {
+    if (index == 0) {
         return "/";
     } else {
-        return "/" + crumbs.value.slice(1, index + 1).join("/");
+        return "/" + literalCrumbs.value.slice(1, index + 1).join("/") + "/";
     }
 }
 
-async function navigate(crumb: string, index: number) {
-    await navigateTo(buildRoute(crumb, index))
+async function navigate(index: number) {
+    await navigateTo(buildRoute(index))
 }
 </script>
 

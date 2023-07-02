@@ -217,6 +217,7 @@ const permissionsText = computed(() => {
   border-radius: 3px;
   box-sizing: border-box;
   padding: 4px;
+  pointer-events: all;
 }
 
 .mobile-full-page .scene-panel {

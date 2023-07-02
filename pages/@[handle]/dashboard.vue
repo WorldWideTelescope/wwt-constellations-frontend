@@ -90,11 +90,11 @@ import {
 
 import {
   getHandle,
-  HandleImageInfoT,
   handleSceneInfo,
   HandleSceneInfoT,
   handleStats,
   HandleStatsResponseT,
+  ImageSummaryT,
   updateHandle,
 } from "~/utils/apis";
 
@@ -103,9 +103,7 @@ import { useConstellationsStore } from "~/stores/constellations";
 
 const {
   describedScene,
-  desiredScene,
   knownScenes,
-  timelineSource,
 } = storeToRefs(useConstellationsStore());
 
 definePageMeta({
@@ -231,11 +229,11 @@ onMounted(() => {
 
 // The "My Images" table
 
-async function onEditImage(img: HandleImageInfoT) {
+async function onEditImage(img: ImageSummaryT) {
   await navigateTo(`/@${encodeURIComponent(handle)}/image/${img._id}/edit`);
 }
 
-async function onNewSceneFromImage(img: HandleImageInfoT) {
+async function onNewSceneFromImage(img: ImageSummaryT) {
   const fullInfo = await getImage($backendCall, img._id);
 
   if (!fullInfo) {
@@ -301,14 +299,14 @@ const myImagesColumns = [
   {
     title: "Note",
     key: "note",
-    render: (row: HandleImageInfoT) => {
+    render: (row: ImageSummaryT) => {
       return h(NEllipsis, { style: "max-width: 30em" }, () => [row.note]);
     }
   },
   {
     title: "Actions",
     key: "_id",
-    render: (row: HandleImageInfoT) => {
+    render: (row: ImageSummaryT) => {
       return h(NButtonGroup, {}, () => [
         h(NButton, { onClick: () => onEditImage(row) }, () => ["Edit"]),
         h(NButton, { onClick: () => onNewSceneFromImage(row) }, () => ["New scene"]),
@@ -317,11 +315,11 @@ const myImagesColumns = [
   },
 ];
 
-const myImagesData = ref<HandleImageInfoT[]>([]);
+const myImagesData = ref<ImageSummaryT[]>([]);
 
 const myImagesIsLoading = ref(true);
 
-function myImagesRowKey(row: HandleImageInfoT) {
+function myImagesRowKey(row: ImageSummaryT) {
   return row._id;
 }
 
