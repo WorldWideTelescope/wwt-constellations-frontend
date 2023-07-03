@@ -95,17 +95,17 @@ onMounted(() => {
   pointer-events: none;
 }
 
-.cookieControl {
-  a {
-    color: #FFF;
+a {
+  text-decoration: none;
+  color: #7fe7c4;
 
-    &:hover {
-      color: #EEF;
-    }
+  &:hover {
+    color: #5acea7;
+    text-decoration: underline;
+  }
 
-    &:visited {
-      color: #CCE;
-    }
+  &:visited {
+    color: #7fe7c4;
   }
 }
 

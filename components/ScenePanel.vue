@@ -18,7 +18,8 @@
     </n-grid-item>
 
     <n-grid-item class="outgoing" v-if="outgoingUrl">
-      <i>Learn more at <a :href="outgoingUrl" target="_blank">{{ outgoingLinkText }}</a></i> 🚀
+      <i>Learn more at <a ref="outgoingLink" :href="outgoingUrl" target="_blank" @click=onOutgoingClick>{{
+        outgoingLinkText }}</a></i> 🚀
     </n-grid-item>
 
     <n-grid-item v-show="permissionsText" class="permissions-wrapper">
@@ -146,6 +147,16 @@ const outgoingLinkText = computed(() => {
   return host;
 });
 
+const outgoingLink = ref<HTMLAnchorElement | null>(null);
+
+function onOutgoingClick() {
+  if (outgoingLink.value !== null) {
+    const nuxtConfig = useRuntimeConfig();
+    const url = `${nuxtConfig.public.apiUrl}/scene/${scene.value.id}/click?href=${encodeURIComponent(outgoingLink.value.href)}`;
+    outgoingLink.value.href = url;
+  }
+}
+
 async function toggleLike() {
   if (scene.value.liked) {
     const success = await removeLike($backendCall, scene.value.id);
@@ -258,20 +269,6 @@ const permissionsText = computed(() => {
   text-align: right;
   box-sizing: border-box;
   padding: 0.2rem;
-
-  a {
-    text-decoration: none;
-    color: #7fe7c4;
-
-    &:hover {
-      color: #5acea7;
-      text-decoration: underline;
-    }
-
-    &:visited {
-      color: #7fe7c4;
-    }
-  }
 }
 
 .permissions-wrapper {

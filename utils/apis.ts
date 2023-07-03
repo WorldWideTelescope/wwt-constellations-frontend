@@ -143,13 +143,18 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
 // Endpoint: GET /handle/:handle/imageinfo?page=$int&pagesize=$int
 
-export const ImageSummary = t.type({
-  _id: t.string,
-  handle_id: t.string,
-  creation_date: t.string,
-  note: t.string,
-  storage: ImageStorage,
-});
+export const ImageSummary = t.intersection([
+  t.type({
+    _id: t.string,
+    handle_id: t.string,
+    creation_date: t.string,
+    note: t.string,
+    storage: ImageStorage,
+  }),
+  t.partial({
+    alt_text: t.string,
+  })
+]);
 
 export type ImageSummaryT = t.TypeOf<typeof ImageSummary>;
 
@@ -339,16 +344,21 @@ export async function addHandleOwner(
 
 // Endpoint: GET /image/:id
 
-export const GetImageResponse = t.type({
-  id: t.string,
-  handle_id: t.string,
-  handle: GetHandleResponse,
-  creation_date: t.string,
-  wwt: ImageWwt,
-  permissions: ImagePermissions,
-  storage: ImageStorage,
-  note: t.string,
-});
+export const GetImageResponse = t.intersection([
+  t.type({
+    id: t.string,
+    handle_id: t.string,
+    handle: GetHandleResponse,
+    creation_date: t.string,
+    wwt: ImageWwt,
+    permissions: ImagePermissions,
+    storage: ImageStorage,
+    note: t.string,
+  }),
+  t.partial({
+    alt_text: t.string,
+  })
+]);
 
 export type GetImageResponseT = t.TypeOf<typeof GetImageResponse>;
 
@@ -411,6 +421,7 @@ export async function imagePermissions(fetcher: $Fetch, id: string): Promise<Ima
 
 export const ImageUpdateRequest = t.partial({
   note: t.string,
+  alt_text: t.string,
   permissions: ImagePermissions,
 });
 
