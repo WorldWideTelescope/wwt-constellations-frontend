@@ -269,20 +269,6 @@ const permissionsText = computed(() => {
   text-align: right;
   box-sizing: border-box;
   padding: 0.2rem;
-
-  a {
-    text-decoration: none;
-    color: #7fe7c4;
-
-    &:hover {
-      color: #5acea7;
-      text-decoration: underline;
-    }
-
-    &:visited {
-      color: #7fe7c4;
-    }
-  }
 }
 
 .permissions-wrapper {
