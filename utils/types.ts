@@ -48,12 +48,17 @@ export const ImagePermissions = t.intersection([
 
 export type ImagePermissionsT = t.TypeOf<typeof ImagePermissions>;
 
-export const ImageDisplayInfo = t.type({
-  id: t.string,
-  wwt: ImageWwt,
-  storage: ImageStorage,
-  permissions: ImagePermissions,
-});
+export const ImageDisplayInfo = t.intersection([
+  t.type({
+    id: t.string,
+    wwt: ImageWwt,
+    storage: ImageStorage,
+    permissions: ImagePermissions,
+  }),
+  t.partial({
+    alt_text: t.string,
+  })
+]);
 
 export type ImageDisplayInfoT = t.TypeOf<typeof ImageDisplayInfo>;
 

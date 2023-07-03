@@ -27,6 +27,23 @@
 
       <n-grid-item class="note">
         <n-text depth="3">
+          <strong>Visual description (“alt-text”)</strong>. A description of the
+          image for users who are blind or otherwise unable to see it. See <a target="_blank"
+            href="https://ui.adsabs.harvard.edu/abs/2023CAPJ...32...25A/abstract">Arcand
+            et al. (2023)</a> for research-based suggestions about how to write
+          high-quality astronomical image descriptions.
+        </n-text>
+        <n-input v-model:value="alt_text" type="textarea" placeholder="Alt-text ..." class="cxinput"
+          @change="onUpdateAltText"></n-input>
+        <n-space justify="end">
+          <n-button :loading="alt_text_loading" @click="onUpdateAltText">
+            Update
+          </n-button>
+        </n-space>
+      </n-grid-item>
+
+      <n-grid-item class="note">
+        <n-text depth="3">
           <strong>Credits</strong>. Freeform text acknowledging the people
           and/or institutions that created the image. This field is in HTML, but
           only basic tags are allowed. Make sure to escape &amp;, &lt;, and &gt;
@@ -47,8 +64,9 @@
           <strong>Copyright</strong>. A copyright statement identifying the
           legal owner of the image, generally of the form “Copyright 2020
           Henrietta Swan Leavitt”. If an image is in the public domain, put
-          “Public domain” — but, under global intellectual property law, nearly
-          all images in Constellations will be copyrighted.
+          “Public domain”. Under global intellectual property law, nearly all
+          images in Constellations will be copyrighted, with the important
+          exception of works created by the US Federal government (e.g., NASA).
         </n-text>
         <n-input v-model:value="copyright" type="text" placeholder="Copyright {year}, {person}." class="cxinput"
           @change="onUpdateCopyright"></n-input>
@@ -160,6 +178,24 @@ async function onUpdateNote() {
   await updateImage(fetcher, id, { note: note.value });
   notification.success({ content: "Note updated.", duration: 3000 });
   note_loading.value = false;
+}
+
+// Editing - image alt text
+
+const alt_text = ref("");
+const alt_text_loading = ref(false);
+
+watchEffect(() => {
+  alt_text.value = image.value?.alt_text ?? "";
+  alt_text_loading.value = false;
+});
+
+async function onUpdateAltText() {
+  const fetcher = await $backendAuthCall();
+  alt_text_loading.value = true;
+  await updateImage(fetcher, id, { alt_text: alt_text.value });
+  notification.success({ content: "Alt-text updated.", duration: 3000 });
+  alt_text_loading.value = false;
 }
 
 // Editing - image permissions
