@@ -10,7 +10,9 @@
                 <n-space justify="space-around" size="large">
                     <ShareNetwork v-for="network in networks" :network="network.network" :key="network.network"
                         :url="sharing.url" :title="sharing.title" :description="sharing.description"
-                        :hashtags="sharing.hashtags" :twitterUser="sharing.twitterUser" style="text-decoration: none;">
+                        :hashtags="sharing.hashtags" :twitterUser="sharing.twitterUser" style="text-decoration: none;"
+                        @open="recordShare(network.network)"
+                      >
                         <n-space :align="'center'" vertical>
                             <n-avatar :style="{ backgroundColor: network.color }" strong circle>
                                 <n-icon size="20">
@@ -29,8 +31,8 @@
             <template #footer>
                 <div class="url-prompt">Or send the following URL:</div>
                 <n-space :align="'center'" horizontal class="sharing-url-container">
-                    <span class="sharing-url" tabindex="0" @keyup.enter="copyURL">{{ sharing.url }}</span>
-                    <n-button aria-label="Copy URL to clipboard" @click="copyURL" @keyup.enter="copyURL">
+                    <span class="sharing-url" tabindex="0" @keyup.enter="onCopy">{{ sharing.url }}</span>
+                    <n-button aria-label="Copy URL to clipboard" @click="onCopy" @keyup.enter="onCopy">
                         <n-icon size="18">
                             <ContentCopyOutlined />
                         </n-icon>
@@ -52,6 +54,8 @@ import {
     NAvatar,
     NSpace
 } from "~/utils/fixnaive.mjs";
+
+const { $backendCall } = useNuxtApp();
 
 const notification = useNotification();
 
@@ -91,6 +95,18 @@ async function copyURL() {
     } catch (e: any) {
         notification.error({ content: `Failed to copy link: ${e}`, duration: 3000 });
     }
+}
+
+function recordShare(type: string) {
+  const id = props.url.split("/").pop();
+  if (id) {
+    addShare($backendCall, id, type);
+  }
+}
+
+function onCopy() {
+  copyURL();
+  recordShare("copy");
 }
 </script>
 

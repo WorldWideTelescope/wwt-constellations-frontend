@@ -661,6 +661,19 @@ export async function removeLike(fetcher: $Fetch, id: string): Promise<boolean> 
   });
 }
 
+export async function addShare(fetcher: $Fetch, id: string, type: string): Promise<boolean> {
+  return fetcher(`/scene/${id}/shares/${type}`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
+    checkForError(data);
+    const maybe = SceneInteractionResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`POST /scenes/shares: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right.success;
+  });
+}
+
 export async function initializeSession(fetcher: $Fetch): Promise<void> {
   return fetcher(`/session/init`, { method: 'POST', credentials: 'include' }).then((data) => {
     checkForError(data);
