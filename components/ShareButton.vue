@@ -64,13 +64,15 @@ const props = defineProps<{
 
 const showModal = ref(false);
 
-const sharing = {
+const sharing = computed(() => {
+  return {
     url: props.url,
     title: props.title,
     description: props.description,
     hashtags: 'WorldWideTelescope',
     twitterUser: 'WWTelescope'
-};
+  }
+});
 
 const modalTitle = computed(() => {
     return `Share @${props.handle}’s post`;
