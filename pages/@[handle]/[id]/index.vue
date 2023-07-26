@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+import ellipsize from "ellipsize";
 import { storeToRefs } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
 
@@ -58,20 +59,32 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 });
 
 useHead({
-  title: `@${handle} - WorldWide Telescope`,
+  title: `@${handle}’s Scene - WorldWide Telescope`,
   meta: [{
     name: 'WorldWide Telescope',
-    content: `Explore images by @${handle}, visualized by the WorldWide Telescope engine`
+    content: `Explore images by @${handle}, visualized in WorldWide Telescope`
   }]
 })
 
+// https://github.com/harlan-zw/zhead/blob/main/src/metaFlat.ts
+// https://api.slack.com/reference/messaging/link-unfurling#classic_unfurl
+// https://ogp.me/#implementations -> links to testing tools from various services
+
 useServerSeoMeta({
-  ogTitle: "WWT Constellations scene",
+  applicationName: "WorldWide Telescope",
+  author: `@${handle}`,
+
+  ogTitle: `@${handle}’s Scene`,
+  ogDescription: ellipsize(scene_data.value!.text, 180),
+  ogSiteName: "WorldWide Telescope",
   ogUrl: `${nuxtConfig.public.hostUrl}${route.fullPath}`,
   ogVideo: scene_data.value!.previews.video,
+  ogVideoSecureUrl: scene_data.value!.previews.video,
   ogVideoWidth: 800,
   ogVideoHeight: 600,
+  ogVideoType: "video/mp4",
   ogImage: scene_data.value!.previews.thumbnail,
+  ogImageSecureUrl: scene_data.value!.previews.thumbnail,
   ogImageWidth: 800,
   ogImageHeight: 600,
   ogImageType: "image/png",

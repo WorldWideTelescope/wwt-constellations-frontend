@@ -1328,6 +1328,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/ellipsize@npm:^0.1":
+  version: 0.1.1
+  resolution: "@types/ellipsize@npm:0.1.1"
+  checksum: 2ddd19ab0bc0ce00a4e1dad666d2f53bb951528a191c0a4b631a17470765ccd25c04297f8f3c25957fe53be598feb73a5011e587000ba6bc8a77ba9798296855
+  languageName: node
+  linkType: hard
+
 "@types/escape-html@npm:^1":
   version: 1.0.2
   resolution: "@types/escape-html@npm:1.0.2"
@@ -1966,6 +1973,7 @@ __metadata:
     "@nuxt/webpack-builder": ^3.4.3
     "@nuxtjs/google-analytics": ^2.4.0
     "@pinia/nuxt": ^0.4.7
+    "@types/ellipsize": ^0.1
     "@types/escape-html": ^1
     "@types/uuid": ^9.0.1
     "@types/xml": ^1.0.8
@@ -1978,6 +1986,7 @@ __metadata:
     "@wwtelescope/engine-types": ^0.6.4
     axe-core: ^4.7.1
     css-loader: ^6
+    ellipsize: ^0.1
     esbuild-loader: ^3
     escape-html: ^1.0.3
     femtotween: ^2.0.3
@@ -3436,6 +3445,13 @@ __metadata:
   version: 1.4.447
   resolution: "electron-to-chromium@npm:1.4.447"
   checksum: 2771bed3f43d8e93bfcedac7b85af11942a5b7af57ebc50bb26b034dafd9e99c040f6168b21f5694ef6348d5056bbc0dca87862a7d3f20864af40db87f7c319e
+  languageName: node
+  linkType: hard
+
+"ellipsize@npm:^0.1":
+  version: 0.1.0
+  resolution: "ellipsize@npm:0.1.0"
+  checksum: 2b2a78259206ead8a2f7b49b4c389dd8de32619ec1304eb042905a2c8b8b11b6a34f7e5f65ed43f29c9472af29531bb683e5a395e7b3dd51be95dd8096ccd426
   languageName: node
   linkType: hard
 
