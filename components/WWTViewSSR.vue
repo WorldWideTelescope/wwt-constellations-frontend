@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div class="sr-only" aria-live="polite">
+      <text>{{ sceneAltText }}</text>
+    </div>
     <ClientOnly>
       <WorldWideTelescope wwt-namespace="wwt-constellations" ref="wwt"></WorldWideTelescope>
       <template #fallback>
@@ -11,7 +14,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { ComponentPublicInstance } from "vue";
+import { ComponentPublicInstance, ref } from "vue";
 
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { useConstellationsStore } from "~/stores/constellations";
@@ -34,6 +37,8 @@ const tweenOutCancellers: Function[] = [];
 
 const { $backendCall } = useNuxtApp();
 
+const sceneAltText = ref<string>();
+
 watch(desiredScene, async (newScene) => {
   // Cancel any pending tweens
 
@@ -53,14 +58,19 @@ watch(desiredScene, async (newScene) => {
   // Set up new engine elements
 
   const imageset_info = [];
+  const alt_text = [];
 
   if (newScene.content.image_layers) {
     for (var imgdef of newScene.content.image_layers) {
       let imgset = imageInfoToSet(imgdef.image);
       imgset = engineStore.addImagesetToRepository(imgset);
       imageset_info.push({ url: imgset.get_url(), opacity: imgdef.opacity });
+      if (imgdef.image.alt_text) {
+        alt_text.push(imgdef.image.alt_text);
+      }
     }
   }
+  const altText = alt_text.join("\n");
 
   // Figure out where we're going, which is a function of both the region-of-interest
   // of the target place as well as the current shape of the viewport.
@@ -158,6 +168,8 @@ watch(desiredScene, async (newScene) => {
     zoomDeg: setup.zoomDeg,
     rollRad: setup.rollRad,
     instant: false
+  }).then(() => {
+    sceneAltText.value = altText;
   }).catch(() => {
     // As above, if this goto is superseded, no problem.
   }).finally(() => {
@@ -171,3 +183,16 @@ watch(desiredScene, async (newScene) => {
   });
 });
 </script>
+
+<style scoped>
+/* Taken from https://webaim.org/techniques/css/invisiblecontent/ */
+.sr-only {
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  width: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+}
+</style>
