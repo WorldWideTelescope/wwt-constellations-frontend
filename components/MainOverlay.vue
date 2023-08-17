@@ -214,8 +214,9 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     // in the range [0, 1]
     // The four intersections happen at t0 = +/-tx, +/-ty, but obviously only one of each pair will
     // be positive, so we can take the absolute value.
-    let x = -100;  // offscreen
-    let y = -100;
+    let x = 0;
+    let y = 0;
+    let visible = false;
     const tx = Math.abs(1 / (1 - (2 * scenePoint.x / window.innerWidth)));
     const ty = Math.abs(1 / (1 - (2 * scenePoint.y / window.innerHeight)));
     const ts = [tx, ty].filter(t => t >= 0 && t <= 1).sort();
@@ -223,18 +224,21 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
       const t = ts[0];
       x = Math.round(((1 - t) * window.innerWidth / 2) + t * scenePoint.x);
       y = Math.round(((1 - t) * window.innerHeight / 2) + t * scenePoint.y);
+      visible = true;
     }
 
-    x = Math.min(x, window.innerWidth - 30);
-    y = Math.min(y, window.innerHeight - 30);
+    // Clamp to be inside screen bounds
+    x = Math.max(Math.min(x, window.innerWidth - 40), 5);
+    y = Math.max(Math.min(y, window.innerHeight - 40), 5);
 
     return {
       transform: `rotate(${angle}rad)`,
       left: `${x}px`,
       top: `${y}px`,
+      visibility: visible ? 'visible' : 'hidden',
     };
   } catch (error) {
-    return { left: "-100px", right: "-100px" };
+    return { visibility: 'hidden' };
   }
 }
 
@@ -735,7 +739,7 @@ watchEffect(() => {
 }
 
 .neighbor-arrow {
-  position: absolute;
+  position: fixed;
   pointer-events: auto;
   padding: 0px;
 }
