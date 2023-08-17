@@ -746,5 +746,6 @@ watchEffect(() => {
   position: fixed;
   pointer-events: auto;
   padding: 0px;
+  z-index: -1000;
 }
 </style>
