@@ -2,6 +2,19 @@
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <!-- Desktop -->
     <template v-if="!isMobile">
+      <ClientOnly>
+        <n-button
+          v-for="scene in neighborScenes"
+          class="neighbor-arrow"
+          :bordered="false"
+          @click="() => desiredScene = scene"
+          :style="neighborArrowStyle(scene)"
+        >
+          <n-icon size="30">
+            <DoubleArrowRound />
+          </n-icon>
+        </n-button>
+      </ClientOnly>
       <n-grid ref="desktop_overlay" cols="1" y-gap="2" class="desktop-panel">
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
@@ -70,6 +83,7 @@ import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 import {
+  DoubleArrowRound,
   KeyboardArrowDownFilled,
   KeyboardArrowUpFilled,
   KeyboardArrowLeftFilled,
@@ -78,7 +92,7 @@ import {
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
-import { SkymapSceneInfo } from "~/utils/types";
+import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -91,6 +105,8 @@ const props = withDefaults(defineProps<{
 });
 
 const isExploreMode = ref(false);
+
+const { $backendCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
 const {
@@ -155,6 +171,55 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   }
 });
 
+const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
+  const scene = desiredScene.value;
+  if (scene === null) {
+    return [];
+  }
+  const place = scene.place;
+  const cell = await getTessellationCell($backendCall, "global", place.ra_rad, place.dec_rad);
+  const neighbors: SceneDisplayInfoT[] = [];
+  for (const scene_id of cell.neighbors) {
+    const scene = await getScene($backendCall, scene_id);
+    if (scene !== null) {
+      neighbors.push(scene);
+    }
+  }
+  return neighbors;
+});
+
+function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
+  const currentPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
+  const scenePoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
+
+  // This formula looks a bit weird!
+  // We switch the relative ordering of currentPoint and scenePoint between x and y
+  // to account for the fact that y coordinates move downward on the screen.
+  // Also, the overall negative sign is to account for the fact that CSS rotations are clockwise
+  // but we're calculating a standard position (counterclockwise) angle.
+  const angle = -Math.atan2(currentPoint.y - scenePoint.y, scenePoint.x - currentPoint.x);
+
+  let x = 0;
+  let y = 0;
+  const tx = 1 / (1 - (2 * scenePoint.x / window.innerWidth));
+  const ty = 1 / (1 - (2 * scenePoint.y / window.innerHeight));
+  const ts = [tx, -tx, ty, -ty].filter(t => t >= 0 && t <= 1).sort();
+  if (ts.length > 0) {
+    const t = ts[0];
+    x = Math.round(((1 - t) * window.innerWidth / 2) + t * scenePoint.x);
+    y = Math.round(((1 - t) * window.innerHeight / 2) + t * scenePoint.y);
+  }
+
+  x = Math.min(x, window.innerWidth - 30);
+  y = Math.min(y, window.innerHeight - 30);
+
+  return {
+    transform: `rotate(${angle}rad)`,
+    left: `${x}px`,
+    top: `${y}px`,
+  };
+}
+
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
@@ -164,6 +229,8 @@ const targetOutsideViewport = ref(false);
 
 const engineStore = getEngineStore();
 const {
+  raRad: wwt_ra_rad,
+  decRad: wwt_dec_rad,
   rollRad: wwt_roll_rad,
   zoomDeg: wwt_zoom_deg,
 } = storeToRefs(engineStore);
@@ -647,5 +714,11 @@ watchEffect(() => {
   transform: translate(-50%, 0);
   position: absolute;
   pointer-events: all;
+}
+
+.neighbor-arrow {
+  position: absolute;
+  pointer-events: auto;
+  padding: 0px;
 }
 </style>
