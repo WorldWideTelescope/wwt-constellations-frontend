@@ -1,9 +1,10 @@
 <template>
-  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
+  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef" @mousemove="onMouseMove">
     <!-- Desktop -->
     <template v-if="!isMobile">
       <ClientOnly>
         <n-button
+          v-if="showNeighborArrows"
           v-for="scene in neighborScenes"
           class="neighbor-arrow"
           :bordered="false"
@@ -171,6 +172,8 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   }
 });
 
+const showNeighborArrows = ref(true);
+
 const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
   const scene = desiredScene.value;
   if (scene === null) {
@@ -189,35 +192,50 @@ const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
 });
 
 function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
-  const currentPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
-  const scenePoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
+  try {
+    const currentPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
+    const scenePoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
 
-  // This formula looks a bit weird!
-  // We switch the relative ordering of currentPoint and scenePoint between x and y
-  // to account for the fact that y coordinates move downward on the screen.
-  // Also, the overall negative sign is to account for the fact that CSS rotations are clockwise
-  // but we're calculating a standard position (counterclockwise) angle.
-  const angle = -Math.atan2(currentPoint.y - scenePoint.y, scenePoint.x - currentPoint.x);
+    // This formula looks a bit weird!
+    // We switch the relative ordering of currentPoint and scenePoint between x and y
+    // to account for the fact that y coordinates move downward on the screen.
+    // Also, the overall negative sign is to account for the fact that CSS rotations are clockwise
+    // but we're calculating an angle from standard position.
+    // Since atan2 uses the signs of x and y to determine the angle quadrant, best to just
+    // use an overall sign.
+    const angle = -Math.atan2(currentPoint.y - scenePoint.y, scenePoint.x - currentPoint.x);
 
-  let x = 0;
-  let y = 0;
-  const tx = 1 / (1 - (2 * scenePoint.x / window.innerWidth));
-  const ty = 1 / (1 - (2 * scenePoint.y / window.innerHeight));
-  const ts = [tx, -tx, ty, -ty].filter(t => t >= 0 && t <= 1).sort();
-  if (ts.length > 0) {
-    const t = ts[0];
-    x = Math.round(((1 - t) * window.innerWidth / 2) + t * scenePoint.x);
-    y = Math.round(((1 - t) * window.innerHeight / 2) + t * scenePoint.y);
+    // Here we use the standard parametrization of a line from a -> b
+    // a and b are points (vectors)
+    // i.e. a + t * (b - a) = (1 - t) * a + t * b   0 <= t <= 1
+    // We imagine just moving along the line, with t going from 0 to 1
+    // our intersection point with the screen boundary is the bounding line that we hit first.
+    // In practice, we just calculate the intersection t0 for each line and find the smallest one
+    // in the range [0, 1]
+    // The four intersections happen at t0 = +/-tx, +/-ty, but obviously only one of each pair will
+    // be positive, so we can take the absolute value.
+    let x = -100;  // offscreen
+    let y = -100;
+    const tx = Math.abs(1 / (1 - (2 * scenePoint.x / window.innerWidth)));
+    const ty = Math.abs(1 / (1 - (2 * scenePoint.y / window.innerHeight)));
+    const ts = [tx, ty].filter(t => t >= 0 && t <= 1).sort();
+    if (ts.length > 0) {
+      const t = ts[0];
+      x = Math.round(((1 - t) * window.innerWidth / 2) + t * scenePoint.x);
+      y = Math.round(((1 - t) * window.innerHeight / 2) + t * scenePoint.y);
+    }
+
+    x = Math.min(x, window.innerWidth - 30);
+    y = Math.min(y, window.innerHeight - 30);
+
+    return {
+      transform: `rotate(${angle}rad)`,
+      left: `${x}px`,
+      top: `${y}px`,
+    };
+  } catch (error) {
+    return { left: "-100px", right: "-100px" };
   }
-
-  x = Math.min(x, window.innerWidth - 30);
-  y = Math.min(y, window.innerHeight - 30);
-
-  return {
-    transform: `rotate(${angle}rad)`,
-    left: `${x}px`,
-    top: `${y}px`,
-  };
 }
 
 const showSwipeAnimation = ref(false);
