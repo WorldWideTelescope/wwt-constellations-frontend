@@ -127,6 +127,17 @@ export interface SkymapSceneInfo {
   content: SceneContentHydratedT;
 }
 
+export const TessellationCell = t.type({
+  neighbors: t.array(t.string),
+  location: t.type({
+    ra: t.number,
+    dec: t.number,
+  }),
+  scene_id: t.string
+});
+
+export type TessellationCellT = t.TypeOf<typeof TessellationCell>;
+
 // Older types, potentially to be removed:
 
 export interface FitsColorMaps {
