@@ -1,5 +1,5 @@
 <template>
-  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef" @mousemove="onMouseMove">
+  <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <!-- Desktop -->
     <template v-if="!isMobile">
       <ClientOnly>
@@ -191,6 +191,10 @@ const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
   return neighbors;
 });
 
+// The calculations here assume that the WWT view takes up the entire screen
+// and that, because of this, the arrows want to live on the side of the screen.
+// If this is ever NOT the case, one could rework this by making the appropriate
+// affine transformation into the screen coordinate space of the WWT canvas.
 function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
   try {
     const currentPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
