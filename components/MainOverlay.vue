@@ -375,10 +375,11 @@ watch(fullPageContainerRef, () => {
 });
 
 
-function updateArrowVisibility(threshold=0.05) {
+function updateArrowVisibility() {
   const scene = desiredScene.value;
-  if (!showNeighborArrows.value && scene) {
-    const place = scene.place
+  if (!isMovingToScene.value && !showNeighborArrows.value && scene) {
+    const place = scene.place;
+    const threshold = (wwt_zoom_deg.value / 60) * 0.05;
     if (distance(wwt_ra_rad.value, wwt_dec_rad.value, place.ra_rad, place.dec_rad) > threshold) {
       showNeighborArrows.value = true;
     }
