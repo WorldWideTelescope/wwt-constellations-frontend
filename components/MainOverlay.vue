@@ -91,6 +91,8 @@ import {
   KeyboardArrowRightFilled,
 } from "@vicons/material";
 
+import { distance } from "@wwtelescope/astro";
+
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
@@ -172,7 +174,7 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   }
 });
 
-const showNeighborArrows = ref(true);
+const showNeighborArrows = ref(false);
 
 const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
   const scene = desiredScene.value;
@@ -370,6 +372,24 @@ watch(fullPageContainerRef, () => {
     scrollTo(timelineIndex.value);
     recenter();
   }
+});
+
+
+function updateArrowVisibility(threshold=0.05) {
+  const scene = desiredScene.value;
+  if (!showNeighborArrows.value && scene) {
+    const place = scene.place
+    if (distance(wwt_ra_rad.value, wwt_dec_rad.value, place.ra_rad, place.dec_rad) > threshold) {
+      showNeighborArrows.value = true;
+    }
+  }
+}
+
+watch(wwt_ra_rad, () => updateArrowVisibility()); 
+watch(wwt_dec_rad, () => updateArrowVisibility()); 
+
+watch(desiredScene, () => {
+  showNeighborArrows.value = false;
 });
 
 
