@@ -5,11 +5,11 @@
       <ClientOnly>
         <n-button
           v-if="showNeighborArrows"
-          v-for="scene in neighborScenes"
+          v-for="neighbor in neighborScenes"
           class="neighbor-arrow"
           :bordered="false"
-          @click="() => desiredScene = scene"
-          :style="neighborArrowStyle(scene)"
+          @click="() => constellationsStore.setupForSingleScene(neighbor)"
+          :style="neighborArrowStyle(neighbor)"
         >
           <n-icon size="30">
             <DoubleArrowRound />
@@ -176,18 +176,18 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
 
 const showNeighborArrows = ref(false);
 
-const neighborScenes = computedAsync<SceneDisplayInfoT[]>(async () => {
+const neighborScenes = computedAsync<GetSceneResponseT[]>(async () => {
   const scene = desiredScene.value;
   if (scene === null) {
     return [];
   }
   const place = scene.place;
   const cell = await getTessellationCell($backendCall, "global", place.ra_rad, place.dec_rad);
-  const neighbors: SceneDisplayInfoT[] = [];
-  for (const scene_id of cell.neighbors) {
-    const scene = await getScene($backendCall, scene_id);
-    if (scene !== null) {
-      neighbors.push(scene);
+  const neighbors: GetSceneResponseT[] = [];
+  for (const neighbor_id of cell.neighbors) {
+    const neighbor = await getScene($backendCall, neighbor_id);
+    if (neighbor !== null) {
+      neighbors.push(neighbor);
     }
   }
   return neighbors;
