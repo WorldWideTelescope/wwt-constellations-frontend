@@ -95,7 +95,7 @@ import { distance } from "@wwtelescope/astro";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
-import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+import { PlaceDetailsT, SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -201,13 +201,14 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
   try {
 
     const currentScene = describedScene.value;
-    if (currentScene === null) {
+    if (currentScene === null || !isOutsideViewport(scene.place)) {
       return { visibility: 'hidden' };
     }
 
+    const isCurrentSceneInView = !isOutsideViewport(currentScene.place);
     const cameraPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
-    const currentScenePoint = engineStore.findScreenPointForRADec({ ra: currentScene.place.ra_rad * R2D, dec: currentScene.place.dec_rad * R2D });
     const neighborPoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
+    const currentScenePoint = engineStore.findScreenPointForRADec({ ra: currentScene.place.ra_rad * R2D, dec: currentScene.place.dec_rad * R2D });
 
     // This formula looks a bit weird!
     // We switch the relative ordering of currentPoint and scenePoint between x and y
@@ -235,10 +236,10 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     const ty1 = (currentScenePoint.y - window.innerHeight) / (currentScenePoint.y - neighborPoint.y);
     const ts = [tx0, tx1, ty0, ty1].filter(t => t >= 0 && t <= 1).sort();
     if (ts.length > 0) {
-      const t = ts[0];
+      const index = isCurrentSceneInView ? 0 : ts.length - 1;
+      const t = ts[index];
       x = Math.round(((1 - t) * currentScenePoint.x) + t * neighborPoint.x);
       y = Math.round(((1 - t) * currentScenePoint.y) + t * neighborPoint.y);
-      console.log(t, x, y);
       visible = true;
     }
 
@@ -264,6 +265,14 @@ const feedRootRef = ref<HTMLDivElement>();
 
 const targetOutsideViewport = ref(false);
 
+function isOutsideViewport(place: PlaceDetailsT): boolean {
+  const point = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D });
+  const rootDiv = feedRootRef.value;
+  return (rootDiv !== undefined) &&
+          (point.x < 0 || point.x > rootDiv.clientWidth ||
+           point.y < 0 || point.y > rootDiv.clientHeight);
+}
+
 const engineStore = getEngineStore();
 const {
   raRad: wwt_ra_rad,
@@ -288,9 +297,7 @@ onMounted(() => {
     const rootDiv = feedRootRef.value
     if (place && rootDiv) {
       try {
-        const screenPoint = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D })
-        targetOutsideViewport.value = (screenPoint.x < 0 || screenPoint.x > rootDiv.clientWidth
-          || screenPoint.y < 0 || screenPoint.y > rootDiv.clientHeight);
+        targetOutsideViewport.value = isOutsideViewport(place);
       } catch {
         // The above function can sometimes throw an exception (TypeError:
         // matrix1 is undefined) if one of the WWT engine is just starting up.
