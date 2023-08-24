@@ -1,21 +1,21 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
+    <ClientOnly>
+      <n-button
+        v-if="showNeighborArrows"
+        v-for="neighbor in neighborScenes"
+        class="neighbor-arrow"
+        :bordered="false"
+        @click="() => constellationsStore.setupForSingleScene(neighbor)"
+        :style="neighborArrowStyle(neighbor)"
+      >
+        <n-icon size="30">
+          <DoubleArrowRound />
+        </n-icon>
+      </n-button>
+    </ClientOnly>
     <!-- Desktop -->
     <template v-if="!isMobile">
-      <ClientOnly>
-        <n-button
-          v-if="showNeighborArrows"
-          v-for="neighbor in neighborScenes"
-          class="neighbor-arrow"
-          :bordered="false"
-          @click="() => constellationsStore.setupForSingleScene(neighbor)"
-          :style="neighborArrowStyle(neighbor)"
-        >
-          <n-icon size="30">
-            <DoubleArrowRound />
-          </n-icon>
-        </n-button>
-      </ClientOnly>
       <n-grid ref="desktop_overlay" cols="1" y-gap="2" class="desktop-panel">
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
@@ -209,6 +209,7 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     const cameraPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
     const neighborPoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
     const currentScenePoint = engineStore.findScreenPointForRADec({ ra: currentScene.place.ra_rad * R2D, dec: currentScene.place.dec_rad * R2D });
+    const startPoint = isCurrentSceneInView ? currentScenePoint : cameraPoint;
 
     // This formula looks a bit weird!
     // We switch the relative ordering of currentPoint and scenePoint between x and y
@@ -217,7 +218,7 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     // but we're calculating an angle from standard position.
     // Since atan2 uses the signs of x and y to determine the angle quadrant, best to just
     // use an overall sign.
-    const angle = -Math.atan2(currentScenePoint.y - neighborPoint.y, neighborPoint.x - currentScenePoint.x);
+    const angle = -Math.atan2(startPoint.y - neighborPoint.y, neighborPoint.x - startPoint.x);
 
     // Here we use the standard parametrization of a line from a -> b
     // a and b are points (vectors)
@@ -230,16 +231,16 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     let x = 0;
     let y = 0;
     let visible = false;
-    const tx0 = currentScenePoint.x / (currentScenePoint.x - neighborPoint.x);
-    const tx1 = (currentScenePoint.x - window.innerWidth) / (currentScenePoint.x - neighborPoint.x);
-    const ty0 = currentScenePoint.y / (currentScenePoint.y - neighborPoint.y);
-    const ty1 = (currentScenePoint.y - window.innerHeight) / (currentScenePoint.y - neighborPoint.y);
+    const tx0 = startPoint.x / (startPoint.x - neighborPoint.x);
+    const tx1 = (startPoint.x - window.innerWidth) / (startPoint.x - neighborPoint.x);
+    const ty0 = startPoint.y / (startPoint.y - neighborPoint.y);
+    const ty1 = (startPoint.y - window.innerHeight) / (startPoint.y - neighborPoint.y);
     const ts = [tx0, tx1, ty0, ty1].filter(t => t >= 0 && t <= 1).sort();
     if (ts.length > 0) {
       const index = isCurrentSceneInView ? 0 : ts.length - 1;
       const t = ts[index];
-      x = Math.round(((1 - t) * currentScenePoint.x) + t * neighborPoint.x);
-      y = Math.round(((1 - t) * currentScenePoint.y) + t * neighborPoint.y);
+      x = Math.round(((1 - t) * startPoint.x) + t * neighborPoint.x);
+      y = Math.round(((1 - t) * startPoint.y) + t * neighborPoint.y);
       visible = true;
     }
 
