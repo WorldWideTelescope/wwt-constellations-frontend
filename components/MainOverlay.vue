@@ -199,8 +199,15 @@ const neighborScenes = computedAsync<GetSceneResponseT[]>(async () => {
 // affine transformation into the screen coordinate space of the WWT canvas.
 function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
   try {
-    const currentPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
-    const scenePoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
+
+    const currentScene = describedScene.value;
+    if (currentScene === null) {
+      return { visibility: 'hidden' };
+    }
+
+    const cameraPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
+    const currentScenePoint = engineStore.findScreenPointForRADec({ ra: currentScene.place.ra_rad * R2D, dec: currentScene.place.dec_rad * R2D });
+    const neighborPoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
 
     // This formula looks a bit weird!
     // We switch the relative ordering of currentPoint and scenePoint between x and y
@@ -209,7 +216,7 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     // but we're calculating an angle from standard position.
     // Since atan2 uses the signs of x and y to determine the angle quadrant, best to just
     // use an overall sign.
-    const angle = -Math.atan2(currentPoint.y - scenePoint.y, scenePoint.x - currentPoint.x);
+    const angle = -Math.atan2(currentScenePoint.y - neighborPoint.y, neighborPoint.x - currentScenePoint.x);
 
     // Here we use the standard parametrization of a line from a -> b
     // a and b are points (vectors)
@@ -218,18 +225,20 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     // our intersection point with the screen boundary is the bounding line that we hit first.
     // In practice, we just calculate the intersection t0 for each line and find the smallest one
     // in the range [0, 1]
-    // The four intersections happen at t0 = +/-tx, +/-ty, but obviously only one of each pair will
-    // be positive, so we can take the absolute value.
+    // The four intersections occur at tx0, tx1, ty0, ty1
     let x = 0;
     let y = 0;
     let visible = false;
-    const tx = Math.abs(1 / (1 - (2 * scenePoint.x / window.innerWidth)));
-    const ty = Math.abs(1 / (1 - (2 * scenePoint.y / window.innerHeight)));
-    const ts = [tx, ty].filter(t => t >= 0 && t <= 1).sort();
+    const tx0 = currentScenePoint.x / (currentScenePoint.x - neighborPoint.x);
+    const tx1 = (currentScenePoint.x - window.innerWidth) / (currentScenePoint.x - neighborPoint.x);
+    const ty0 = currentScenePoint.y / (currentScenePoint.y - neighborPoint.y);
+    const ty1 = (currentScenePoint.y - window.innerHeight) / (currentScenePoint.y - neighborPoint.y);
+    const ts = [tx0, tx1, ty0, ty1].filter(t => t >= 0 && t <= 1).sort();
     if (ts.length > 0) {
       const t = ts[0];
-      x = Math.round(((1 - t) * window.innerWidth / 2) + t * scenePoint.x);
-      y = Math.round(((1 - t) * window.innerHeight / 2) + t * scenePoint.y);
+      x = Math.round(((1 - t) * currentScenePoint.x) + t * neighborPoint.x);
+      y = Math.round(((1 - t) * currentScenePoint.y) + t * neighborPoint.y);
+      console.log(t, x, y);
       visible = true;
     }
 
