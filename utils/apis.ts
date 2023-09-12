@@ -576,7 +576,6 @@ export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateR
   });
 }
 
-
 // Endpoint: GET /handle/:handle/timeline?page=$number
 
 export const TimelineResponse = t.type({

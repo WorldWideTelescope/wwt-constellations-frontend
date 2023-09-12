@@ -1,7 +1,7 @@
 <template>
     <n-space justify="space-between" class="button-bar">
         <n-button-group>
-            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" v-show="isTimelineMode"
+            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button"
                 :disabled="!hasPrev">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="prev-button">
@@ -15,8 +15,7 @@
                 :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="feed-button">
-                        <SwipeVerticalFilled v-if="isTimelineMode" />
-                        <ArticleFilled v-else />
+                        <SwipeVerticalFilled />
                     </n-icon>
                 </template>
             </n-button>
@@ -39,7 +38,7 @@
             </n-button>
         </n-button-group>
         <n-button-group>
-            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" v-show="isTimelineMode"
+            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button"
                 :disabled="!hasNext">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
@@ -76,13 +75,12 @@ const constellationsStore = useConstellationsStore();
 
 const {
     isMobile,
-    knownScenes,
-    timelineIndex
+    historyIndex,
+    sceneHistory,
 } = storeToRefs(constellationsStore);
 
-const isTimelineMode = computed(() => timelineIndex.value >= 0);
-const hasNext = computed<boolean>(() => (timelineIndex.value >= 0 && timelineIndex.value < (knownScenes.value.size - 1)));
-const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
+const hasPrev = computed<boolean>(() => historyIndex.value > 0);
+const hasNext = computed<boolean>(() => historyIndex.value < sceneHistory.value.length - 1);
 
 withDefaults(defineProps<{
     isExploreMode?: boolean,

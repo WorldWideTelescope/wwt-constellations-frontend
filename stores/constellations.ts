@@ -2,7 +2,7 @@ import { $Fetch } from "ofetch";
 import { defineStore } from "pinia";
 import { useBreakpoints } from "@vueuse/core";
 
-import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "~/utils/apis";
+import { getHomeTimeline, getHandleTimeline, GetSceneResponseT, TimelineResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT } from "~/utils/types";
 
 export const useConstellationsStore = defineStore("wwt-constellations", () => {
@@ -41,6 +41,18 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // centered in the view if the user has panned elsewhere, if we're currently
   // slewing towards it, etc.
   const desiredScene = ref<SceneDisplayInfoT | null>(null);
+
+  // The history of visited scenes
+  const sceneHistory = ref<GetSceneResponseT[]>([]);
+  const historyIndex = ref(0);
+
+  type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
+
+  let getNextScenes: ScenesGetter | null = getHomeTimeline;
+  let nextNeededPage = 0;
+  type NextSceneSourceType = { type: 'global' } |
+                             { type: 'handle'; handle: string } |
+                             { type: 'mini', baseID: string };
 
   // The ordered list of scene IDs that constitutes our current "timeline". This
   // list is completed from the start of the timeline to as far as it goes; we
@@ -149,6 +161,88 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     await ensureTimelineCoverage(n + 5);
   }
 
+  async function ensureForwardCoverage(n: number) {
+    if (getNextScenes === null) {
+      return;
+    }
+
+    const MAX_ATTEMPTS = 5;
+    const targetLength = sceneHistory.value.length + n;
+    const { $backendCall } = useNuxtApp();
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      if (sceneHistory.value.length >= targetLength) {
+        break;
+      }
+
+      const page = nextNeededPage;
+      const result = await getNextScenes($backendCall, page);
+
+      if (nextNeededPage === page) {
+        for (const scene of result.results) {
+          knownScenes.value.set(scene.id, scene);
+          sceneHistory.value.push(scene);
+        }
+      }
+
+      nextNeededPage += 1;
+    }
+  }
+
+  function moveBack() {
+    // We're at the beginning of the history - there's nowhere back to go
+    if (historyIndex.value === 0) {
+      return;
+    }
+    historyIndex.value -= 1;
+    desiredScene.value = sceneHistory.value[historyIndex.value];
+  }
+
+  async function moveForward() {
+    if (sceneHistory.value.length < historyIndex.value) {
+      await ensureForwardCoverage(1);
+    }
+    historyIndex.value += 1;
+    desiredScene.value = sceneHistory.value[historyIndex.value];
+  }
+
+  async function moveToScene(id: string) {
+    sceneHistory.value = sceneHistory.value.splice(historyIndex.value); 
+    let scene = knownScenes.value.get(id);
+    if (scene === undefined) {
+      const { $backendCall } = useNuxtApp();
+      const fetchedScene = await getScene($backendCall, id);
+      if (fetchedScene === null) {
+        return;
+      }
+      scene = fetchedScene;
+    }
+
+    sceneHistory.value.push(scene);
+    historyIndex.value += 1;
+  }
+
+  function updateNextSceneSource(source: NextSceneSourceType) {
+    if (source.type === 'global') {
+      getNextScenes = getHomeTimeline;
+    } else if (source.type === 'handle') {
+      getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
+    }
+    // TODO: Add in 'mini timeline' handling
+    
+    sceneHistory.value.splice(historyIndex.value);
+    nextNeededPage = 0;
+  }
+
+  function useGlobalTimeline() {
+    updateNextSceneSource({ type: 'global' });
+  }
+
+  function useHandleTimeline(handle: string) {
+    updateNextSceneSource({ type: 'handle', handle });
+  }
+
+
   watch(timelineSource, async (newSource, oldSource) => {
     if (newSource == null) {
       getTimeline = null;
@@ -206,5 +300,12 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     viewNeedsInitialization,
     viewportBottomBlockage,
     viewportLeftBlockage,
+
+    sceneHistory,
+    historyIndex,
+    moveBack,
+    moveForward,
+    moveToScene,
+    ensureForwardCoverage
   }
 });

@@ -98,6 +98,8 @@ const {
   desiredScene,
   isMobile,
   knownScenes,
+  sceneHistory,
+  historyIndex,
   timeline,
   timelineIndex,
   timelineSource,
@@ -106,14 +108,14 @@ const {
   isMovingToScene
 } = storeToRefs(constellationsStore);
 
-// The list of scenes shown in the skymap; just a subset of the timeline.
+// The list of scenes shown in the skymap
+// TODO: What exactly do we want in this?
 const skymapScenes = computed<SkymapSceneInfo[]>(() => {
-  const i0 = Math.max(timelineIndex.value - 5, 0);
-  const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
+  const i0 = historyIndex.value;
+  const i1 = historyIndex.value + 5;
 
-  return timeline.value.slice(i0, i1).map((id, relIndex) => {
-    const scene = knownScenes.value.get(id)!;
-    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+  return sceneHistory.value.slice(i0, i1).map((s, relIndex) => {
+    return { id: s.id, content: s.content, place: s.place };
   });
 });
 
@@ -171,7 +173,7 @@ const {
 onMounted(() => {
   if (timelineSource.value !== null) {
     nextTick(() => {
-      constellationsStore.ensureTimelineCoverage(8);
+      constellationsStore.ensureForwardCoverage(8);
     });
   }
 
@@ -202,15 +204,16 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
-function onItemSelected(index: number) {
-  constellationsStore.setTimelineIndex(index);
+function onItemSelected(sceneInfo: SkymapSceneInfo) {
+  constellationsStore.moveToScene(sceneInfo.id);
 }
 
 function onScroll(event: UIEvent) {
   const target = event.target as HTMLDivElement;
   if (target) {
     const index = Math.round(target.scrollTop / (target.offsetHeight));
-    onItemSelected(index);
+    // TODO: How to replace this?
+    // onItemSelected(index);
   }
 }
 
@@ -236,39 +239,25 @@ async function recenter() {
 }
 
 function goNext() {
-  const idx = timelineIndex.value;
-
-  if (idx >= 0 && idx < (knownScenes.value.size - 1)) {
-    const n = idx + 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveForward();
 }
 
 function goPrev() {
-  const idx = timelineIndex.value;
-
-  if (idx > 0) {
-    const n = idx - 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveBack();
 }
 
 watchEffect(async () => {
-  if (timelineIndex.value >= 0) {
-    const id = timeline.value[timelineIndex.value];
-    describedScene.value = knownScenes.value.get(id)!;
-
+  if (historyIndex.value >= 0) {
+    describedScene.value = sceneHistory.value[historyIndex.value];
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
         place: describedScene.value.place,
-        content: describedScene.value.content,
+        content: describedScene.value.content
       };
     }
 
-    await constellationsStore.ensureTimelineCoverage(8);
+    await constellationsStore.ensureForwardCoverage(8);
   }
 });
 

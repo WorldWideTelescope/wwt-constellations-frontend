@@ -6,8 +6,8 @@
                 since the scenes are the actually selectable items of relevance here.
                 -->
             <ul>
-                <li v-for="co in scenes" :on-click="() => $emit('selected', co.itemIndex)" aria-label="Celestial object">
-                    {{ co.itemIndex }}
+                <li v-for="co in scenes" :on-click="() => $emit('selected', co)" aria-label="Celestial object">
+                    {{ co.id }}
                 </li>
             </ul>
         </canvas>
@@ -38,7 +38,7 @@ const props = defineProps<{
 const { scenes } = toRefs(props);
 
 const emits = defineEmits<{
-    (event: 'selected', index: number): void
+    (event: 'selected', scene: SkymapSceneInfo): void
 }>();
 
 const defaultObjectRadius = 4;
@@ -150,9 +150,6 @@ const NEXT_SCENE_COLOR = new Rgba(0.12, 0.75, 0.54, 1.0); // #1fbf89
 const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
 
 class Marker {
-    // The scene that this marker corresponds to, identified by its index in the
-    // timeline.
-    readonly timelineIndex: number;
     readonly raDeg: number;
     readonly decDeg: number;
     readonly content: SceneContentHydratedT;
@@ -172,7 +169,6 @@ class Marker {
     targetColor: Rgba;
 
     constructor(scene: SkymapSceneInfo) {
-        this.timelineIndex = scene.itemIndex;
         this.raDeg = scene.place.ra_rad * R2D;
         this.decDeg = scene.place.dec_rad * R2D;
         this.content = scene.content;
@@ -195,19 +191,10 @@ class Marker {
         context.ctx.stroke();
     }
 
-    sendToDesiredScene(curTimelineIndex: number) {
-        const d = this.timelineIndex - curTimelineIndex;
-
-        if (d == 0) {
-            this.targetColor.setTo(CURRENT_SCENE_COLOR);
-            this.targetLineWidth = 2;
-        } else if (d == 1) {
-            this.targetColor.setTo(NEXT_SCENE_COLOR);
-            this.targetLineWidth = 1;
-        } else {
-            this.targetColor.setTo(GENERAL_SCENE_COLOR);
-            this.targetLineWidth = 1;
-        }
+    sendToDesiredScene(scene: SkymapSceneInfo) {
+        // TODO: Make these two properties change based on the scene
+        this.targetColor.setTo(GENERAL_SCENE_COLOR);
+        this.targetLineWidth = 1;
 
         this.needsAnimation = true;
         this.isBeingRemoved = false;
@@ -284,7 +271,7 @@ interface AssessMarkerHoversResult {
 }
 
 class MarkerCollection {
-    readonly markers: Map<number, Marker> = new Map();
+    readonly markers: Map<string, Marker> = new Map();
     needsAnimation: boolean = false;
 
     syncWithScenes(scenes: SkymapSceneInfo[], curTimelineIndex: number) {
@@ -296,14 +283,14 @@ class MarkerCollection {
         }
 
         for (var scene of scenes) {
-            let marker = this.markers.get(scene.itemIndex);
+            let marker = this.markers.get(scene.id);
 
             if (marker === undefined) {
                 marker = new Marker(scene);
-                this.markers.set(scene.itemIndex, marker);
+                this.markers.set(scene.id, marker);
             }
 
-            marker.sendToDesiredScene(curTimelineIndex);
+            marker.sendToDesiredScene(scene);
         }
 
         for (var marker of this.markers.values()) {
@@ -332,13 +319,15 @@ class MarkerCollection {
         // overwrite one another. This seems easier (and faster?) than trying to
         // sort the list.
 
-        const tlidx = timelineIndex.value;
-        const filterPass1 = (m: Marker) => (m.timelineIndex < tlidx) || (m.timelineIndex > tlidx + 1);
-        const filterPass2 = (m: Marker) => (m.timelineIndex == tlidx + 1);
-        const filterPass3 = (m: Marker) => (m.timelineIndex == tlidx);
-
-        for (var filter of [filterPass1, filterPass2, filterPass3]) {
-            for (var marker of this.markers.values()) {
+        // const tlidx = timelineIndex.value;
+        // const filterPass1 = (m: Marker) => (m.timelineIndex < tlidx) || (m.timelineIndex > tlidx + 1);
+        // const filterPass2 = (m: Marker) => (m.timelineIndex == tlidx + 1);
+        // const filterPass3 = (m: Marker) => (m.timelineIndex == tlidx);
+        
+        // TODO: What do we want to do here?
+        const filters = [(m: Marker) => true];
+        for (var filter of filters) {
+            for (const [id, marker] of this.markers.entries()) {
                 if (!filter(marker)) {
                     continue;
                 }
@@ -349,7 +338,7 @@ class MarkerCollection {
                 // If this marker is on its way towards removal, and it has gotten
                 // there, we can get rid of it.
                 if (!marker.needsAnimation && marker.isBeingRemoved) {
-                    markersToRemove.push(marker.timelineIndex);
+                    markersToRemove.push(id);
                 }
             }
         }
@@ -359,10 +348,10 @@ class MarkerCollection {
         }
     }
 
-    getSelectedIndex(): number | null {
+    getSelectedScene(): SceneContentHydratedT | null {
         for (var marker of this.markers.values()) {
             if (marker.isHovered) {
-                return marker.timelineIndex;
+                return marker.content;
             }
         }
 
@@ -565,10 +554,10 @@ watchEffect(() => {
 // Mousing over the canvas for previews -- breaking encapsulation a bit here
 
 function onMouseClick(_event: MouseEvent) {
-    const index = markerCollection.getSelectedIndex();
+    const scene = markerCollection.getSelectedScene();
 
-    if (index !== null) {
-        emits("selected", index);
+    if (scene!== null) {
+        emits("selected", scene);
     }
 }
 

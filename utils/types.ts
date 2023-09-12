@@ -122,7 +122,7 @@ export const ScenePreviews = t.partial({
 export type ScenePreviewsT = t.TypeOf<typeof ScenePreviews>;
 
 export interface SkymapSceneInfo {
-  itemIndex: number;
+  id: string;
   place: PlaceDetailsT;
   content: SceneContentHydratedT;
 }
