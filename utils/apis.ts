@@ -14,6 +14,8 @@ import {
   SceneContentHydrated,
   SceneCreationInfoT,
   ScenePreviews,
+  TessellationCell,
+  TessellationCellT,
 } from "./types";
 
 function checkForError(item: any) {
@@ -689,4 +691,18 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
   return fetcher(`/session/init`, { method: 'POST', credentials: 'include' }).then((data) => {
     checkForError(data);
   });
+}
+
+// Endpoint: GET /tessellations/cell
+
+export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
+  const data = await fetcher('tessellations/cell', { query: { name: tessellationName, ra: raRad, dec: decRad } });
+  checkForError(data);
+  const maybe = TessellationCell.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /tessellation/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
 }
