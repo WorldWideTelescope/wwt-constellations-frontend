@@ -52,7 +52,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   let nextNeededPage = 0;
   type NextSceneSourceType = { type: 'global' } |
                              { type: 'handle'; handle: string } |
-                             { type: 'mini', baseID: string };
+                             { type: 'nearby', baseID: string };
 
   // The ordered list of scene IDs that constitutes our current "timeline". This
   // list is completed from the start of the timeline to as far as it goes; we
@@ -228,8 +228,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       getNextScenes = getHomeTimeline;
     } else if (source.type === 'handle') {
       getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
+    } else if (source.type === 'nearby') {
+      // TODO: How to handle pagination for the nearby timeline?
+      getNextScenes = (fetcher, _page) => getNearbyTimeline(fetcher, source.baseID);
     }
-    // TODO: Add in 'mini timeline' handling
     
     sceneHistory.value.splice(historyIndex.value);
     nextNeededPage = 0;

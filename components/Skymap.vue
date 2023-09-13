@@ -31,6 +31,8 @@ import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
 import { useConstellationsStore } from "~/stores/constellations";
 
+const { $backendCall } = useNuxtApp();
+
 const props = defineProps<{
     scenes: SkymapSceneInfo[]
 }>();
@@ -134,6 +136,19 @@ class SkymapContext {
 
         return { x, y };
     }
+
+    canvasToSky(x: number, y: number): { raDeg: number, decDeg: number } {
+      const raCenter = 0;
+      const raScale = this.width / 360;
+      const raOffset = this.width / 2;
+      const raDeg = (x - raOffset) / raScale + raCenter;
+
+      const decCenter = 0;
+      const decScale = -this.height / 180;
+      const decDeg = decCenter + ((y - this.height / 2) / decScale);
+
+      return { raDeg, decDeg };
+    }
 }
 
 // Markers -- points that show up on the map.
@@ -148,6 +163,7 @@ const ANIMATION_DURATION_MS = 5000; // milliseconds
 const GENERAL_SCENE_COLOR = new Rgba(0.44, 0.44, 0.48, 1.0); // #6f6f7a
 const NEXT_SCENE_COLOR = new Rgba(0.12, 0.75, 0.54, 1.0); // #1fbf89
 const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
+const CLICKED_COLOR = new Rgba(0.77, 0.71, 0.33, 1.0); // #c4b454
 
 class Marker {
     readonly raDeg: number;
@@ -554,11 +570,35 @@ watchEffect(() => {
 
 // Mousing over the canvas for previews -- breaking encapsulation a bit here
 
-function onMouseClick(_event: MouseEvent) {
+function onMouseClick(event: MouseEvent) {
     const scene = markerCollection.getSelectedScene();
 
     if (scene !== null) {
         emits("selected", scene);
+    }
+
+    const canvas = canvasRef.value;
+    if (canvas !== null) {
+      const ctx = canvas.getContext('2d');
+      if (ctx === null) {
+        return;
+      }
+      const context = new SkymapContext(canvas.width, canvas.height, ctx);
+      const { raDeg, decDeg } = context.canvasToSky(event.offsetX, event.offsetY);
+
+      const raRad = raDeg * D2R;
+      const decRad = decDeg * D2R;
+      getTessellationCell($backendCall, "global", raRad, decRad).then(async (cell) => {
+        const scene = await getScene($backendCall, cell.scene_id);
+        if (scene === null) {
+          return;
+        }
+        const marker = new Marker(scene);
+        marker.targetColor = CLICKED_COLOR;
+        marker.currentColor = CLICKED_COLOR;
+        markerCollection.markers.set(scene.id, marker);
+        renderer.queueRender();
+      });
     }
 }
 
