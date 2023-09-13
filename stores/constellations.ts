@@ -44,7 +44,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
   // The history of visited scenes
   const sceneHistory = ref<GetSceneResponseT[]>([]);
-  const historyIndex = ref(0);
+  const historyIndex = ref(-1);
 
   type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
 
@@ -66,7 +66,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // `desiredScene` stay in some reasonable level of synchronization, but they
   // can in principle vary. This should be -1 if nothing is selected or we're
   // not in a timeline mode (i.e., `timeline` is empty).
-  const timelineIndex = ref(-1);
+  const timelineIndex = ref(0);
 
   // The source of further items for the timeline, if we need them. There are
   // three broad possibilities. If this is null, we're not in a timeline mode,
@@ -162,6 +162,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   async function ensureForwardCoverage(n: number) {
+    console.log("ensureForwardCoverage", n);
     if (getNextScenes === null) {
       return;
     }
@@ -200,7 +201,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
   async function moveForward() {
     if (sceneHistory.value.length < historyIndex.value) {
-      await ensureForwardCoverage(1);
+      await ensureForwardCoverage(5); // What should this value be?
     }
     historyIndex.value += 1;
     desiredScene.value = sceneHistory.value[historyIndex.value];
@@ -306,6 +307,8 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     moveBack,
     moveForward,
     moveToScene,
-    ensureForwardCoverage
+    ensureForwardCoverage,
+    useGlobalTimeline,
+    useHandleTimeline
   }
 });

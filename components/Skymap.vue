@@ -152,7 +152,7 @@ const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
 class Marker {
     readonly raDeg: number;
     readonly decDeg: number;
-    readonly content: SceneContentHydratedT;
+    readonly scene: SkymapSceneInfo;
 
     isHovered: boolean = false;
     isBeingRemoved: boolean = false;
@@ -171,7 +171,7 @@ class Marker {
     constructor(scene: SkymapSceneInfo) {
         this.raDeg = scene.place.ra_rad * R2D;
         this.decDeg = scene.place.dec_rad * R2D;
-        this.content = scene.content;
+        this.scene = scene;
 
         this.currentColor = Rgba.newBlack();
         this.currentLineWidth = 1;
@@ -348,10 +348,10 @@ class MarkerCollection {
         }
     }
 
-    getSelectedScene(): SceneContentHydratedT | null {
+    getSelectedScene(): SkymapSceneInfo | null {
         for (var marker of this.markers.values()) {
             if (marker.isHovered) {
-                return marker.content;
+                return marker.scene;
             }
         }
 
@@ -512,9 +512,10 @@ class SkymapRenderer {
 
             let t = "";
 
-            if (selected.content.image_layers && selected.content.image_layers.length > 0) {
+            const content = selected.scene.content;
+            if (content && content.image_layers && content.image_layers.length > 0) {
                 t = URLHelpers.singleton.rewrite(
-                    selected.content.image_layers[0].image.wwt.thumbnail_url,
+                    content.image_layers[0].image.wwt.thumbnail_url,
                     URLRewriteMode.AsIfAbsolute
                 );
             }
@@ -556,7 +557,7 @@ watchEffect(() => {
 function onMouseClick(_event: MouseEvent) {
     const scene = markerCollection.getSelectedScene();
 
-    if (scene!== null) {
+    if (scene !== null) {
         emits("selected", scene);
     }
 }

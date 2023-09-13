@@ -614,6 +614,18 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
   return maybe.right;
 }
 
+export async function getNearbyTimeline(fetcher: $Fetch, sceneID: string): Promise<TimelineResponseT> {
+  const data = await fetcher(`/tessellations/nearby-feed/${sceneID}`, { query: { size: 30 } });
+  checkForError(data);
+  const maybe = TimelineResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /tessellations/nearby-feed: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+    
+    return maybe.right;
+}
+
 export const SceneInteractionResponse = t.type({
   id: t.string,
   success: t.boolean

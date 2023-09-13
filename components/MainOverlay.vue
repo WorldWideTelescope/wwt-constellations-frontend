@@ -114,7 +114,7 @@ const skymapScenes = computed<SkymapSceneInfo[]>(() => {
   const i0 = historyIndex.value;
   const i1 = historyIndex.value + 5;
 
-  return sceneHistory.value.slice(i0, i1).map((s, relIndex) => {
+  return sceneHistory.value.slice(i0, i1).map((s, _relIndex) => {
     return { id: s.id, content: s.content, place: s.place };
   });
 });
@@ -171,11 +171,11 @@ const {
 } = storeToRefs(engineStore);
 
 onMounted(() => {
-  if (timelineSource.value !== null) {
-    nextTick(() => {
-      constellationsStore.ensureForwardCoverage(8);
+  nextTick(() => {
+    constellationsStore.ensureForwardCoverage(8).then(() => {
+      historyIndex.value = 0;
     });
-  }
+  });
 
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
@@ -246,9 +246,11 @@ function goPrev() {
   constellationsStore.moveBack();
 }
 
-watchEffect(async () => {
+watch(historyIndex, async () => {
   if (historyIndex.value >= 0) {
     describedScene.value = sceneHistory.value[historyIndex.value];
+    console.log("historyIndex watcher");
+    console.log(describedScene.value);
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
