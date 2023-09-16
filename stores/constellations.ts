@@ -230,7 +230,13 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
     } else if (source.type === 'nearby') {
       // TODO: How to handle pagination for the nearby timeline?
-      getNextScenes = (fetcher, _page) => getNearbyTimeline(fetcher, source.baseID);
+      getNextScenes = async (fetcher, page) => {
+        if (page === 0) {
+          return getNearbyTimeline(fetcher, source.baseID);
+        } else {
+          return { results: [] };
+        }
+      }
     }
     
     sceneHistory.value.splice(historyIndex.value);
