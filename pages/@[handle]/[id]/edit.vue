@@ -63,7 +63,7 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 
 watchEffect(() => {
   if (scene_data.value !== null) {
-    constellationsStore.setupForSingleScene(scene_data.value);
+    constellationsStore.moveToScene(scene_data.value.id);
   }
 });
 

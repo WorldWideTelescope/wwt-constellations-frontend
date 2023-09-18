@@ -104,7 +104,7 @@ useServerSeoMeta({
 
 watchEffect(() => {
   if (scene_data.value !== null) {
-    constellationsStore.setupForSingleScene(scene_data.value);
+    constellationsStore.moveToScene(scene_data.value.id);
   }
 });
 

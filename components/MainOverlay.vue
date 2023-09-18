@@ -78,7 +78,9 @@ import {
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
-import { SkymapSceneInfo } from "~/utils/types";
+import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+
+import { Color } from "@wwtelescope/engine";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -108,12 +110,25 @@ const {
 
 // The list of scenes shown in the skymap
 // TODO: What exactly do we want in this?
-const skymapScenes = computed<SkymapSceneInfo[]>(() => {
-  const i0 = historyIndex.value;
-  const i1 = historyIndex.value + 5;
 
-  return sceneHistory.value.slice(i0, i1).map((s, _relIndex) => {
-    return { id: s.id, content: s.content, place: s.place };
+const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
+const NEXT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
+const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
+const skymapScenes = computed<SkymapSceneInfo[]>(() => {
+
+  const currentSceneArr: GetSceneResponseT[] = describedScene.value != null ? [describedScene.value] : [];
+  console.log(currentSceneArr);
+  console.log(currentSceneArr.concat(futureScenes.value.slice(0,5)));
+  return currentSceneArr.concat(futureScenes.value.slice(0, 5)).map((s, relIndex) => {
+    const color = (relIndex === 0) ? CURRENT_SCENE_COLOR : (relIndex === 1 ? NEXT_SCENE_COLOR : GENERAL_SCENE_COLOR);
+    console.log(s);
+    return {
+      id: s.id,
+      content: s.content,
+      place: s.place,
+      color,
+      linewidth: relIndex ? 1 : 2 
+    };
   });
 });
 
@@ -190,8 +205,13 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
-function onItemSelected(sceneInfo: SkymapSceneInfo) {
-  constellationsStore.moveToScene(sceneInfo.id);
+function onItemSelected(sceneInfo: SceneDisplayInfoT) {
+  const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id); 
+  if (index >= 0) {
+    constellationsStore.moveForward(index);
+  } else {
+    constellationsStore.moveToScene(sceneInfo.id);
+  }
 }
 
 function onScroll(event: UIEvent) {
@@ -199,6 +219,7 @@ function onScroll(event: UIEvent) {
   const target = event.target as HTMLDivElement;
   console.log(target);
   if (target) {
+    console.log(target.scrollTop, target.offsetHeight);
     const n = Math.round(target.scrollTop / (target.offsetHeight));
     console.log(`n: ${n}`);
     constellationsStore.moveForward(n);
@@ -238,10 +259,6 @@ function goPrev() {
 watch(historyIndex, async () => {
   if (historyIndex.value >= 0) {
     describedScene.value = sceneHistory.value[historyIndex.value];
-    console.log("historyIndex watcher");
-    console.log(sceneHistory);
-    console.log(describedScene.value);
-    console.log(`historyIndex: ${historyIndex.value}`);
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,

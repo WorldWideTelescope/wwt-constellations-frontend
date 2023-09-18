@@ -182,6 +182,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
       const page = nextNeededPage;
       const result = await getNextScenes($backendCall, page);
+      console.log(result);
 
       if (nextNeededPage === page) {
         for (const scene of result.results) {
@@ -236,7 +237,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   async function moveToScene(id: string) {
-    sceneHistory.value = sceneHistory.value.splice(historyIndex.value); 
+    updateNextSceneSource({ type: 'nearby', baseID: id });
     let scene = knownScenes.value.get(id);
     if (scene === undefined) {
       const { $backendCall } = useNuxtApp();
@@ -246,6 +247,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       }
       scene = fetchedScene;
     }
+    await ensureForwardCoverage(8);
 
     sceneHistory.value.push(scene);
     historyIndex.value += 1;
@@ -276,7 +278,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       }
     }
     
-    sceneHistory.value.splice(historyIndex.value);
+    sceneHistory.value = sceneHistory.value.splice(historyIndex.value);
     futureScenes.value = [];
     nextNeededPage = 0;
   }

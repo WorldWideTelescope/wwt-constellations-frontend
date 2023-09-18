@@ -24,9 +24,9 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
+import { Color, URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 
-import { SkymapSceneInfo } from "~/utils/types";
+import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
 import { useConstellationsStore } from "~/stores/constellations";
@@ -40,7 +40,7 @@ const props = defineProps<{
 const { scenes } = toRefs(props);
 
 const emits = defineEmits<{
-    (event: 'selected', scene: SkymapSceneInfo): void
+    (event: 'selected', scene: SceneDisplayInfoT): void
 }>();
 
 const defaultObjectRadius = 4;
@@ -209,8 +209,8 @@ class Marker {
 
     sendToDesiredScene(scene: SkymapSceneInfo) {
         // TODO: Make these two properties change based on the scene
-        this.targetColor.setTo(GENERAL_SCENE_COLOR);
-        this.targetLineWidth = 1;
+        this.targetColor.setTo(new Rgba(scene.color.r / 255, scene.color.g / 255, scene.color.b / 255, scene.color.a / 255));
+        this.targetLineWidth = scene.linewidth;
 
         this.needsAnimation = true;
         this.isBeingRemoved = false;
@@ -575,6 +575,7 @@ function onMouseClick(event: MouseEvent) {
 
     if (scene !== null) {
         emits("selected", scene);
+        return;
     }
 
     const canvas = canvasRef.value;
@@ -593,7 +594,10 @@ function onMouseClick(event: MouseEvent) {
         if (scene === null) {
           return;
         }
-        const marker = new Marker(scene);
+        console.log("Selected scene from click");
+        console.log(scene);
+        emits("selected", scene);
+        const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1});
         marker.targetColor = CLICKED_COLOR;
         marker.currentColor = CLICKED_COLOR;
         markerCollection.markers.set(scene.id, marker);
