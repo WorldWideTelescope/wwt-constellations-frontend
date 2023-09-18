@@ -6,7 +6,7 @@
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
-        <n-grid-item v-if="timelineSource !== null">
+        <n-grid-item>
           <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
         <n-grid-item>
@@ -97,12 +97,10 @@ const {
   describedScene,
   desiredScene,
   isMobile,
-  knownScenes,
   sceneHistory,
+  futureScenes,
   historyIndex,
-  timeline,
   timelineIndex,
-  timelineSource,
   viewportBottomBlockage,
   viewportLeftBlockage,
   isMovingToScene
@@ -133,28 +131,16 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   // Maybe this is silly, but pull values out of all of the refs that we use
   // up-front, so that this value is recomputed the same way regardless of which
   // mode we're in.
-  const tlsource = timelineSource.value;
-  const tlindex = timelineIndex.value;
-  const desc = describedScene.value;
-  const tldata = timeline.value;
-  const known = knownScenes.value;
+  const history = sceneHistory.value;
+  const index = historyIndex.value;
+  const future = futureScenes.value;
 
-  if (tlsource === null || tlindex < 0) {
-    if (desc === null) {
-      return [];
-    }
-
-    return [{
-      currentlyShown: true,
-      ...desc,
-    }];
-  } else {
-    return tldata.map((id, itemIndex) => {
-      const scene = known.get(id)!;
-      const currentlyShown = itemIndex == tlindex;
-      return { currentlyShown, itemIndex, ...scene };
-    });
-  }
+  console.log(index);
+  return history.concat(future).map((scene, itemIndex) => {
+    const currentlyShown = (index === itemIndex);
+    console.log({ currentlyShown, itemIndex, ...scene });
+    return { currentlyShown, itemIndex, ...scene };
+  });
 });
 
 const showSwipeAnimation = ref(false);
@@ -173,7 +159,7 @@ const {
 onMounted(() => {
   nextTick(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
-      historyIndex.value = 0;
+      constellationsStore.moveForward();
     });
   });
 
@@ -209,15 +195,18 @@ function onItemSelected(sceneInfo: SkymapSceneInfo) {
 }
 
 function onScroll(event: UIEvent) {
+  console.log("onScroll");
   const target = event.target as HTMLDivElement;
+  console.log(target);
   if (target) {
-    const index = Math.round(target.scrollTop / (target.offsetHeight));
-    // TODO: How to replace this?
-    // onItemSelected(index);
+    const n = Math.round(target.scrollTop / (target.offsetHeight));
+    console.log(`n: ${n}`);
+    constellationsStore.moveForward(n);
   }
 }
 
 function scrollTo(index: number) {
+  console.log(`scrollTo: ${index}`);
   if (fullPageContainerRef.value) {
     const element = fullPageContainerRef.value as HTMLDivElement;
     if (element) {
@@ -250,7 +239,9 @@ watch(historyIndex, async () => {
   if (historyIndex.value >= 0) {
     describedScene.value = sceneHistory.value[historyIndex.value];
     console.log("historyIndex watcher");
+    console.log(sceneHistory);
     console.log(describedScene.value);
+    console.log(`historyIndex: ${historyIndex.value}`);
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
@@ -265,7 +256,7 @@ watch(historyIndex, async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    scrollTo(timelineIndex.value);
+    scrollTo(historyIndex.value);
     recenter();
   }
 });

@@ -26,7 +26,7 @@
 import { storeToRefs } from "pinia";
 import { URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 
-import { SceneContentHydratedT, SkymapSceneInfo } from "~/utils/types";
+import { SkymapSceneInfo } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
 import { useConstellationsStore } from "~/stores/constellations";

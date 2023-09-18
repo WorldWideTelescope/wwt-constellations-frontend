@@ -45,6 +45,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // The history of visited scenes
   const sceneHistory = ref<GetSceneResponseT[]>([]);
   const historyIndex = ref(-1);
+  const futureScenes = ref<GetSceneResponseT[]>([]);
 
   type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
 
@@ -53,6 +54,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   type NextSceneSourceType = { type: 'global' } |
                              { type: 'handle'; handle: string } |
                              { type: 'nearby', baseID: string };
+  let nextSceneSource: NextSceneSourceType = { type: 'global' };
 
   // The ordered list of scene IDs that constitutes our current "timeline". This
   // list is completed from the start of the timeline to as far as it goes; we
@@ -163,16 +165,18 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
   async function ensureForwardCoverage(n: number) {
     console.log("ensureForwardCoverage", n);
+    console.log(getNextScenes);
     if (getNextScenes === null) {
       return;
     }
 
     const MAX_ATTEMPTS = 5;
-    const targetLength = sceneHistory.value.length + n;
+    const targetLength = n;
     const { $backendCall } = useNuxtApp();
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-      if (sceneHistory.value.length >= targetLength) {
+      if (futureScenes.value.length >= targetLength) {
+        console.log(`ensureForwardCoverage: exiting early`);
         break;
       }
 
@@ -182,7 +186,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       if (nextNeededPage === page) {
         for (const scene of result.results) {
           knownScenes.value.set(scene.id, scene);
-          sceneHistory.value.push(scene);
+          futureScenes.value.push(scene);
         }
       }
 
@@ -190,21 +194,45 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   }
 
-  function moveBack() {
+  function moveBack(count=1) {
     // We're at the beginning of the history - there's nowhere back to go
-    if (historyIndex.value === 0) {
+    if (sceneHistory.value.length === 0 || historyIndex.value === 0) {
       return;
     }
-    historyIndex.value -= 1;
+    historyIndex.value = Math.max(0, historyIndex.value - count);;
     desiredScene.value = sceneHistory.value[historyIndex.value];
   }
 
-  async function moveForward() {
-    if (sceneHistory.value.length < historyIndex.value) {
-      await ensureForwardCoverage(5); // What should this value be?
+  async function moveForward(count=1) {
+    if (count <= 0) {
+      return;
     }
-    historyIndex.value += 1;
-    desiredScene.value = sceneHistory.value[historyIndex.value];
+    console.log(sceneHistory.value);
+    let scene: GetSceneResponseT | undefined = undefined;
+    
+    // The first argument to `Math.min` is to account for the setup case where sceneHistory is empty
+    const canMoveForwardInHistory = Math.min(sceneHistory.value.length, count, sceneHistory.value.length - 1 - historyIndex.value);
+
+    // The setup here is so that we only modify scene history and index once, at the end
+    let remaining = count - canMoveForwardInHistory;
+    let index = historyIndex.value + canMoveForwardInHistory;
+    const scenesToAdd: GetSceneResponseT[] = [];
+
+    while (remaining > 0) {
+      if (futureScenes.value.length === 0) {
+        await ensureForwardCoverage(remaining); // Should this be larger?
+      }
+      scene = futureScenes.value.shift();
+      if (scene) {
+        scenesToAdd.push(scene);
+        index += 1;
+      }
+      remaining -= 1;
+    }
+
+    index = Math.max(0, index);
+    sceneHistory.value = sceneHistory.value.concat(scenesToAdd);
+    historyIndex.value = index;
   }
 
   async function moveToScene(id: string) {
@@ -223,7 +251,16 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     historyIndex.value += 1;
   }
 
+  function needToChangeSceneSource(source: NextSceneSourceType) {
+    return !((source.type === 'global' && nextSceneSource.type === 'global') ||
+             (source.type === 'handle' && nextSceneSource.type === 'handle' && source.handle === nextSceneSource.handle) ||
+             (source.type === 'nearby' && nextSceneSource.type === 'nearby' && source.baseID === nextSceneSource.baseID));
+  }
+
   function updateNextSceneSource(source: NextSceneSourceType) {
+    if (!needToChangeSceneSource(source)) {
+      return;
+    }
     if (source.type === 'global') {
       getNextScenes = getHomeTimeline;
     } else if (source.type === 'handle') {
@@ -240,6 +277,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
     
     sceneHistory.value.splice(historyIndex.value);
+    futureScenes.value = [];
     nextNeededPage = 0;
   }
 
@@ -312,6 +350,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     sceneHistory,
     historyIndex,
+    futureScenes,
     moveBack,
     moveForward,
     moveToScene,

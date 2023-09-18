@@ -2,6 +2,8 @@
 
 import * as t from "io-ts";
 
+import { Color } from "@wwtelescope/engine";
+
 export const PlaceDetails = t.type({
   ra_rad: t.number,
   dec_rad: t.number,
@@ -125,6 +127,8 @@ export interface SkymapSceneInfo {
   id: string;
   place: PlaceDetailsT;
   content: SceneContentHydratedT;
+  color: Color;
+  linewidth: number;
 }
 
 export const TessellationCell = t.type({
