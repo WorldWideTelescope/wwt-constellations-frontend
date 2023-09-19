@@ -29,7 +29,6 @@ import { Color, URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
-import { useConstellationsStore } from "~/stores/constellations";
 
 const { $backendCall } = useNuxtApp();
 
@@ -48,7 +47,6 @@ const hoveredObjectRadius = 8;
 const zoomMaxSize = 50;
 const zoomMinSize = 10;
 
-const { timelineIndex } = storeToRefs(useConstellationsStore());
 const { raRad: engineRaRad, decRad: engineDecRad, zoomDeg: engineZoomDeg } = storeToRefs(getEngineStore());
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -290,7 +288,7 @@ class MarkerCollection {
     readonly markers: Map<string, Marker> = new Map();
     needsAnimation: boolean = false;
 
-    syncWithScenes(scenes: SkymapSceneInfo[], curTimelineIndex: number) {
+    syncWithScenes(scenes: SkymapSceneInfo[]) {
         this.needsAnimation = false;
 
         // Any marker that we don't catch below should go away
@@ -564,7 +562,7 @@ watch(engineDecRad, renderer.queueRender);
 watch(engineZoomDeg, renderer.queueRender);
 
 watchEffect(() => {
-    markerCollection.syncWithScenes(scenes.value, timelineIndex.value);
+    markerCollection.syncWithScenes(scenes.value);
     renderer.queueRender();
 });
 

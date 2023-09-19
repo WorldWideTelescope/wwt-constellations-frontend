@@ -102,7 +102,6 @@ const {
   sceneHistory,
   futureScenes,
   historyIndex,
-  timelineIndex,
   viewportBottomBlockage,
   viewportLeftBlockage,
   isMovingToScene
@@ -174,7 +173,7 @@ onMounted(() => {
   });
 
   swipeAnimationTimer.value = setInterval(() => {
-    showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
+    showSwipeAnimation.value = historyIndex.value === 0 && !showSwipeAnimation.value;
   }, 10000);
 
   engineStore.$subscribe(() => {
