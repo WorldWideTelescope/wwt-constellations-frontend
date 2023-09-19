@@ -594,8 +594,6 @@ function onMouseClick(event: MouseEvent) {
         if (scene === null) {
           return;
         }
-        console.log("Selected scene from click");
-        console.log(scene);
         emits("selected", scene);
         const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1});
         marker.targetColor = CLICKED_COLOR;

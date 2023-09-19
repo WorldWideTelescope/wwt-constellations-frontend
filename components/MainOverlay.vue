@@ -117,11 +117,8 @@ const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
 const skymapScenes = computed<SkymapSceneInfo[]>(() => {
 
   const currentSceneArr: GetSceneResponseT[] = describedScene.value != null ? [describedScene.value] : [];
-  console.log(currentSceneArr);
-  console.log(currentSceneArr.concat(futureScenes.value.slice(0,5)));
   return currentSceneArr.concat(futureScenes.value.slice(0, 5)).map((s, relIndex) => {
     const color = (relIndex === 0) ? CURRENT_SCENE_COLOR : (relIndex === 1 ? NEXT_SCENE_COLOR : GENERAL_SCENE_COLOR);
-    console.log(s);
     return {
       id: s.id,
       content: s.content,
@@ -150,10 +147,8 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   const index = historyIndex.value;
   const future = futureScenes.value;
 
-  console.log(index);
   return history.concat(future).map((scene, itemIndex) => {
     const currentlyShown = (index === itemIndex);
-    console.log({ currentlyShown, itemIndex, ...scene });
     return { currentlyShown, itemIndex, ...scene };
   });
 });
@@ -215,19 +210,14 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
 }
 
 function onScroll(event: UIEvent) {
-  console.log("onScroll");
   const target = event.target as HTMLDivElement;
-  console.log(target);
   if (target) {
-    console.log(target.scrollTop, target.offsetHeight);
     const n = Math.round(target.scrollTop / (target.offsetHeight));
-    console.log(`n: ${n}`);
     constellationsStore.moveForward(n);
   }
 }
 
 function scrollTo(index: number) {
-  console.log(`scrollTo: ${index}`);
   if (fullPageContainerRef.value) {
     const element = fullPageContainerRef.value as HTMLDivElement;
     if (element) {
