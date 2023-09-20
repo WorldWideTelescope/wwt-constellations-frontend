@@ -108,7 +108,6 @@ const {
 } = storeToRefs(constellationsStore);
 
 // The list of scenes shown in the skymap
-// TODO: What exactly do we want in this?
 
 const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
 const ADJACENT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
@@ -116,25 +115,27 @@ const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
 const skymapScenes = computed<SkymapSceneInfo[]>(() => {
 
   let scenes = [];
-  const previousScene = sceneHistory.value[historyIndex.value];
+  let currentIndex = 0;
+  const previousScene = constellationsStore.previousScene();
   if (previousScene) {
     scenes.push(previousScene);
+    currentIndex += 1;
   }
-  if (describedScene.value) {
-    scenes.push(describedScene.value);
-  }
-  console.log(scenes);
-  scenes = scenes.concat(futureScenes.value.slice(0, 5));
-  console.log(scenes);
-  console.log("==========");
+  const fromHistory = sceneHistory.value.slice(historyIndex.value, historyIndex.value + 5);
+  const stillNeed = Math.max(5 - fromHistory.length, 0);
+  scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, stillNeed));
   return scenes.map((s, relIndex) => {
-    const color = (relIndex === 1) ? CURRENT_SCENE_COLOR : (relIndex === 0 || relIndex === 2) ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR;
+    const currentScene = relIndex === currentIndex;
+    const adjacent = Math.abs(relIndex - currentIndex) === 1;
+    const color = currentScene ? CURRENT_SCENE_COLOR : (adjacent ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR);
     return {
       id: s.id,
       content: s.content,
       place: s.place,
       color,
-      linewidth: relIndex ? 1 : 2 
+      linewidth: currentScene ? 2 : 1,
+      current: currentScene,
+      adjacent: adjacent,
     };
   });
 });

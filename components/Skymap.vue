@@ -158,10 +158,6 @@ class SkymapContext {
 // when rendering the canvas.
 
 const ANIMATION_DURATION_MS = 5000; // milliseconds
-const GENERAL_SCENE_COLOR = new Rgba(0.44, 0.44, 0.48, 1.0); // #6f6f7a
-const NEXT_SCENE_COLOR = new Rgba(0.12, 0.75, 0.54, 1.0); // #1fbf89
-const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
-const CLICKED_COLOR = new Rgba(0.77, 0.71, 0.33, 1.0); // #c4b454
 
 class Marker {
     readonly raDeg: number;
@@ -306,7 +302,6 @@ class MarkerCollection {
             marker.sendToDesiredScene(scene);
         }
 
-        console.log(Object.keys(this.markers).lengt);
         for (var marker of this.markers.values()) {
             if (marker.isBeingRemoved) {
                 marker.sendToDestruction();
@@ -333,14 +328,11 @@ class MarkerCollection {
         // overwrite one another. This seems easier (and faster?) than trying to
         // sort the list.
 
-        // const tlidx = timelineIndex.value;
-        // const filterPass1 = (m: Marker) => (m.timelineIndex < tlidx) || (m.timelineIndex > tlidx + 1);
-        // const filterPass2 = (m: Marker) => (m.timelineIndex == tlidx + 1);
-        // const filterPass3 = (m: Marker) => (m.timelineIndex == tlidx);
+        const filterPass1 = (m: Marker) => !(m.scene.current || m.scene.adjacent);
+        const filterPass2 = (m: Marker) => m.scene.adjacent;
+        const filterPass3 = (m: Marker) => m.scene.current;
         
-        // TODO: What do we want to do here?
-        const filters = [(m: Marker) => true];
-        for (var filter of filters) {
+        for (var filter of [filterPass1, filterPass2, filterPass3]) {
             for (const [id, marker] of this.markers.entries()) {
                 if (!filter(marker)) {
                     continue;
@@ -594,8 +586,6 @@ function onMouseClick(event: MouseEvent) {
         }
         emits("selected", scene);
         const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1});
-        marker.targetColor = CLICKED_COLOR;
-        marker.currentColor = CLICKED_COLOR;
         markerCollection.markers.set(scene.id, marker);
         renderer.queueRender();
       });

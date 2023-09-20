@@ -74,8 +74,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   async function ensureForwardCoverage(n: number) {
-    console.log("ensureForwardCoverage", n);
-    console.log(getNextScenes);
     if (getNextScenes === null) {
       return;
     }
@@ -86,13 +84,11 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
       if (futureScenes.value.length >= targetLength) {
-        console.log(`ensureForwardCoverage: exiting early`);
         break;
       }
 
       const page = nextNeededPage;
       const result = await getNextScenes($backendCall, page);
-      console.log(result);
 
       if (nextNeededPage === page) {
         for (const scene of result.results) {
@@ -118,7 +114,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     if (count <= 0) {
       return;
     }
-    console.log(sceneHistory.value);
     let scene: GetSceneResponseT | undefined = undefined;
     
     // The first argument to `Math.min` is to account for the setup case where sceneHistory is empty
@@ -161,6 +156,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     sceneHistory.value.push(scene);
     historyIndex.value += 1;
+  }
+
+  function previousScene(): GetSceneResponseT | null {
+    return sceneHistory.value[historyIndex.value - 1] ?? null;
   }
 
   function needToChangeSceneSource(source: NextSceneSourceType) {
@@ -234,6 +233,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     moveBack,
     moveForward,
     moveHistoryToScene,
+    previousScene,
     ensureForwardCoverage,
     useGlobalTimeline,
     useHandleTimeline

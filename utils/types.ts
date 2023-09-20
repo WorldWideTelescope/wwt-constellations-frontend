@@ -129,6 +129,8 @@ export interface SkymapSceneInfo {
   content: SceneContentHydratedT;
   color: Color;
   linewidth: number;
+  current: boolean;
+  adjacent: boolean;
 }
 
 export const TessellationCell = t.type({
