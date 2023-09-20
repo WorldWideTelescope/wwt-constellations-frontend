@@ -46,7 +46,6 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
-  timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
@@ -104,7 +103,7 @@ useServerSeoMeta({
 
 watchEffect(() => {
   if (scene_data.value !== null) {
-    constellationsStore.moveToScene(scene_data.value.id);
+    constellationsStore.setupForSingleScene(scene_data.value);
   }
 });
 

@@ -206,7 +206,6 @@ class Marker {
     }
 
     sendToDesiredScene(scene: SkymapSceneInfo) {
-        // TODO: Make these two properties change based on the scene
         this.targetColor.setTo(new Rgba(scene.color.r / 255, scene.color.g / 255, scene.color.b / 255, scene.color.a / 255));
         this.targetLineWidth = scene.linewidth;
 
@@ -307,6 +306,7 @@ class MarkerCollection {
             marker.sendToDesiredScene(scene);
         }
 
+        console.log(Object.keys(this.markers).lengt);
         for (var marker of this.markers.values()) {
             if (marker.isBeingRemoved) {
                 marker.sendToDestruction();

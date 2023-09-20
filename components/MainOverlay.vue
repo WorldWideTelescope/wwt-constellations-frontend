@@ -111,13 +111,24 @@ const {
 // TODO: What exactly do we want in this?
 
 const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
-const NEXT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
+const ADJACENT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
 const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
 const skymapScenes = computed<SkymapSceneInfo[]>(() => {
 
-  const currentSceneArr: GetSceneResponseT[] = describedScene.value != null ? [describedScene.value] : [];
-  return currentSceneArr.concat(futureScenes.value.slice(0, 5)).map((s, relIndex) => {
-    const color = (relIndex === 0) ? CURRENT_SCENE_COLOR : (relIndex === 1 ? NEXT_SCENE_COLOR : GENERAL_SCENE_COLOR);
+  let scenes = [];
+  const previousScene = sceneHistory.value[historyIndex.value];
+  if (previousScene) {
+    scenes.push(previousScene);
+  }
+  if (describedScene.value) {
+    scenes.push(describedScene.value);
+  }
+  console.log(scenes);
+  scenes = scenes.concat(futureScenes.value.slice(0, 5));
+  console.log(scenes);
+  console.log("==========");
+  return scenes.map((s, relIndex) => {
+    const color = (relIndex === 1) ? CURRENT_SCENE_COLOR : (relIndex === 0 || relIndex === 2) ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR;
     return {
       id: s.id,
       content: s.content,
@@ -204,7 +215,7 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   if (index >= 0) {
     constellationsStore.moveForward(index);
   } else {
-    constellationsStore.moveToScene(sceneInfo.id);
+    constellationsStore.moveHistoryToScene(sceneInfo.id);
   }
 }
 

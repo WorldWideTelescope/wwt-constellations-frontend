@@ -56,30 +56,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
                              { type: 'nearby', baseID: string };
   let nextSceneSource: NextSceneSourceType = { type: 'global' };
 
-  // The ordered list of scene IDs that constitutes our current "timeline". This
-  // list is completed from the start of the timeline to as far as it goes; we
-  // may be able to extend it by fetching more scenes. If we are not currently
-  // navigating a timeline, the list is empty. All of these scene IDs must have
-  // corresponding records in the `knownScenes` map.
-  const timeline = ref<string[]>([]);
-
-  // The index of the currently viewed scene within the `timeline` array.
-  // Someone should make sure that this selection, `describedScene`, and
-  // `desiredScene` stay in some reasonable level of synchronization, but they
-  // can in principle vary. This should be -1 if nothing is selected or we're
-  // not in a timeline mode (i.e., `timeline` is empty).
-  const timelineIndex = ref(0);
-
-  // The source of further items for the timeline, if we need them. There are
-  // three broad possibilities. If this is null, we're not in a timeline mode,
-  // and there's nothing to fetch. If this is the empty string, we're exploring
-  // the "home" timeline. Otherwise, the value of this field is the name of a
-  // handle, and we're exploring that handle's timeline.
-  const timelineSource = ref<string | null>("");
-
-  var getTimeline: typeof getHomeTimeline | null = getHomeTimeline;
-  var timelineSequence = 0;
-  var nextNeededTimelinePage = 0;
 
   // Set up state for a single scene. NOTE: before calling this function, you
   // must have already set timelineSource to null and let a render clock tick
@@ -87,7 +63,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // will reset knownScenes. This is all quite gnarly and gross and should be
   // rationalized.
   function setupForSingleScene(scene: GetSceneResponseT) {
-    timelineIndex.value = -1;
     describedScene.value = scene;
     desiredScene.value = {
       id: scene.id,
@@ -95,72 +70,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       content: scene.content,
     };
     knownScenes.value.set(scene.id, scene);
-  }
-
-  // Ensure that the timeline data structure extends at least `n` items past the
-  // current index. If the timeline was initially empty, this will set the
-  // current index to the first position. If something fails badly in the
-  // backend, it is possible that this function will give up without actually
-  // achieving its goal.
-  async function ensureTimelineCoverage(n: number) {
-    // If we're not in a timeline mode, the most appropriate thing to do is
-    // nothing.
-    if (getTimeline === null) {
-      return;
-    }
-
-    const init_index = (timelineIndex.value < 0);
-    const target_length = init_index ? n : timelineIndex.value + n;
-    const our_sequence = timelineSequence;
-    const MAX_ATTEMPTS = 5;
-
-    // Note that we are currently using $backendCall, not $backendAuthCall,
-    // because none of the feeds are personalized. To get personalized feeds
-    // we'll need to change that. (And we might also need to fix things up so
-    // that we can make authenticated calls in the server-side rendering phase.)
-    const { $backendCall } = useNuxtApp();
-
-    for (var attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-      // If, during one of our asynchronous attempts, the app has
-      // moved on to caring about a different timeline altogether,
-      // go home.
-      if (timelineSequence != our_sequence) {
-        return;
-      }
-
-      // If we're in the same sequence but we've gotten enough items, we're
-      // done.
-      if (timeline.value.length >= target_length) {
-        break;
-      }
-
-      // Try to get the next page that we think is needed.
-      const our_page = nextNeededTimelinePage;
-      const result = await getTimeline($backendCall, our_page);
-
-      // Due to the "await", some unknowable amount of time has passed since we
-      // put in the API request, and someone else may already have filled in the
-      // timeline or switched us to a new timeline. Only edit the global
-      // structure if it appears that our results are still wanted and needed.
-
-      if (timelineSequence == our_sequence && nextNeededTimelinePage == our_page) {
-        for (var scene of result.results) {
-          knownScenes.value.set(scene.id, scene);
-          timeline.value.push(scene.id);
-        }
-
-        nextNeededTimelinePage += 1;
-      }
-    }
-
-    if (init_index) {
-      timelineIndex.value = 0;
-    }
-  }
-
-  async function setTimelineIndex(n: number) {
-    timelineIndex.value = n;
-    await ensureTimelineCoverage(n + 5);
+    moveHistoryToScene(scene.id);
   }
 
   async function ensureForwardCoverage(n: number) {
@@ -236,7 +146,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     historyIndex.value = index;
   }
 
-  async function moveToScene(id: string) {
+  async function moveHistoryToScene(id: string) {
     updateNextSceneSource({ type: 'nearby', baseID: id });
     let scene = knownScenes.value.get(id);
     if (scene === undefined) {
@@ -291,33 +201,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     updateNextSceneSource({ type: 'handle', handle });
   }
 
-
-  watch(timelineSource, async (newSource, oldSource) => {
-    if (newSource == null) {
-      getTimeline = null;
-      nextNeededTimelinePage = 0;
-      timelineSequence += 1;
-      timeline.value = [];
-      timelineIndex.value = -1;
-      knownScenes.value = new Map();
-
-      if (describedScene.value !== null) {
-        knownScenes.value.set(describedScene.value.id, describedScene.value);
-      }
-    } else if (newSource != oldSource) {
-      if (newSource == "") {
-        getTimeline = getHomeTimeline;
-      } else {
-        getTimeline = (fetcher: $Fetch, page: number) => getHandleTimeline(fetcher, newSource, page);
-      }
-
-      nextNeededTimelinePage = 0;
-      timelineSequence += 1;
-      timeline.value = [];
-      timelineIndex.value = -1;
-    }
-  });
-
   // Cross-component plumbing for the region-of-interest display
 
   const roiEditHeightPercentage = ref(50);
@@ -333,19 +216,14 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   return {
     describedScene,
     desiredScene,
-    ensureTimelineCoverage,
     isMobile,
     isMovingToScene,
     knownScenes,
     loggedIn,
     roiEditHeightPercentage,
     roiEditWidthPercentage,
-    setTimelineIndex,
     setupForSingleScene,
     showWWT,
-    timeline,
-    timelineIndex,
-    timelineSource,
     viewNeedsInitialization,
     viewportBottomBlockage,
     viewportLeftBlockage,
@@ -355,7 +233,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     futureScenes,
     moveBack,
     moveForward,
-    moveToScene,
+    moveHistoryToScene,
     ensureForwardCoverage,
     useGlobalTimeline,
     useHandleTimeline
