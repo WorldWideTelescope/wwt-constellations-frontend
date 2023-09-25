@@ -617,7 +617,7 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
 }
 
 export async function getNearbyTimeline(fetcher: $Fetch, sceneID: string): Promise<TimelineResponseT> {
-  const data = await fetcher(`/tessellations/nearby-feed/${sceneID}`, { query: { size: 30 } });
+  const data = await fetcher(`/scene/${sceneID}/nearby-global`, { query: { size: 30 } });
   checkForError(data);
   const maybe = TimelineResponse.decode(data);
 
@@ -696,7 +696,7 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
 // Endpoint: GET /tessellations/cell
 
 export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
-  const data = await fetcher('tessellations/cell', { query: { name: tessellationName, ra: raRad, dec: decRad } });
+  const data = await fetcher(`tessellations/${tessellationName}/cell`, { query: { ra: raRad, dec: decRad } });
   checkForError(data);
   const maybe = TessellationCell.decode(data);
 
