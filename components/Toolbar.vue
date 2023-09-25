@@ -75,12 +75,14 @@ const constellationsStore = useConstellationsStore();
 
 const {
     isMobile,
+    sceneHistory,
     historyIndex,
     futureScenes,
 } = storeToRefs(constellationsStore);
 
 const hasPrev = computed<boolean>(() => historyIndex.value > 0);
-const hasNext = computed<boolean>(() => futureScenes.value.length > 0);
+const hasNext = computed<boolean>(() => futureScenes.value.length > 0 ||
+                                        (sceneHistory.value.length > 0 && historyIndex.value < sceneHistory.value.length - 1));
 
 withDefaults(defineProps<{
     isExploreMode?: boolean,
