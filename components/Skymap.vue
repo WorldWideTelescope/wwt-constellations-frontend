@@ -585,7 +585,7 @@ function onMouseClick(event: MouseEvent) {
           return;
         }
         emits("selected", scene);
-        const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1});
+        const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1, current: false, adjacent: false } );
         markerCollection.markers.set(scene.id, marker);
         renderer.queueRender();
       });

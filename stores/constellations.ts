@@ -52,9 +52,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   let getNextScenes: ScenesGetter | null = getHomeTimeline;
   let nextNeededPage = 0;
   type NextSceneSourceType = { type: 'global' } |
+                             { type: 'single-scene', id: string } |
                              { type: 'handle'; handle: string } |
                              { type: 'nearby', baseID: string };
-  let nextSceneSource: NextSceneSourceType = { type: 'global' };
+  let nextSceneSource = ref<NextSceneSourceType>({ type: 'global' });
 
 
   // Set up state for a single scene. NOTE: before calling this function, you
@@ -73,16 +74,34 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     moveHistoryToScene(scene.id);
   }
 
+  // Ensure that the future scenes data structure contains at least `n` items.
+  // If something fails badly in the backend, it is possible that this function
+  // will give up without actually achieving its goal.
   async function ensureForwardCoverage(n: number) {
     if (getNextScenes === null) {
       return;
     }
 
+    // Note that we are currently using $backendCall, not $backendAuthCall,
+    // because none of the feeds are personalized. To get personalized feeds
+    // we'll need to change that. (And we might also need to fix things up so
+    // that we can make authenticated calls in the server-side rendering phase.)
     const MAX_ATTEMPTS = 5;
     const targetLength = n;
+    const navigationMode = nextSceneSource;
     const { $backendCall } = useNuxtApp();
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+
+      // If, during one of our asynchronous attempts, the app has
+      // changed its navigation mode, return.
+      // Note that we need to check the entire `nextSceneSource` object
+      // and not just the `type` member. For example, if we switch handles, the
+      // `type` will be unchanged.
+      if (navigationMode !== nextSceneSource) {
+        return;
+      }
+
       if (futureScenes.value.length >= targetLength) {
         break;
       }
@@ -142,7 +161,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   async function moveHistoryToScene(id: string) {
-    updateNextSceneSource({ type: 'nearby', baseID: id });
+    updateNextSceneSource({ type: 'single-scene', id });
     let scene = knownScenes.value.get(id);
     if (scene === undefined) {
       const { $backendCall } = useNuxtApp();
@@ -152,7 +171,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       }
       scene = fetchedScene;
     }
-    await ensureForwardCoverage(8);
 
     sceneHistory.value.push(scene);
     historyIndex.value += 1;
@@ -163,9 +181,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   function needToChangeSceneSource(source: NextSceneSourceType) {
-    return !((source.type === 'global' && nextSceneSource.type === 'global') ||
-             (source.type === 'handle' && nextSceneSource.type === 'handle' && source.handle === nextSceneSource.handle) ||
-             (source.type === 'nearby' && nextSceneSource.type === 'nearby' && source.baseID === nextSceneSource.baseID));
+    return !((source.type === 'global' && nextSceneSource.value.type === 'global') ||
+             (source.type === 'single-scene' && nextSceneSource.value.type === 'single-scene') ||
+             (source.type === 'handle' && nextSceneSource.value.type === 'handle' && source.handle === nextSceneSource.value.handle) ||
+             (source.type === 'nearby' && nextSceneSource.value.type === 'nearby' && source.baseID === nextSceneSource.value.baseID));
   }
 
   function updateNextSceneSource(source: NextSceneSourceType) {
@@ -185,8 +204,11 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
           return { results: [] };
         }
       }
+    } else if (source.type === 'single-scene') {
+      getNextScenes = async (_fetcher, _page) => { return { results: [] }; };
     }
     
+    nextSceneSource.value = source;
     sceneHistory.value = sceneHistory.value.splice(historyIndex.value);
     futureScenes.value = [];
     nextNeededPage = 0;
@@ -236,6 +258,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     previousScene,
     ensureForwardCoverage,
     useGlobalTimeline,
-    useHandleTimeline
+    useHandleTimeline,
+    nextSceneSource,
   }
 });

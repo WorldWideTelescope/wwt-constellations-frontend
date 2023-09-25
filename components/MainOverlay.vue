@@ -7,7 +7,7 @@
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
         <n-grid-item>
-          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+          <Skymap v-if="nextSceneSource.type !== 'single-scene'" :scenes="skymapScenes" @selected="onItemSelected" />
         </n-grid-item>
         <n-grid-item>
           <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
@@ -104,7 +104,8 @@ const {
   historyIndex,
   viewportBottomBlockage,
   viewportLeftBlockage,
-  isMovingToScene
+  isMovingToScene,
+  nextSceneSource
 } = storeToRefs(constellationsStore);
 
 // The list of scenes shown in the skymap
