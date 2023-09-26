@@ -55,6 +55,7 @@ const detailsPosY = ref(0);
 const backgroundImage = ref<HTMLImageElement | null>(null);
 const isHoveringObject = ref(false);
 const celestialObjectThumbnail = ref("");
+const clickedMarkerID = ref<string | null>(null);
 
 // A helper class for tweening colors. I don't see an built-in type that
 // obviously does what we want here??
@@ -569,6 +570,7 @@ function onMouseClick(event: MouseEvent) {
     }
 
     const canvas = canvasRef.value;
+    clickedMarkerID.value = null;
     if (canvas !== null) {
       const ctx = canvas.getContext('2d');
       if (ctx === null) {
@@ -584,9 +586,17 @@ function onMouseClick(event: MouseEvent) {
         if (scene === null) {
           return;
         }
-        emits("selected", scene);
-        const marker = new Marker({ ...scene, color: Color.fromArgb(255, 196, 180, 84), linewidth: 1, current: false, adjacent: false } );
+        const color = Color.fromArgb(255, 196, 180, 84);
+        const marker = new Marker({ ...scene, color, linewidth: 1, current: false, adjacent: false } );
+        if (clickedMarkerID.value !== null) {
+          const oldMarker = markerCollection.markers.get(clickedMarkerID.value);
+          oldMarker?.sendToDestruction();
+        }
         markerCollection.markers.set(scene.id, marker);
+        clickedMarkerID.value = scene.id;
+        const rgba = new Rgba(color.r, color.g, color.b, color.a);
+        marker.currentColor = rgba;
+        marker.targetColor = rgba;
         renderer.queueRender();
       });
     }
