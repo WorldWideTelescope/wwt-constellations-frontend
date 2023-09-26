@@ -570,7 +570,6 @@ function onMouseClick(event: MouseEvent) {
     }
 
     const canvas = canvasRef.value;
-    clickedMarkerID.value = null;
     if (canvas !== null) {
       const ctx = canvas.getContext('2d');
       if (ctx === null) {
