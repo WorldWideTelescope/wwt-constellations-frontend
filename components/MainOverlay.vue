@@ -7,7 +7,9 @@
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
         <n-grid-item>
-          <Skymap v-if="nextSceneSource.type !== 'single-scene'" :scenes="skymapScenes" @selected="onItemSelected" />
+          <n-collapse-transition appear :show="nextSceneSource.type !== 'single-scene'">
+            <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+          </n-collapse-transition>
         </n-grid-item>
         <n-grid-item>
           <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
@@ -61,6 +63,7 @@
 <script setup lang="ts">
 import {
   NButton,
+  NCollapseTransition,
   NGrid,
   NGridItem,
   NIcon,
