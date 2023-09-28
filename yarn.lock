@@ -1996,6 +1996,7 @@ __metadata:
     keycloak-js: ~21.0.0
     less: ^4.1.3
     less-loader: ^11.1.0
+    linked-list: ^3.1.0
     naive-ui: ^2.34
     nuxt: ^3.4.3
     pinia: ^2.0.32
@@ -5181,6 +5182,13 @@ __metadata:
   version: 1.2.4
   resolution: "lines-and-columns@npm:1.2.4"
   checksum: 0c37f9f7fa212b38912b7145e1cd16a5f3cd34d782441c3e6ca653485d326f58b3caccda66efce1c5812bde4961bbde3374fae4b0d11bf1226152337f3894aa5
+  languageName: node
+  linkType: hard
+
+"linked-list@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "linked-list@npm:3.1.0"
+  checksum: 462a1ae2a412fb3d216dc9e7ad6bccff3a68eb8617c5378779fef151770591c6340d5e43db718efcde8976f5a7260d361ec0b940f5cf1772f24e6271779c7b60
   languageName: node
   linkType: hard
 
