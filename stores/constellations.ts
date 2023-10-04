@@ -122,7 +122,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   }
 
-  function moveBack(count=1) {
+  function moveBack() {
     const prevNode = currentHistoryNode.value?.prev;
     const prev = prevNode?.value;
     if (prevNode && prev) {
@@ -140,8 +140,9 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     let remaining = count;
     while (remaining > 0) {
-      if (currentHistoryNode.value?.next) {
-        currentHistoryNode.value = currentHistoryNode.value.next;   
+      const next = currentHistoryNode.value?.next;
+      if (next) {
+        scene = next.value;
       } else {
         if (futureScenes.value.length === 0) {
           await ensureForwardCoverage(remaining);  // Should this be larger?
@@ -155,6 +156,9 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
 
     sceneHistory.value.push(...scenesToAdd);
+    if (scene) {
+      currentHistoryNode.value = sceneHistory.value.tail;
+    }
 
   }
 
@@ -170,11 +174,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
 
     sceneHistory.value.push(scene);
-    historyIndex.value += 1;
   }
 
   function previousScene(): GetSceneResponseT | null {
-    return sceneHistory.value[historyIndex.value - 1] ?? null;
+    return currentHistoryNode.value?.prev?.value ?? null;
   }
 
   function needToChangeSceneSource(source: NextSceneSourceType) {
@@ -206,7 +209,11 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
     
     nextSceneSource.value = source;
-    sceneHistory.value = sceneHistory.value.splice(historyIndex.value);
+    sceneHistory.value.tail = currentHistoryNode.value;
+    const currentNode = currentHistoryNode.value;
+    if (currentNode) {
+      currentNode.prev = null;
+    }
     futureScenes.value = [];
     nextNeededPage = 0;
   }
@@ -253,7 +260,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     viewportLeftBlockage,
 
     sceneHistory,
-    historyIndex,
+    currentHistoryNode,
     futureScenes,
     moveBack,
     moveForward,
@@ -262,6 +269,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     ensureForwardCoverage,
     useGlobalTimeline,
     useHandleTimeline,
+    useNearbyTimeline,
     nextSceneSource,
   }
 });

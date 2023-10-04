@@ -103,8 +103,8 @@ const {
   desiredScene,
   isMobile,
   sceneHistory,
+  currentHistoryNode,
   futureScenes,
-  historyIndex,
   viewportBottomBlockage,
   viewportLeftBlockage,
   isMovingToScene,
@@ -125,9 +125,15 @@ const skymapScenes = computed<SkymapSceneInfo[]>(() => {
     scenes.push(previousScene);
     currentIndex += 1;
   }
-  const fromHistory = sceneHistory.value.slice(historyIndex.value, historyIndex.value + 5);
-  const stillNeed = Math.max(5 - fromHistory.length, 0);
-  scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, stillNeed));
+  const fromHistory: GetSceneResponseT[] = [];
+  let sceneNode = currentHistoryNode.value;
+  let needed = 5;
+  while (sceneNode && needed > 0) {
+    fromHistory.push(sceneNode.value);
+    sceneNode = sceneNode.next;
+    needed -= 1;
+  }
+  scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, needed));
   return scenes.map((s, relIndex) => {
     const currentScene = relIndex === currentIndex;
     const adjacent = Math.abs(relIndex - currentIndex) === 1;
@@ -158,12 +164,12 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   // Maybe this is silly, but pull values out of all of the refs that we use
   // up-front, so that this value is recomputed the same way regardless of which
   // mode we're in.
-  const history = sceneHistory.value;
-  const index = historyIndex.value;
+  const history = sceneHistory.value.toArray();
   const future = futureScenes.value;
+  const currentScene = currentHistoryNode.value?.value;
 
   return history.concat(future).map((scene, itemIndex) => {
-    const currentlyShown = (index === itemIndex);
+    const currentlyShown = (scene === currentScene);
     return { currentlyShown, itemIndex, ...scene };
   });
 });
@@ -185,11 +191,12 @@ onMounted(() => {
   nextTick(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
       constellationsStore.moveForward();
+      console.log(constellationsStore);
     });
   });
 
   swipeAnimationTimer.value = setInterval(() => {
-    showSwipeAnimation.value = historyIndex.value === 0 && !showSwipeAnimation.value;
+    showSwipeAnimation.value = currentHistoryNode.value !== null && !showSwipeAnimation.value;
   }, 10000);
 
   engineStore.$subscribe(() => {
@@ -264,9 +271,10 @@ function goPrev() {
   constellationsStore.moveBack();
 }
 
-watch(historyIndex, async () => {
-  if (historyIndex.value >= 0) {
-    describedScene.value = sceneHistory.value[historyIndex.value];
+watch(currentHistoryNode, async () => {
+  const currentScene = currentHistoryNode.value?.value;
+  if (currentScene) {
+    describedScene.value = currentScene;
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
@@ -281,7 +289,8 @@ watch(historyIndex, async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    scrollTo(historyIndex.value);
+    // TODO: What should this be?
+    // scrollTo(historyIndex.value);
     recenter();
   }
 });

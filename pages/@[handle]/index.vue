@@ -67,7 +67,7 @@ watchEffect(async () => {
 onMounted(() => {
   constellationsStore.useHandleTimeline(handle);
   nextTick(() => {
-    constellationsStore.ensureTimelineCoverage(8);
+    constellationsStore.ensureForwardCoverage(8);
   });
 });
 </script>
