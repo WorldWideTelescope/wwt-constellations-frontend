@@ -220,7 +220,10 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   if (index >= 0) {
     constellationsStore.moveForward(index);
   } else {
+    // TODO: Should some of these calls live inside `useNearbyTimeline`?
+    constellationsStore.useNearbyTimeline(sceneInfo.id);
     constellationsStore.moveHistoryToScene(sceneInfo.id);
+    constellationsStore.ensureForwardCoverage(8);
   }
 }
 

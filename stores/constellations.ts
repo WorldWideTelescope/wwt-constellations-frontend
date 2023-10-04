@@ -1,6 +1,7 @@
 import { $Fetch } from "ofetch";
 import { defineStore } from "pinia";
 import { useBreakpoints } from "@vueuse/core";
+import Yallist from "yallist";
 
 import { getHomeTimeline, getHandleTimeline, GetSceneResponseT, TimelineResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT } from "~/utils/types";
@@ -43,8 +44,8 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   const desiredScene = ref<SceneDisplayInfoT | null>(null);
 
   // The history of visited scenes
-  const sceneHistory = ref<GetSceneResponseT[]>([]);
-  const historyIndex = ref(-1);
+  const sceneHistory = ref(new Yallist<GetSceneResponseT>());
+  const currentHistoryNode = ref<Yallist.Node<GetSceneResponseT> | null>(sceneHistory.value.head);
   const futureScenes = ref<GetSceneResponseT[]>([]);
 
   type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
@@ -71,6 +72,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       content: scene.content,
     };
     knownScenes.value.set(scene.id, scene);
+    updateNextSceneSource({ type: 'single-scene', id: scene.id });
     moveHistoryToScene(scene.id);
   }
 
@@ -121,12 +123,12 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   }
 
   function moveBack(count=1) {
-    // We're at the beginning of the history - there's nowhere back to go
-    if (sceneHistory.value.length === 0 || historyIndex.value === 0) {
-      return;
+    const prevNode = currentHistoryNode.value?.prev;
+    const prev = prevNode?.value;
+    if (prevNode && prev) {
+      currentHistoryNode.value = prevNode;
+      desiredScene.value = prev;
     }
-    historyIndex.value = Math.max(0, historyIndex.value - count);;
-    desiredScene.value = sceneHistory.value[historyIndex.value];
   }
 
   async function moveForward(count=1) {
@@ -134,34 +136,29 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       return;
     }
     let scene: GetSceneResponseT | undefined = undefined;
-    
-    // The first argument to `Math.min` is to account for the setup case where sceneHistory is empty
-    const canMoveForwardInHistory = Math.min(sceneHistory.value.length, count, sceneHistory.value.length - 1 - historyIndex.value);
-
-    // The setup here is so that we only modify scene history and index once, at the end
-    let remaining = count - canMoveForwardInHistory;
-    let index = historyIndex.value + canMoveForwardInHistory;
     const scenesToAdd: GetSceneResponseT[] = [];
 
+    let remaining = count;
     while (remaining > 0) {
-      if (futureScenes.value.length === 0) {
-        await ensureForwardCoverage(remaining); // Should this be larger?
+      if (currentHistoryNode.value?.next) {
+        currentHistoryNode.value = currentHistoryNode.value.next;   
+      } else {
+        if (futureScenes.value.length === 0) {
+          await ensureForwardCoverage(remaining);  // Should this be larger?
+        }
+        scene = futureScenes.value.shift();
+        if (scene) {
+          scenesToAdd.push(scene);
+        }
       }
-      scene = futureScenes.value.shift();
-      if (scene) {
-        scenesToAdd.push(scene);
-        index += 1;
-      }
-      remaining -= 1;
+      remaining--;
     }
 
-    index = Math.max(0, index);
-    sceneHistory.value = sceneHistory.value.concat(scenesToAdd);
-    historyIndex.value = index;
+    sceneHistory.value.push(...scenesToAdd);
+
   }
 
   async function moveHistoryToScene(id: string) {
-    updateNextSceneSource({ type: 'single-scene', id });
     let scene = knownScenes.value.get(id);
     if (scene === undefined) {
       const { $backendCall } = useNuxtApp();
@@ -220,6 +217,12 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
   function useHandleTimeline(handle: string) {
     updateNextSceneSource({ type: 'handle', handle });
+  }
+
+  function useNearbyTimeline(baseID: string) {
+    updateNextSceneSource({ type: 'nearby', baseID });
+    moveHistoryToScene(baseID);
+    ensureForwardCoverage(8);
   }
 
   // Cross-component plumbing for the region-of-interest display
