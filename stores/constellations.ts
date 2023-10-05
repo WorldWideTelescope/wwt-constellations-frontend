@@ -124,14 +124,21 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
   function moveBack(count=1) {
     let remaining = count;
-    while (remaining > 0 && currentHistoryNode.value?.prev) {
-      const prevNode = currentHistoryNode.value?.prev;
-      const prev = prevNode?.value;
-      if (prevNode && prev) {
-        currentHistoryNode.value = prevNode;
-        desiredScene.value = prev;
-      }
-      remaining -= 1;
+    let node = currentHistoryNode.value;
+    if (node === null) {
+      return;
+    }
+    let prevNode: Yallist.Node<GetSceneResponseT> | null = null;
+    while (remaining > 0 && (prevNode = node.prev)) {
+      if (prevNode) {
+        node = prevNode;
+       }
+       remaining -= 1;
+     }
+    currentHistoryNode.value = node;
+    const scene = node.value;
+    if (scene) {
+      desiredScene.value = scene;
     }
   }
 

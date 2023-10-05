@@ -291,8 +291,22 @@ watch(currentHistoryNode, async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    // TODO: What should this be?
-    // scrollTo(historyIndex.value);
+    // Get the index of the current scene
+    // This is not ideal, but this watcher also shouldn't run very often
+    let index = 0;
+    let found = false;
+    let node = sceneHistory.value.head;
+    while (node !== null) {
+      const currentScene = currentHistoryNode.value;
+      if (currentScene && node.value.id === currentScene.value.id) {
+        found = true;
+        break;
+      }
+      index = 1;
+    }
+    if (found) {
+      scrollTo(index);
+    }
     recenter();
   }
 });
