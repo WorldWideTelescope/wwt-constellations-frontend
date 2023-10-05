@@ -564,6 +564,8 @@ watchEffect(() => {
 function onMouseClick(event: MouseEvent) {
     const scene = markerCollection.getSelectedScene();
 
+    console.log(scene);
+
     if (scene !== null) {
         emits("selected", scene);
         return;
