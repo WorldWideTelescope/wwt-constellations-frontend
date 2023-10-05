@@ -122,12 +122,16 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   }
 
-  function moveBack() {
-    const prevNode = currentHistoryNode.value?.prev;
-    const prev = prevNode?.value;
-    if (prevNode && prev) {
-      currentHistoryNode.value = prevNode;
-      desiredScene.value = prev;
+  function moveBack(count=1) {
+    let remaining = count;
+    while (remaining > 0 && currentHistoryNode.value?.prev) {
+      const prevNode = currentHistoryNode.value?.prev;
+      const prev = prevNode?.value;
+      if (prevNode && prev) {
+        currentHistoryNode.value = prevNode;
+        desiredScene.value = prev;
+      }
+      remaining -= 1;
     }
   }
 
@@ -174,6 +178,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
 
     sceneHistory.value.push(scene);
+    currentHistoryNode.value = sceneHistory.value.tail;
   }
 
   function previousScene(): GetSceneResponseT | null {
