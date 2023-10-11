@@ -134,7 +134,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
         node = prevNode;
        }
        remaining -= 1;
-     }
+    }
     currentHistoryNode.value = node;
     const scene = node.value;
     if (scene) {
@@ -146,14 +146,18 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     if (count <= 0) {
       return;
     }
+
+    // These two variables are just containers so that we don't need to update ref values more than once
     let scene: GetSceneResponseT | undefined = undefined;
+    let node: Yallist.Node<GetSceneResponseT> | undefined = undefined;
+
     const scenesToAdd: GetSceneResponseT[] = [];
 
     let remaining = count;
     while (remaining > 0) {
       const next = currentHistoryNode.value?.next;
       if (next) {
-        scene = next.value;
+        node = next;
       } else {
         if (futureScenes.value.length === 0) {
           await ensureForwardCoverage(remaining);  // Should this be larger?
@@ -169,6 +173,8 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     sceneHistory.value.push(...scenesToAdd);
     if (scene) {
       currentHistoryNode.value = sceneHistory.value.tail;
+    } else if (node) {
+      currentHistoryNode.value = node;
     }
 
   }
@@ -222,10 +228,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     
     nextSceneSource.value = source;
     sceneHistory.value.tail = currentHistoryNode.value;
-    const currentNode = currentHistoryNode.value;
-    if (currentNode) {
-      currentNode.prev = null;
-    }
     futureScenes.value = [];
     nextNeededPage = 0;
   }
