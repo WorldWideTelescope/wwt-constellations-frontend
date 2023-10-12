@@ -280,9 +280,18 @@ interface AssessMarkerHoversResult {
     anythingChanged: boolean;
 }
 
+const sceneFilterPass1 = (scene: SkymapSceneInfo) => !(scene.current || scene.adjacent);
+const sceneFilterPass2 = (scene: SkymapSceneInfo) => scene.adjacent;
+const sceneFilterPass3 = (scene: SkymapSceneInfo) => scene.current;
+const sceneFilterPasses = [sceneFilterPass1, sceneFilterPass2, sceneFilterPass3];
+
 class MarkerCollection {
     readonly markers: Map<string, Marker> = new Map();
     needsAnimation: boolean = false;
+
+    // TODO: If a scene is repeated in the list, only the later one will be drawn
+    // This is bad if the current scene is repeated later in the list as a "future" scene
+    // Need to trim out duplicates
 
     syncWithScenes(scenes: SkymapSceneInfo[]) {
         this.needsAnimation = false;
@@ -292,15 +301,20 @@ class MarkerCollection {
             marker.isBeingRemoved = true;
         }
 
-        for (var scene of scenes) {
-            let marker = this.markers.get(scene.id);
+        for (var filter of sceneFilterPasses) {
+            for (var scene of scenes) {
+                if (!filter(scene)) {
+                  continue;
+                }
+                let marker = this.markers.get(scene.id);
 
-            if (marker === undefined) {
-                marker = new Marker(scene);
-                this.markers.set(scene.id, marker);
+                if (marker === undefined) {
+                    marker = new Marker(scene);
+                    this.markers.set(scene.id, marker);
+                }
+
+                marker.sendToDesiredScene(scene);
             }
-
-            marker.sendToDesiredScene(scene);
         }
 
         for (var marker of this.markers.values()) {
@@ -328,14 +342,10 @@ class MarkerCollection {
         // "least important" to "most important", since stacked markers will
         // overwrite one another. This seems easier (and faster?) than trying to
         // sort the list.
-
-        const filterPass1 = (m: Marker) => !(m.scene.current || m.scene.adjacent);
-        const filterPass2 = (m: Marker) => m.scene.adjacent;
-        const filterPass3 = (m: Marker) => m.scene.current;
         
-        for (var filter of [filterPass1, filterPass2, filterPass3]) {
+        for (var filter of sceneFilterPasses) {
             for (const [id, marker] of this.markers.entries()) {
-                if (!filter(marker)) {
+                if (!filter(marker.scene)) {
                     continue;
                 }
 
