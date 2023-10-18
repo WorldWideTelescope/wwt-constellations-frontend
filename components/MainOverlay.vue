@@ -229,10 +229,10 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   if (index < 0) {
     // TODO: Should some of these calls live inside `useNearbyTimeline`?
     constellationsStore.useNearbyTimeline(sceneInfo.id);
-  } else if (relIndex < 0) {
+  } else if (relIndex > 0) {
     constellationsStore.moveForward(relIndex);
-  } else {
-    constellationsStore.moveBack(relIndex);
+  } else if (relIndex < 0) {
+    constellationsStore.moveBack(-relIndex);
   }
 }
 
