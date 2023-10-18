@@ -192,6 +192,13 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     sceneHistory.value.push(scene);
     currentHistoryNode.value = sceneHistory.value.tail;
+
+    if (scene !== undefined) {
+      const futureIndex = futureScenes.value.findIndex(s => s.id === scene?.id);
+      if (futureIndex >= 0) {
+        futureScenes.value.splice(futureIndex, 1);
+      }
+    }
   }
 
   function previousScene(): GetSceneResponseT | null {

@@ -225,14 +225,11 @@ onBeforeUnmount(() => {
 function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id); 
   const currentSceneIndex = skymapScenes.value.findIndex(scene => scene.id === currentHistoryNode.value?.value.id);
-  const relIndex = index - currentSceneIndex;
   if (index < 0) {
     // TODO: Should some of these calls live inside `useNearbyTimeline`?
     constellationsStore.useNearbyTimeline(sceneInfo.id);
-  } else if (relIndex > 0) {
-    constellationsStore.moveForward(relIndex);
-  } else if (relIndex < 0) {
-    constellationsStore.moveBack(-relIndex);
+  } else {
+    constellationsStore.moveHistoryToScene(sceneInfo.id);
   }
 }
 
