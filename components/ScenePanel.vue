@@ -29,23 +29,29 @@
     <n-grid-item>
       <n-space justify="space-between">
         <n-space justify="start">
-          <n-button class="action-button" :on-click="() => toggleLike()" :bordered="false" aria-label="Like button">
-            <n-icon size="30">
-              <StarRound v-if="scene.liked" />
-              <StarBorderRound v-else />
-            </n-icon>
-            <n-text class="action-button-label">
-              {{ scene.likes }}
-            </n-text>
-          </n-button>
-          <n-button class="action-button" :bordered="false" aria-label="Views">
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button class="action-button" @click="toggleLike" :bordered="false" aria-label="Like button">
+                <n-icon size="30">
+                  <StarRound v-if="scene.liked" />
+                  <StarBorderRound v-else />
+                </n-icon>
+                <n-text class="action-button-label">
+                  {{ scene.likes }}
+                </n-text>
+              </n-button>
+            </template>
+            Like
+          </n-tooltip>
+
+          <n-space :align='"center"' :size="0" class="buttonlike">
             <n-icon size="30">
               <RemoveRedEyeOutlined />
             </n-icon>
             <n-text class="action-button-label">
               {{ scene.impressions }}
             </n-text>
-          </n-button>
+          </n-space>
         </n-space>
 
         <n-space justify="end">
@@ -286,6 +292,15 @@ const permissionsText = computed(() => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.buttonlike {
+  line-height: 1;
+  margin: 1px;
+
+  div {
+    display: block;
+  }
 }
 
 .outgoing {

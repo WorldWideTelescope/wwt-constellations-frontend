@@ -1,9 +1,15 @@
 <template>
-    <n-button class="action-button" :bordered="false" @click="showModal = true">
-        <n-icon size="30">
-            <ShareOutlined />
-        </n-icon>
-    </n-button>
+    <n-tooltip trigger="hover">
+        <template #trigger>
+            <n-button class="action-button" :bordered="false" @click="showModal = true">
+                <n-icon size="30">
+                    <ShareOutlined />
+                </n-icon>
+            </n-button>
+        </template>
+        Share
+    </n-tooltip>
+
     <n-modal v-model:show="showModal">
         <n-card style="width: 600px" :title="modalTitle" :bordered="false" size="huge" role="dialog" aria-modal="true">
             <div class="share-network-list">
@@ -11,8 +17,7 @@
                     <ShareNetwork v-for="network in networks" :network="network.network" :key="network.network"
                         :url="sharing.url" :title="sharing.title" :description="sharing.description"
                         :hashtags="sharing.hashtags" :twitterUser="sharing.twitterUser" style="text-decoration: none;"
-                        @open="recordShare(network.network)"
-                      >
+                        @open="recordShare(network.network)">
                         <n-space :align="'center'" vertical>
                             <n-avatar :style="{ backgroundColor: network.color }" strong circle>
                                 <n-icon size="20">
@@ -52,7 +57,8 @@ import {
     NModal,
     NCard,
     NAvatar,
-    NSpace
+    NSpace,
+    NTooltip,
 } from "~/utils/fixnaive.mjs";
 
 const { $backendCall } = useNuxtApp();
@@ -69,13 +75,13 @@ const props = defineProps<{
 const showModal = ref(false);
 
 const sharing = computed(() => {
-  return {
-    url: props.url,
-    title: props.title,
-    description: props.description,
-    hashtags: 'WorldWideTelescope',
-    twitterUser: 'WWTelescope'
-  }
+    return {
+        url: props.url,
+        title: props.title,
+        description: props.description,
+        hashtags: 'WorldWideTelescope',
+        twitterUser: 'WWTelescope'
+    }
 });
 
 const modalTitle = computed(() => {
@@ -100,15 +106,15 @@ async function copyURL() {
 }
 
 function recordShare(type: string) {
-  const id = props.url.split("/").pop();
-  if (id) {
-    addShare($backendCall, id, type);
-  }
+    const id = props.url.split("/").pop();
+    if (id) {
+        addShare($backendCall, id, type);
+    }
 }
 
 function onCopy() {
-  copyURL();
-  recordShare("copy");
+    copyURL();
+    recordShare("copy");
 }
 </script>
 
