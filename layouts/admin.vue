@@ -7,6 +7,7 @@
 <style lang="less">
 #admin-root {
   color: #FFF;
+  pointer-events: all;
 }
 </style>
 
