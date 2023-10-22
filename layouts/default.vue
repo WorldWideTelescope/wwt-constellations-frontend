@@ -17,6 +17,8 @@
 
           <Breadcrumb />
 
+          <WhatsNew />
+
           <div style="flex: 1;"></div>
 
           <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
@@ -39,11 +41,14 @@
               aria-label="Drawer">
               <n-drawer-content header-style="justify-content:center">
                 <template #header>
-                  <n-space :align="'center'">
+                  <n-space :align="'center'" :size="'small'">
                     <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
                       alt="World Wide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
+                  <div style="margin-top: 3px; width: 100%; text-align: center; font-size: smaller">a <NuxtLink
+                      to="https://numfocus.org/" target="_blank">NumFOCUS
+                    </NuxtLink> project</div>
                 </template>
                 <n-button v-for="menuItem in menuItems" text tag="a" :href=menuItem.url target="_blank" class="menu-item">
                   {{ menuItem.name }}
@@ -104,12 +109,12 @@ const { $keycloak } = useNuxtApp();
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
 const menuItems: Array<MenuItem> = [
-  { name: "About WWT", url: "https://worldwidetelescope.org/about/" },
-  { name: "Acknowledgements", url: "https://worldwidetelescope.org/about/acknowledgments/" },
-  { name: "Privacy Policy", url: "#" },
-  { name: "Terms of Use", url: "https://worldwidetelescope.org/terms/" },
-  { name: "WWT Home", url: "https://worldwidetelescope.org/home/" },
+  { name: "About WWT", url: "https://worldwidetelescope.org/home/" },
   { name: "WWT Webclient", url: "https://worldwidetelescope.org/webclient/" },
+  { name: "Support WWT", url: "https://numfocus.org/donate-for-worldwide-telescope" },
+  { name: "Acknowledgments", url: "https://worldwidetelescope.org/about/acknowledgments/" },
+  { name: "Privacy Policy", url: "https://numfocus.org/privacy-policy" },
+  { name: "Terms of Use", url: "https://worldwidetelescope.org/terms/" },
 ]
 interface MenuItem {
   name: string,

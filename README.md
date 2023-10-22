@@ -75,6 +75,20 @@ values there, a simple `yarn dev` should get things going for you here.
 [1]: https://github.com/WorldWideTelescope/wwt-constellations-backend/#readme
 
 
+## Deployment
+
+Merges to the main branch are automatically deployed to a “staging slot” of the
+WWT web app. To bring the new code into production, you need to “swap” that slot
+into the production role. You can do this through the Azure Portal UI or using
+the `az` CLI tool as follows:
+
+```bash
+az webapp deployment slot swap -g wwtprod-cxbackend -n wwtprod-cxfe --slot stage --target-slot production
+```
+
+(Yes, the resource group name with `backend` is correct here.)
+
+
 ## Color Theme
 
 These are the colors associated with the Naive UI dark theme used by the app. If
