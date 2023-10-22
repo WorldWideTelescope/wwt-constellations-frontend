@@ -29,26 +29,45 @@
     <n-grid-item>
       <n-space justify="space-between">
         <n-space justify="start">
-          <n-button class="action-button" :on-click="() => toggleLike()" :bordered="false" aria-label="Like button">
-            <n-icon size="30">
-              <StarRound v-if="scene.liked" />
-              <StarBorderRound v-else />
-            </n-icon>
-            <n-text class="action-button-label">
-              {{ scene.likes }}
-            </n-text>
-          </n-button>
-          <n-button class="action-button" :bordered="false" aria-label="Views">
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button class="action-button" @click="toggleLike" :bordered="false" aria-label="Like button">
+                <n-icon size="30">
+                  <StarRound v-if="scene.liked" />
+                  <StarBorderRound v-else />
+                </n-icon>
+                <n-text class="action-button-label">
+                  {{ scene.likes }}
+                </n-text>
+              </n-button>
+            </template>
+            Like
+          </n-tooltip>
+
+          <n-space :align='"center"' :size="0" class="buttonlike">
             <n-icon size="30">
               <RemoveRedEyeOutlined />
             </n-icon>
             <n-text class="action-button-label">
               {{ scene.impressions }}
             </n-text>
-          </n-button>
+          </n-space>
         </n-space>
 
         <n-space justify="end">
+          <NuxtLink :to="webclientUrl" target="webclient">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button class="action-button" :bordered="false" aria-label="Webclient button">
+                  <n-icon size="30">
+                    <SendTimeExtensionRound />
+                  </n-icon>
+                </n-button>
+              </template>
+              Analyze in the WWT webclient
+            </n-tooltip>
+          </NuxtLink>
+
           <ShareButton title="WorldWide Telescope" :url="externalItemUrl" :description="scene.text"
             :handle="scene.handle.handle" />
 
@@ -78,11 +97,13 @@ import {
   NSpace,
   NIcon,
   NText,
+  NTooltip,
 } from "~/utils/fixnaive.mjs";
 
 import {
   ModeEditOutlined,
   RemoveRedEyeOutlined,
+  SendTimeExtensionRound,
   StarBorderRound,
   StarRound,
 } from "@vicons/material";
@@ -148,6 +169,15 @@ const outgoingLinkText = computed(() => {
 });
 
 const outgoingLink = ref<HTMLAnchorElement | null>(null);
+
+const webclientUrl = computed(() => {
+  if (!scene.value) {
+    return "";
+  }
+
+  const wtml = `${nuxtConfig.public.apiUrl}/scene/${scene.value.id}/place.wtml`;
+  return "https://worldwidetelescope.org/webclient/?wtml=" + encodeURIComponent(wtml);
+});
 
 function onOutgoingClick() {
   if (outgoingLink.value !== null) {
@@ -262,6 +292,15 @@ const permissionsText = computed(() => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.buttonlike {
+  line-height: 1;
+  margin: 1px;
+
+  div {
+    display: block;
+  }
 }
 
 .outgoing {
