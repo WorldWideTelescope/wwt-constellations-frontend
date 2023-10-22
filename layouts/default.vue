@@ -17,6 +17,8 @@
 
           <Breadcrumb />
 
+          <WhatsNew />
+
           <div style="flex: 1;"></div>
 
           <n-button v-show="screenfull.isEnabled" @click="toggleFullscreen()" quaternary class="fullscreen-button">
