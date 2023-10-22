@@ -49,6 +49,19 @@
         </n-space>
 
         <n-space justify="end">
+          <NuxtLink :to="webclientUrl" target="webclient">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button class="action-button" :bordered="false" aria-label="Webclient button">
+                  <n-icon size="30">
+                    <SendTimeExtensionRound />
+                  </n-icon>
+                </n-button>
+              </template>
+              Analyze in the WWT webclient
+            </n-tooltip>
+          </NuxtLink>
+
           <ShareButton title="WorldWide Telescope" :url="externalItemUrl" :description="scene.text"
             :handle="scene.handle.handle" />
 
@@ -78,11 +91,13 @@ import {
   NSpace,
   NIcon,
   NText,
+  NTooltip,
 } from "~/utils/fixnaive.mjs";
 
 import {
   ModeEditOutlined,
   RemoveRedEyeOutlined,
+  SendTimeExtensionRound,
   StarBorderRound,
   StarRound,
 } from "@vicons/material";
@@ -148,6 +163,15 @@ const outgoingLinkText = computed(() => {
 });
 
 const outgoingLink = ref<HTMLAnchorElement | null>(null);
+
+const webclientUrl = computed(() => {
+  if (!scene.value) {
+    return "";
+  }
+
+  const wtml = `${nuxtConfig.public.apiUrl}/scene/${scene.value.id}/place.wtml`;
+  return "https://worldwidetelescope.org/webclient/?wtml=" + encodeURIComponent(wtml);
+});
 
 function onOutgoingClick() {
   if (outgoingLink.value !== null) {
