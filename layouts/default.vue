@@ -111,6 +111,7 @@ const placement = ref<DrawerPlacement>('left')
 const menuItems: Array<MenuItem> = [
   { name: "About WWT", url: "https://worldwidetelescope.org/home/" },
   { name: "WWT Webclient", url: "https://worldwidetelescope.org/webclient/" },
+  { name: "WWT Swag!", url: "https://numfocus.myspreadshop.com/worldwide+telescope+logo?idea=65144eaf404a6d6dbf0f8dc2" },
   { name: "Support WWT", url: "https://numfocus.org/donate-for-worldwide-telescope" },
   { name: "Acknowledgments", url: "https://worldwidetelescope.org/about/acknowledgments/" },
   { name: "Privacy Policy", url: "https://numfocus.org/privacy-policy" },
