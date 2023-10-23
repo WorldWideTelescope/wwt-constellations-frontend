@@ -39,8 +39,8 @@
             </n-button>
         </n-button-group>
         <n-button-group>
-            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" v-show="isTimelineMode"
-                :disabled="!hasNext">
+            <n-button id="next-button" @click="clickNext" aria-label="Go next button" v-show="isTimelineMode"
+                :disabled="!hasNext" :class="{ 'clickme': nextNotYetClicked }">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
                         <NavigateNextRound />
@@ -83,6 +83,7 @@ const {
 const isTimelineMode = computed(() => timelineIndex.value >= 0);
 const hasNext = computed<boolean>(() => (timelineIndex.value >= 0 && timelineIndex.value < (knownScenes.value.size - 1)));
 const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
+const nextNotYetClicked = ref(true);
 
 withDefaults(defineProps<{
     isExploreMode?: boolean,
@@ -92,12 +93,18 @@ withDefaults(defineProps<{
     isCenterButtonEnabled: false
 });
 
-defineEmits<{
+const emit = defineEmits<{
     (event: 'goNext'): void
     (event: 'goPrev'): void
     (event: 'setExploreMode', setting: boolean): void,
     (event: 'centerScene'): void
 }>();
+
+
+function clickNext() {
+    nextNotYetClicked.value = false;
+    emit("goNext");
+}
 </script>
 
 <style type="less">
@@ -127,5 +134,27 @@ defineEmits<{
 .smooth-enter,
 .smooth-leave-to>* {
     opacity: 0;
+}
+
+#next-button.clickme .n-button__state-border {
+    animation: pulse 1.6s alternate infinite;
+}
+
+@keyframes pulse {
+    0% {
+        border: var(--n-border);
+    }
+
+    10% {
+        border: var(--n-border);
+    }
+
+    85% {
+        border: var(--n-border-hover);
+    }
+
+    100% {
+        border: var(--n-border-hover);
+    }
 }
 </style>
