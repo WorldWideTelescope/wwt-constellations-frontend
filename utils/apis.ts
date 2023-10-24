@@ -77,6 +77,29 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
 }
 
 
+// Endpoint: POST /misc/update-timeline
+
+//export interface MiscConfigDatabaseRequest { }
+
+export const MiscUpdateTimelineResponse = t.type({});
+
+export type MiscUpdateTimelineResponseT = t.TypeOf<typeof MiscUpdateTimelineResponse>;
+
+export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Promise<MiscUpdateTimelineResponseT> {
+  return fetcher("/misc/update-timeline", { query: { "initial_id": initialId }, method: 'POST' }).then((data) => {
+    checkForError(data);
+
+    const maybe = MiscUpdateTimelineResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /misc/update-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  });
+}
+
+
 // Endpoint: GET /handle/:handle
 
 export const GetHandleResponse = t.type({
