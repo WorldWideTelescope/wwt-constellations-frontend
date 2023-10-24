@@ -136,11 +136,15 @@ function clickNext() {
     opacity: 0;
 }
 
-#next-button.clickme .n-button__state-border {
-    animation: pulse 1.6s alternate infinite;
+#next-button.clickme {
+    animation: pulse-bg 1.6s alternate infinite;
+
+    .n-button__state-border {
+        animation: pulse-bo=rder 1.6s alternate infinite;
+    }
 }
 
-@keyframes pulse {
+@keyframes pulse-border {
     0% {
         border: var(--n-border);
     }
@@ -155,6 +159,24 @@ function clickNext() {
 
     100% {
         border: var(--n-border-hover);
+    }
+}
+
+@keyframes pulse-bg {
+    0% {
+        background-color: #000;
+    }
+
+    10% {
+        background-color: #000;
+    }
+
+    85% {
+        background-color: rgba(99, 226, 183, 0.5);
+    }
+
+    100% {
+        background-color: rgba(99, 226, 183, 0.5);
     }
 }
 </style>

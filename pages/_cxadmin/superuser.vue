@@ -25,6 +25,12 @@
       <p>Account ID: <input type="text" id="add-handle-owner-account" name="add-handle-owner-account"
           v-model="addHandleOwnerAccount" /></p>
       <p><button @click="onAddHandleOwner">Do it</button> Result: {{ addHandleOwnerResult }}</p>
+
+      <h3>Regenerate Global Timeline</h3>
+
+      <p>Lead Scene ID: <input type="text" id="regen-timeline-scene" name="regen-timeline-scene"
+          v-model="regenTimelineScene" /></p>
+      <p><button @click="onRegenTimeline">Do it</button> Result: {{ regenTimelineResult }}</p>
     </div>
   </div>
 </template>
@@ -111,6 +117,23 @@ async function onAddHandleOwner() {
     addHandleOwnerResult.value = `error: ${err}`;
   }
 }
+
+// Regenerate global timeline
+
+const regenTimelineScene = ref("");
+const regenTimelineResult = ref("N/A");
+
+async function onRegenTimeline() {
+  try {
+    const fetcher = await $backendAuthCall();
+    regenTimelineResult.value = "sending ...";
+    await miscUpdateTimeline(fetcher, regenTimelineScene.value);
+    regenTimelineResult.value = "OK";
+  } catch (err) {
+    regenTimelineResult.value = `error: ${err}`;
+  }
+}
+
 </script>
 
 <style scoped lang="less"></style>
