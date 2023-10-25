@@ -796,15 +796,15 @@ watchEffect(() => {
 }
 
 @keyframes arrow-color-cycle {
-  8%, 25% {
+  16.7%, 50% {
     color: rgb(191, 243, 226);
   }
 
-  17% {
+  33% {
     color: #7fe7c4;
   }
 
-  33%, 100% {
+  66%, 100% {
     color: white;
   }
 }
