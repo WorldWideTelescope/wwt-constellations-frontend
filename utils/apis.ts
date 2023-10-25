@@ -211,13 +211,18 @@ export async function handleImageInfo(
 
 // Endpoint: GET /handle/:handle/sceneinfo?page=$int&pagesize=$int
 
-export const HandleSceneInfo = t.type({
-  _id: t.string,
-  creation_date: t.string,
-  impressions: t.number,
-  likes: t.number,
-  text: t.string,
-});
+export const HandleSceneInfo = t.intersection([
+  t.type({
+    _id: t.string,
+    creation_date: t.string,
+    impressions: t.number,
+    likes: t.number,
+    text: t.string,
+  }), t.partial({
+    clicks: t.number,
+    shares: t.number,
+  })
+]);
 
 export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
 
@@ -259,6 +264,8 @@ export const HandleSceneStats = t.type({
   count: t.number,
   impressions: t.number,
   likes: t.number,
+  clicks: t.number,
+  shares: t.number,
 });
 
 export const HandleStatsResponse = t.type({
@@ -489,6 +496,8 @@ export const GetSceneResponse = t.type({
   creation_date: t.string,
   likes: t.number,
   impressions: t.number,
+  clicks: t.number,
+  shares: t.number,
   place: PlaceDetails,
   content: SceneContentHydrated,
   text: t.string,
