@@ -77,6 +77,7 @@ export interface WWTCameraSetup {
  * interest in the un-blocked part of the viewport.
  */
 export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportShape): WWTCameraSetup {
+  const rollRad = place.roll_rad ?? 0;
   const effective_width = Math.max(viewport_shape.width - viewport_shape.left_blockage, 1);
   const effective_height = Math.max(viewport_shape.height - viewport_shape.bottom_blockage, 1);
 
@@ -98,27 +99,33 @@ export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportS
   const ZOOM_PAD_FACTOR = 1.2;
   const zoomDeg = Math.max(v_height_deg, h_height_deg) * 6 * ZOOM_PAD_FACTOR;
 
-  // If the bottom of the viewport is blocked, tell the WWT camera to move down
-  // such that the ROI will appear to be centered in the unobscured region.
+  // Now adjust the pointing center based on potential blockages to the
+  // viewport. We need to compute an RA/dec offset vector, then potentially
+  // rotate it based on the final camera roll angle. All of these calculations
+  // are done naively with regard to spherical coordinates.
+
   const deg_per_px = zoomDeg / (6 * viewport_shape.height);
-  let decRad = place.dec_rad - 0.5 * D2R * viewport_shape.bottom_blockage * deg_per_px;
-  decRad = Math.max(decRad, -0.5 * Math.PI);
+  const delta_ra_0 = 0.5 * D2R * viewport_shape.left_blockage * deg_per_px;
+  const delta_dec_0 = -0.5 * D2R * viewport_shape.bottom_blockage * deg_per_px;
+  const cos_roll = Math.cos(rollRad);
+  const sin_roll = Math.sin(rollRad);
+  const delta_ra = cos_roll * delta_ra_0 + sin_roll * delta_dec_0;
+  const delta_dec = -sin_roll * delta_ra_0 + cos_roll * delta_dec_0;
 
-  // Likewise if the left side of the viewport is blocked. We have a cos(dec)
-  // term here since an offset in RA/longitude near the poles isn't "really" as
-  // big as it is in the vertical direction, due to the longitude lines
-  // converging.
-  let raRad = place.ra_rad + 0.5 * D2R * viewport_shape.left_blockage * deg_per_px / Math.cos(decRad);
+  // Apply the offset, clamping due to aforementioned naivete. To be honest I
+  // don't feel like I understand the transformations well, but empirically, it
+  // seems that this is the correct stage in the process to apply the cos(dec)
+  // term.
 
+  const decRad = Math.min(Math.max(place.dec_rad + delta_dec, -0.5 * Math.PI), 0.5 * Math.PI);
+  let raRad = place.ra_rad + delta_ra / Math.cos(decRad);
   const TWO_PI = 2 * Math.PI;
 
   while (raRad >= TWO_PI) {
     raRad -= TWO_PI;
   }
 
-  // The rest is easy.
-
-  const rollRad = place.roll_rad ?? 0;
+  // All done!
 
   return { raRad, decRad, rollRad, zoomDeg };
 }
