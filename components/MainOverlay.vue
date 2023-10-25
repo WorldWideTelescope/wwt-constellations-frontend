@@ -9,8 +9,23 @@
         @click="() => constellationsStore.setupForSingleScene(neighbor)"
         :style="neighborArrowStyle(neighbor)"
       >
-        <n-icon size="30">
-          <DoubleArrowRound />
+        <n-icon size="30" color="white">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080" height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
+            <g transform="matrix(1 0 0 1 540 540)" id="5e37fbc9-afa3-4ee7-9700-3bde04719136"  >
+            </g>
+            <g transform="matrix(1 0 0 1 540 540)" id="3b68765a-11c4-4d1d-a495-a1bdf884d74f"  >
+            <rect style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1; visibility: hidden;" vector-effect="non-scaling-stroke"  x="-540" y="-540" rx="0" ry="0" width="1080" height="1080" />
+            </g>
+            <g transform="matrix(45 0 0 45 842.74 540)"  >
+            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-16.5, -12)" d="M 20.08 11.42 L 16.04 5.77 C 15.7 5.289999999999999 15.149999999999999 5 14.559999999999999 5 C 13.069999999999999 5 12.209999999999999 6.68 13.069999999999999 7.890000000000001 L 16 12 L 13.07 16.11 C 12.200000000000001 17.32 13.07 19 14.56 19 C 15.15 19 15.71 18.71 16.05 18.23 L 20.09 12.58 C 20.33 12.23 20.33 11.77 20.08 11.42 z" stroke-linecap="round" />
+            </g>
+            <g transform="matrix(45 0 0 45 527.74 540)"  >
+            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-9.5, -12)" d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z" stroke-linecap="round" />
+            </g>
+            <g transform="matrix(45 0 0 45 216.65 540)"  >
+            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-9.5, -12)" d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z" stroke-linecap="round" />
+            </g>
+            </svg>
         </n-icon>
       </n-button>
     </ClientOnly>
@@ -780,10 +795,45 @@ watchEffect(() => {
   pointer-events: all;
 }
 
+@keyframes arrow-color-cycle {
+  8%, 25% {
+    color: rgb(191, 243, 226);
+  }
+
+  17% {
+    color: #7fe7c4;
+  }
+
+  33%, 100% {
+    color: white;
+  }
+}
+
 .neighbor-arrow {
   position: fixed;
   pointer-events: auto;
   padding: 0px;
   z-index: -1000;
+
+  &:hover svg {
+    g {
+      animation: arrow-color-cycle;
+      animation-duration: 0.45s;
+      animation-iteration-count: infinite;
+    }
+
+    g:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    g:nth-child(4) {
+      animation-delay: 0.15s;
+    }
+
+    g:nth-child(5) {
+      animation-delay: 0s;
+    }
+  }
+
 }
 </style>
