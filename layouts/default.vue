@@ -13,7 +13,7 @@
 
           <n-divider vertical style="height: 24px;" />
 
-          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
+          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="WorldWide Telescope logo" />
 
           <Breadcrumb />
 
@@ -43,7 +43,7 @@
                 <template #header>
                   <n-space :align="'center'" :size="'small'">
                     <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
-                      alt="World Wide Telescope logo" />
+                      alt="WorldWide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
                   <div style="margin-top: 3px; width: 100%; text-align: center; font-size: smaller">a <NuxtLink
