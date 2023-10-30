@@ -54,6 +54,25 @@
                   {{ menuItem.name }}
                 </n-button>
                 <template #footer>
+                  <n-text style="font-size: smaller">WWT has been supported by
+                    <a href="https://numfocus.org" target="_blank">NumFOCUS</a>,
+                    the <a href="https://cfa.harvard.edu" target="_blank">Center
+                      for Astrophysics | Harvard &amp; Smithsonian</a>, the <a href="https://aas.org"
+                      target="_blank">American Astronomical
+                      Society</a> (AAS), the
+                    <a href="https://dotnetfoundation.org" target="_blank">.NET
+                      Foundation</a>, and other sponsors. See <a
+                      href="https://worldwidetelescope.org/about/acknowledgments/" target="_blank">the Acknowledgements
+                      page</a> for more
+                    information. This material is based upon work supported by
+                    the National Science Foundation under Grant Nos. <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1550701" target="_blank">1550701</a>, <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1642446" target="_blank">1642446</a>, and <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2004840" target="_blank">2004840</a>. Any
+                    opinions, findings, and
+                    conclusions or recommendations expressed in this material
+                    are those of the author(s) and do not necessarily reflect
+                    the views of the National Science Foundation.</n-text>
                   <n-button @click="logInOut">
                     {{ loggedIn ? 'Log out' : 'Log in' }}
                   </n-button>
@@ -97,6 +116,7 @@ import {
   NLayoutHeader,
   NNotificationProvider,
   NSpace,
+  NText,
 } from "~/utils/fixnaive.mjs";
 
 import { useConstellationsStore } from "~/stores/constellations";
