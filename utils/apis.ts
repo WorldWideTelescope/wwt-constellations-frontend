@@ -100,6 +100,28 @@ export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Pr
 }
 
 
+
+// Endpoint: POST /misc/update-global-tessellation
+
+export const MiscUpdateGlobalTessellationResponse = t.type({});
+
+export type MiscUpdateGlobalTessellationResponseT = t.TypeOf<typeof MiscUpdateGlobalTessellationResponse>;
+
+export async function miscUpdateGlobalTessellation(fetcher: $Fetch): Promise<MiscUpdateGlobalTessellationResponseT> {
+  return fetcher("/misc/update-global-tessellation", { method: "POST" }).then((data) => {
+    checkForError(data);
+
+    const maybe = MiscUpdateGlobalTessellationResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /misc/update-global-tessellation: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  });
+}
+
+
 // Endpoint: GET /handle/:handle
 
 export const GetHandleResponse = t.type({
