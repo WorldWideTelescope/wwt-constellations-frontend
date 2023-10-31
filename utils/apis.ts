@@ -693,7 +693,7 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
   });
 }
 
-// Endpoint: GET /tessellations/cell
+// Endpoint: GET /tessellations/:name/cell
 
 export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
   const data = await fetcher(`tessellations/${tessellationName}/cell`, { query: { ra: raRad, dec: decRad } });
@@ -701,7 +701,7 @@ export async function getTessellationCell(fetcher: $Fetch, tessellationName: str
   const maybe = TessellationCell.decode(data);
 
   if (isLeft(maybe)) {
-    throw new Error(`GET /tessellation/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+    throw new Error(`GET /tessellations/:name/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
   }
 
   return maybe.right;

@@ -1,7 +1,7 @@
 <template>
     <n-space justify="space-between" class="button-bar">
         <n-button-group>
-            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button"
+            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" v-show="nextSceneSource.type !== 'single-scene'"
                 :disabled="!hasPrev">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="prev-button">
@@ -38,7 +38,7 @@
             </n-button>
         </n-button-group>
         <n-button-group>
-            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button"
+            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" v-show="nextSceneSource.type !== 'single-scene'"
                 :disabled="!hasNext">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
@@ -78,6 +78,7 @@ const {
     sceneHistory,
     currentHistoryNode,
     futureScenes,
+    nextSceneSource,
 } = storeToRefs(constellationsStore);
 
 const hasPrev = computed<boolean>(() => !!currentHistoryNode.value?.prev);

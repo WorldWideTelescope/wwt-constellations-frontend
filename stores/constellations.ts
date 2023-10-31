@@ -59,11 +59,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   let nextSceneSource = ref<NextSceneSourceType>({ type: 'global' });
 
 
-  // Set up state for a single scene. NOTE: before calling this function, you
-  // must have already set timelineSource to null and let a render clock tick
-  // elapse! This is because the watcher for changes to `timelineSource` below
-  // will reset knownScenes. This is all quite gnarly and gross and should be
-  // rationalized.
+  // Set up state for a single scene
   function setupForSingleScene(scene: GetSceneResponseT) {
     describedScene.value = scene;
     desiredScene.value = {
@@ -97,10 +93,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
       // If, during one of our asynchronous attempts, the app has
       // changed its navigation mode, return.
-      // Note that we need to check the entire `nextSceneSource` object
-      // and not just the `type` member. For example, if we switch handles, the
-      // `type` will be unchanged.
-      if (navigationMode !== nextSceneSource) {
+      if (needToChangeSceneSource(navigationMode.value)) {
         return;
       }
 
@@ -111,7 +104,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       const page = nextNeededPage;
       const result = await getNextScenes($backendCall, page);
 
-      if (nextNeededPage === page) {
+      if (nextNeededPage === page && needToChangeSceneSource(navigationMode.value)) {
         for (const scene of result.results) {
           knownScenes.value.set(scene.id, scene);
           futureScenes.value.push(scene);

@@ -67,7 +67,7 @@ watchEffect(() => {
 });
 
 onMounted(() => {
-  constellationsStore.useNearbyTimeline();
+  constellationsStore.useHandleTimeline();
 
   // This is all to handle the case when `data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our

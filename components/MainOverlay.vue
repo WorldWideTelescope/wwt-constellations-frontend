@@ -191,7 +191,6 @@ onMounted(() => {
   nextTick(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
       constellationsStore.moveForward();
-      console.log(constellationsStore);
     });
   });
 
@@ -224,9 +223,7 @@ onBeforeUnmount(() => {
 
 function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id); 
-  const currentSceneIndex = skymapScenes.value.findIndex(scene => scene.id === currentHistoryNode.value?.value.id);
   if (index < 0) {
-    // TODO: Should some of these calls live inside `useNearbyTimeline`?
     constellationsStore.useNearbyTimeline(sceneInfo.id);
   } else {
     constellationsStore.moveHistoryToScene(sceneInfo.id);
@@ -278,7 +275,7 @@ watch(currentHistoryNode, async () => {
       desiredScene.value = {
         id: describedScene.value.id,
         place: describedScene.value.place,
-        content: describedScene.value.content
+        content: describedScene.value.content,
       };
     }
 
@@ -299,7 +296,8 @@ watch(fullPageContainerRef, () => {
         found = true;
         break;
       }
-      index = 1;
+      node = node.next;
+      index += 1;
     }
     if (found) {
       scrollTo(index);
