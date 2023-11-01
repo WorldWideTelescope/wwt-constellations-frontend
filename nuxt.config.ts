@@ -71,7 +71,13 @@ export default defineNuxtConfig({
         {
           id: 'ga',
           name: 'Google Analytics',
-          src: 'https://www.googletagmanager.com/gtag/js?id=' + (process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG || ""),
+          // In production, `src` (and everything else in this file!) is frozen
+          // at build time, so it can't depend on a runtime environment variable
+          // as we would like. So, `plugins/vue-gtag.client.ts` updates this
+          // field based on the public `googleAnalyticsTag` setting defined
+          // above, which in turn can be configured at runtime with
+          // $NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG.
+          src: 'https://www.googletagmanager.com/gtag/js?id=defaulted',
           targetCookieIds: ['cookie_control_consent', 'cookie_control_enabled_cookies']
         },
       ],
