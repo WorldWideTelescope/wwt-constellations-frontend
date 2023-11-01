@@ -104,7 +104,7 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       const page = nextNeededPage;
       const result = await getNextScenes($backendCall, page);
 
-      if (nextNeededPage === page && needToChangeSceneSource(navigationMode.value)) {
+      if (nextNeededPage === page && !needToChangeSceneSource(navigationMode.value)) {
         for (const scene of result.results) {
           knownScenes.value.set(scene.id, scene);
           futureScenes.value.push(scene);
