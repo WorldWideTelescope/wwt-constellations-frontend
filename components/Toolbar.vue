@@ -1,8 +1,8 @@
 <template>
     <n-space justify="space-between" class="button-bar">
         <n-button-group>
-            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" v-show="nextSceneSource.type !== 'single-scene'"
-                :disabled="!hasPrev">
+            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button"
+                v-show="nextSceneSource.type !== 'single-scene'" :disabled="!hasPrev">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="prev-button">
                         <NavigateBeforeRound />
@@ -38,8 +38,9 @@
             </n-button>
         </n-button-group>
         <n-button-group>
-            <n-button id="next-button" @click="$emit('goNext')" aria-label="Go next button" v-show="nextSceneSource.type !== 'single-scene'"
-                :disabled="!hasNext">
+            <n-button id="next-button" @click="clickNext" aria-label="Go next button"
+                v-show="nextSceneSource.type !== 'single-scene'" :disabled="!hasNext"
+                :class="{ 'clickme': nextNotYetClicked }">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
                         <NavigateNextRound />
@@ -83,7 +84,8 @@ const {
 
 const hasPrev = computed<boolean>(() => !!currentHistoryNode.value?.prev);
 const hasNext = computed<boolean>(() => futureScenes.value.length > 0 ||
-                                        (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next));
+    (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next));
+const nextNotYetClicked = ref(true);
 
 withDefaults(defineProps<{
     isExploreMode?: boolean,
@@ -93,12 +95,18 @@ withDefaults(defineProps<{
     isCenterButtonEnabled: false
 });
 
-defineEmits<{
+const emit = defineEmits<{
     (event: 'goNext'): void
     (event: 'goPrev'): void
     (event: 'setExploreMode', setting: boolean): void,
     (event: 'centerScene'): void
 }>();
+
+
+function clickNext() {
+    nextNotYetClicked.value = false;
+    emit("goNext");
+}
 </script>
 
 <style type="less">
@@ -128,5 +136,49 @@ defineEmits<{
 .smooth-enter,
 .smooth-leave-to>* {
     opacity: 0;
+}
+
+#next-button.clickme {
+    animation: pulse-bg 1.6s alternate infinite;
+
+    .n-button__state-border {
+        animation: pulse-bo=rder 1.6s alternate infinite;
+    }
+}
+
+@keyframes pulse-border {
+    0% {
+        border: var(--n-border);
+    }
+
+    10% {
+        border: var(--n-border);
+    }
+
+    85% {
+        border: var(--n-border-hover);
+    }
+
+    100% {
+        border: var(--n-border-hover);
+    }
+}
+
+@keyframes pulse-bg {
+    0% {
+        background-color: #000;
+    }
+
+    10% {
+        background-color: #000;
+    }
+
+    85% {
+        background-color: rgba(99, 226, 183, 0.5);
+    }
+
+    100% {
+        background-color: rgba(99, 226, 183, 0.5);
+    }
 }
 </style>

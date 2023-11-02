@@ -40,6 +40,7 @@ import {
   NTabs,
   NTabPane,
   NText,
+  NTooltip,
   useNotification,
 } from "../node_modules/naive-ui";
 
@@ -78,5 +79,6 @@ export {
   NTabs,
   NTabPane,
   NText,
+  NTooltip,
   useNotification,
 };

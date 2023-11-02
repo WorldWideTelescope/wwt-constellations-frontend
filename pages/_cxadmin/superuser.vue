@@ -11,12 +11,14 @@
 
       <p><button @click="onConfigDatabase">Do it</button> Result: {{ configDatabaseResult }}</p>
 
+
       <h3>Create Handle</h3>
 
       <p>Name: <input type="text" id="create-handle-name" name="create-handle-name" v-model="createHandleName" /></p>
       <p>Display name: <input type="text" id="create-handle-display" name="create-handle-display"
           v-model="createHandleDisplay" /></p>
       <p><button @click="onCreateHandle">Do it</button> Result: {{ createHandleResult }}</p>
+
 
       <h3>Add Handle Owner</h3>
 
@@ -25,6 +27,18 @@
       <p>Account ID: <input type="text" id="add-handle-owner-account" name="add-handle-owner-account"
           v-model="addHandleOwnerAccount" /></p>
       <p><button @click="onAddHandleOwner">Do it</button> Result: {{ addHandleOwnerResult }}</p>
+
+
+      <h3>Regenerate Global Timeline</h3>
+
+      <p>Lead Scene ID: <input type="text" id="regen-timeline-scene" name="regen-timeline-scene"
+          v-model="regenTimelineScene" /></p>
+      <p><button @click="onRegenTimeline">Do it</button> Result: {{ regenTimelineResult }}</p>
+
+
+      <h3>Regenerate Global Tessellation</h3>
+
+      <p><button @click="onRegenTessellation">Do it</button> Result: {{ regenTessellationResult }}</p>
     </div>
   </div>
 </template>
@@ -42,6 +56,12 @@ const { $backendAuthCall } = useNuxtApp();
 definePageMeta({
   layout: 'admin'
 });
+
+// In case you are getting excited about security weaknesses, note that all of
+// the backend APIs used here have independent security checks. The
+// "amISuperuser" test is only something superficial to determine whether to
+// display the UI and give the admin an indicator as to whether they're properly
+// logged in.
 
 const isSuperuser = ref(false);
 const superuserStatus = ref("unknown");
@@ -111,6 +131,38 @@ async function onAddHandleOwner() {
     addHandleOwnerResult.value = `error: ${err}`;
   }
 }
+
+// Regenerate global timeline
+
+const regenTimelineScene = ref("");
+const regenTimelineResult = ref("N/A");
+
+async function onRegenTimeline() {
+  try {
+    const fetcher = await $backendAuthCall();
+    regenTimelineResult.value = "sending ...";
+    await miscUpdateTimeline(fetcher, regenTimelineScene.value);
+    regenTimelineResult.value = "OK";
+  } catch (err) {
+    regenTimelineResult.value = `error: ${err}`;
+  }
+}
+
+// Regenerate global tessellation
+
+const regenTessellationResult = ref("N/A");
+
+async function onRegenTessellation() {
+  try {
+    const fetcher = await $backendAuthCall();
+    regenTessellationResult.value = "sending ...";
+    await miscUpdateGlobalTessellation(fetcher);
+    regenTessellationResult.value = "OK";
+  } catch (err) {
+    regenTessellationResult.value = `error: ${err}`;
+  }
+}
+
 </script>
 
 <style scoped lang="less"></style>

@@ -13,9 +13,11 @@
 
           <n-divider vertical style="height: 24px;" />
 
-          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
+          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="WorldWide Telescope logo" />
 
           <Breadcrumb />
+
+          <WhatsNew />
 
           <div style="flex: 1;"></div>
 
@@ -39,16 +41,38 @@
               aria-label="Drawer">
               <n-drawer-content header-style="justify-content:center">
                 <template #header>
-                  <n-space :align="'center'">
+                  <n-space :align="'center'" :size="'small'">
                     <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
-                      alt="World Wide Telescope logo" />
+                      alt="WorldWide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
+                  <div style="margin-top: 3px; width: 100%; text-align: center; font-size: smaller">a <NuxtLink
+                      to="https://numfocus.org/" target="_blank">NumFOCUS
+                    </NuxtLink> project</div>
                 </template>
                 <n-button v-for="menuItem in menuItems" text tag="a" :href=menuItem.url target="_blank" class="menu-item">
                   {{ menuItem.name }}
                 </n-button>
                 <template #footer>
+                  <n-text style="font-size: smaller">WWT has been supported by
+                    <a href="https://numfocus.org" target="_blank">NumFOCUS</a>,
+                    the <a href="https://cfa.harvard.edu" target="_blank">Center
+                      for Astrophysics | Harvard &amp; Smithsonian</a>, the <a href="https://aas.org"
+                      target="_blank">American Astronomical
+                      Society</a> (AAS), the
+                    <a href="https://dotnetfoundation.org" target="_blank">.NET
+                      Foundation</a>, and other sponsors. See <a
+                      href="https://worldwidetelescope.org/about/acknowledgments/" target="_blank">the Acknowledgements
+                      page</a> for more
+                    information. This material is based upon work supported by
+                    the National Science Foundation under Grant Nos. <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1550701" target="_blank">1550701</a>, <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1642446" target="_blank">1642446</a>, and <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2004840" target="_blank">2004840</a>. Any
+                    opinions, findings, and
+                    conclusions or recommendations expressed in this material
+                    are those of the author(s) and do not necessarily reflect
+                    the views of the National Science Foundation.</n-text>
                   <n-button @click="logInOut">
                     {{ loggedIn ? 'Log out' : 'Log in' }}
                   </n-button>
@@ -92,6 +116,7 @@ import {
   NLayoutHeader,
   NNotificationProvider,
   NSpace,
+  NText,
 } from "~/utils/fixnaive.mjs";
 
 import { useConstellationsStore } from "~/stores/constellations";
@@ -104,12 +129,13 @@ const { $keycloak } = useNuxtApp();
 const drawer = ref(false)
 const placement = ref<DrawerPlacement>('left')
 const menuItems: Array<MenuItem> = [
-  { name: "About WWT", url: "https://worldwidetelescope.org/about/" },
-  { name: "Acknowledgements", url: "https://worldwidetelescope.org/about/acknowledgments/" },
-  { name: "Privacy Policy", url: "#" },
-  { name: "Terms of Use", url: "https://worldwidetelescope.org/terms/" },
-  { name: "WWT Home", url: "https://worldwidetelescope.org/home/" },
+  { name: "About WWT", url: "https://worldwidetelescope.org/home/" },
   { name: "WWT Webclient", url: "https://worldwidetelescope.org/webclient/" },
+  { name: "WWT Swag!", url: "https://numfocus.myspreadshop.com/worldwide+telescope+logo?idea=65144eaf404a6d6dbf0f8dc2" },
+  { name: "Support WWT", url: "https://numfocus.org/donate-for-worldwide-telescope" },
+  { name: "Acknowledgments", url: "https://worldwidetelescope.org/about/acknowledgments/" },
+  { name: "Privacy Policy", url: "https://numfocus.org/privacy-policy" },
+  { name: "Terms of Use", url: "https://worldwidetelescope.org/terms/" },
 ]
 interface MenuItem {
   name: string,

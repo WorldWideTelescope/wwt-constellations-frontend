@@ -12,20 +12,28 @@
     </h1>
 
     <n-row>
-      <n-col :span="6">
+      <n-col :span="4">
         <n-statistic label="Images" :value="stats.images.count">
         </n-statistic>
       </n-col>
-      <n-col :span="6">
+      <n-col :span="4">
         <n-statistic label="Scenes" :value="stats.scenes.count">
         </n-statistic>
       </n-col>
-      <n-col :span="6">
+      <n-col :span="4">
         <n-statistic label="Impressions" :value="stats.scenes.impressions">
         </n-statistic>
       </n-col>
-      <n-col :span="6">
+      <n-col :span="4">
         <n-statistic label="Likes" :value="stats.scenes.likes">
+        </n-statistic>
+      </n-col>
+      <n-col :span="4">
+        <n-statistic label="Clicks" :value="stats.scenes.clicks">
+        </n-statistic>
+      </n-col>
+      <n-col :span="4">
+        <n-statistic label="Shares" :value="stats.scenes.shares">
         </n-statistic>
       </n-col>
     </n-row>
@@ -156,12 +164,12 @@ async function onUpdateDisplayName() {
   display_name_loading.value = false;
 }
 
-// Stats
+// Overall stats
 
 const stats = ref<HandleStatsResponseT>({
   handle: "",
   images: { count: 0 },
-  scenes: { count: 0, impressions: 0, likes: 0 },
+  scenes: { count: 0, impressions: 0, likes: 0, clicks: 0, shares: 0 },
 });
 
 onMounted(async () => {
@@ -179,17 +187,27 @@ const sceneColumns = [
     key: "_id",
     render: (row: HandleSceneInfoT) => {
       return h(resolveComponent("NuxtLink"), { to: `/@${handle}/${row._id}` }, () =>
-        [h(NEllipsis, { style: "max-width: 30em" }, () => [row.text])]
+        [h(NEllipsis, { style: "max-width: 24em" }, () => [row.text])]
       );
     }
   },
   {
-    title: "Impressions",
+    title: "Impr's",
     key: "impressions",
   },
   {
     title: "Likes",
     key: "likes",
+  },
+  {
+    title: "Clicks",
+    key: "clicks",
+    render: (row: HandleSceneInfoT) => row.clicks || 0,
+  },
+  {
+    title: "Shares",
+    key: "shares",
+    render: (row: HandleSceneInfoT) => row.shares || 0,
   },
 ];
 
