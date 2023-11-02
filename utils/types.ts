@@ -2,6 +2,8 @@
 
 import * as t from "io-ts";
 
+import { Color } from "@wwtelescope/engine";
+
 export const PlaceDetails = t.type({
   ra_rad: t.number,
   dec_rad: t.number,
@@ -122,10 +124,25 @@ export const ScenePreviews = t.partial({
 export type ScenePreviewsT = t.TypeOf<typeof ScenePreviews>;
 
 export interface SkymapSceneInfo {
-  itemIndex: number;
+  id: string;
   place: PlaceDetailsT;
   content: SceneContentHydratedT;
+  color: Color;
+  linewidth: number;
+  current: boolean;
+  adjacent: boolean;
 }
+
+export const TessellationCell = t.type({
+  neighbors: t.array(t.string),
+  location: t.type({
+    ra: t.number,
+    dec: t.number
+  }),
+  scene_id: t.string
+});
+
+export type TessellationCellT = t.TypeOf<typeof TessellationCell>;
 
 // Older types, potentially to be removed:
 

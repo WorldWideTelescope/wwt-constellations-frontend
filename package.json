@@ -23,7 +23,8 @@
     "vue-gtag": "^2.0.1",
     "vue-slider-component": "^4.1.0-beta.7",
     "vue-social-sharing": "next",
-    "vue3-popper": "^1.5.0"
+    "vue3-popper": "^1.5.0",
+    "yallist": "^4.0.0"
   },
   "devDependencies": {
     "@css-render/vue3-ssr": "^0.15.12",
@@ -33,6 +34,7 @@
     "@types/escape-html": "^1",
     "@types/uuid": "^9.0.1",
     "@types/xml": "^1.0.8",
+    "@types/yallist": "^4.0.2",
     "@vicons/material": "^0.12.0",
     "axe-core": "^4.7.1",
     "css-loader": "^6",

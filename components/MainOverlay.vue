@@ -6,8 +6,10 @@
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
-        <n-grid-item v-if="timelineSource !== null">
-          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+        <n-grid-item>
+          <n-collapse-transition appear :show="nextSceneSource.type !== 'single-scene'">
+            <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+          </n-collapse-transition>
         </n-grid-item>
         <n-grid-item>
           <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
@@ -61,6 +63,7 @@
 <script setup lang="ts">
 import {
   NButton,
+  NCollapseTransition,
   NGrid,
   NGridItem,
   NIcon,
@@ -78,7 +81,9 @@ import {
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
-import { SkymapSceneInfo } from "~/utils/types";
+import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+
+import { Color } from "@wwtelescope/engine";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -97,23 +102,51 @@ const {
   describedScene,
   desiredScene,
   isMobile,
-  knownScenes,
-  timeline,
-  timelineIndex,
-  timelineSource,
+  sceneHistory,
+  currentHistoryNode,
+  futureScenes,
   viewportBottomBlockage,
   viewportLeftBlockage,
-  isMovingToScene
+  isMovingToScene,
+  nextSceneSource
 } = storeToRefs(constellationsStore);
 
-// The list of scenes shown in the skymap; just a subset of the timeline.
-const skymapScenes = computed<SkymapSceneInfo[]>(() => {
-  const i0 = Math.max(timelineIndex.value - 5, 0);
-  const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
+// The list of scenes shown in the skymap
 
-  return timeline.value.slice(i0, i1).map((id, relIndex) => {
-    const scene = knownScenes.value.get(id)!;
-    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
+const ADJACENT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
+const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
+const skymapScenes = computed<SkymapSceneInfo[]>(() => {
+
+  let scenes = [];
+  let currentIndex = 0;
+  const previousScene = constellationsStore.previousScene();
+  if (previousScene) {
+    scenes.push(previousScene);
+    currentIndex += 1;
+  }
+  const fromHistory: GetSceneResponseT[] = [];
+  let sceneNode = currentHistoryNode.value;
+  let needed = 5;
+  while (sceneNode && needed > 0) {
+    fromHistory.push(sceneNode.value);
+    sceneNode = sceneNode.next;
+    needed -= 1;
+  }
+  scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, needed));
+  return scenes.map((s, relIndex) => {
+    const currentScene = relIndex === currentIndex;
+    const adjacent = Math.abs(relIndex - currentIndex) === 1;
+    const color = currentScene ? CURRENT_SCENE_COLOR : (adjacent ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR);
+    return {
+      id: s.id,
+      content: s.content,
+      place: s.place,
+      color,
+      linewidth: currentScene ? 2 : 1,
+      current: currentScene,
+      adjacent: adjacent,
+    };
   });
 });
 
@@ -131,28 +164,14 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   // Maybe this is silly, but pull values out of all of the refs that we use
   // up-front, so that this value is recomputed the same way regardless of which
   // mode we're in.
-  const tlsource = timelineSource.value;
-  const tlindex = timelineIndex.value;
-  const desc = describedScene.value;
-  const tldata = timeline.value;
-  const known = knownScenes.value;
+  const history = sceneHistory.value.toArray();
+  const future = futureScenes.value;
+  const currentScene = currentHistoryNode.value?.value;
 
-  if (tlsource === null || tlindex < 0) {
-    if (desc === null) {
-      return [];
-    }
-
-    return [{
-      currentlyShown: true,
-      ...desc,
-    }];
-  } else {
-    return tldata.map((id, itemIndex) => {
-      const scene = known.get(id)!;
-      const currentlyShown = itemIndex == tlindex;
-      return { currentlyShown, itemIndex, ...scene };
-    });
-  }
+  return history.concat(future).map((scene, itemIndex) => {
+    const currentlyShown = (scene === currentScene);
+    return { currentlyShown, itemIndex, ...scene };
+  });
 });
 
 const showSwipeAnimation = ref(false);
@@ -169,14 +188,14 @@ const {
 } = storeToRefs(engineStore);
 
 onMounted(() => {
-  if (timelineSource.value !== null) {
-    nextTick(() => {
-      constellationsStore.ensureTimelineCoverage(8);
+  nextTick(() => {
+    constellationsStore.ensureForwardCoverage(8).then(() => {
+      constellationsStore.moveForward();
     });
-  }
+  });
 
   swipeAnimationTimer.value = setInterval(() => {
-    showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
+    showSwipeAnimation.value = currentHistoryNode.value !== null && !showSwipeAnimation.value;
   }, 10000);
 
   engineStore.$subscribe(() => {
@@ -202,15 +221,20 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
-function onItemSelected(index: number) {
-  constellationsStore.setTimelineIndex(index);
+function onItemSelected(sceneInfo: SceneDisplayInfoT) {
+  const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id); 
+  if (index < 0) {
+    constellationsStore.useNearbyTimeline(sceneInfo.id);
+  } else {
+    constellationsStore.moveHistoryToScene(sceneInfo.id);
+  }
 }
 
 function onScroll(event: UIEvent) {
   const target = event.target as HTMLDivElement;
   if (target) {
-    const index = Math.round(target.scrollTop / (target.offsetHeight));
-    onItemSelected(index);
+    const n = Math.round(target.scrollTop / (target.offsetHeight));
+    constellationsStore.moveForward(n);
   }
 }
 
@@ -236,30 +260,17 @@ async function recenter() {
 }
 
 function goNext() {
-  const idx = timelineIndex.value;
-
-  if (idx >= 0 && idx < (knownScenes.value.size - 1)) {
-    const n = idx + 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveForward();
 }
 
 function goPrev() {
-  const idx = timelineIndex.value;
-
-  if (idx > 0) {
-    const n = idx - 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveBack();
 }
 
-watchEffect(async () => {
-  if (timelineIndex.value >= 0) {
-    const id = timeline.value[timelineIndex.value];
-    describedScene.value = knownScenes.value.get(id)!;
-
+watch(currentHistoryNode, async () => {
+  const currentScene = currentHistoryNode.value?.value;
+  if (currentScene) {
+    describedScene.value = currentScene;
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
@@ -268,13 +279,29 @@ watchEffect(async () => {
       };
     }
 
-    await constellationsStore.ensureTimelineCoverage(8);
+    await constellationsStore.ensureForwardCoverage(8);
   }
 });
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    scrollTo(timelineIndex.value);
+    // Get the index of the current scene
+    // This is not ideal, but this watcher also shouldn't run very often
+    let index = 0;
+    let found = false;
+    let node = sceneHistory.value.head;
+    while (node !== null) {
+      const currentScene = currentHistoryNode.value;
+      if (currentScene && node.value.id === currentScene.value.id) {
+        found = true;
+        break;
+      }
+      node = node.next;
+      index += 1;
+    }
+    if (found) {
+      scrollTo(index);
+    }
     recenter();
   }
 });

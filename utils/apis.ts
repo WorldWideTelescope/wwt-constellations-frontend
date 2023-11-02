@@ -14,6 +14,8 @@ import {
   SceneContentHydrated,
   SceneCreationInfoT,
   ScenePreviews,
+  TessellationCell,
+  TessellationCellT,
 } from "./types";
 
 function checkForError(item: any) {
@@ -630,7 +632,6 @@ export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateR
   });
 }
 
-
 // Endpoint: GET /handle/:handle/timeline?page=$number
 
 export const TimelineResponse = t.type({
@@ -667,6 +668,18 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
   }
 
   return maybe.right;
+}
+
+export async function getNearbyTimeline(fetcher: $Fetch, sceneID: string): Promise<TimelineResponseT> {
+  const data = await fetcher(`/scene/${sceneID}/nearby-global`, { query: { size: 30 } });
+  checkForError(data);
+  const maybe = TimelineResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /tessellations/nearby-feed: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+    
+    return maybe.right;
 }
 
 export const SceneInteractionResponse = t.type({
@@ -732,4 +745,18 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
   return fetcher(`/session/init`, { method: 'POST', credentials: 'include' }).then((data) => {
     checkForError(data);
   });
+}
+
+// Endpoint: GET /tessellations/:name/cell
+
+export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
+  const data = await fetcher(`tessellations/${tessellationName}/cell`, { query: { ra: raRad, dec: decRad } });
+  checkForError(data);
+  const maybe = TessellationCell.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /tessellations/:name/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
 }

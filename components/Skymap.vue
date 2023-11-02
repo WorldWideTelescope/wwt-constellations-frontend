@@ -6,8 +6,8 @@
                 since the scenes are the actually selectable items of relevance here.
                 -->
             <ul>
-                <li v-for="co in scenes" :on-click="() => $emit('selected', co.itemIndex)" aria-label="Celestial object">
-                    {{ co.itemIndex }}
+                <li v-for="co in scenes" :on-click="() => $emit('selected', co)" aria-label="Celestial object">
+                    {{ co.id }}
                 </li>
             </ul>
         </canvas>
@@ -24,12 +24,13 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
+import { Color, URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 
-import { SceneContentHydratedT, SkymapSceneInfo } from "~/utils/types";
+import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
-import { useConstellationsStore } from "~/stores/constellations";
+
+const { $backendCall } = useNuxtApp();
 
 const props = defineProps<{
     scenes: SkymapSceneInfo[]
@@ -38,7 +39,7 @@ const props = defineProps<{
 const { scenes } = toRefs(props);
 
 const emits = defineEmits<{
-    (event: 'selected', index: number): void
+    (event: 'selected', scene: SceneDisplayInfoT): void
 }>();
 
 const defaultObjectRadius = 4;
@@ -46,7 +47,6 @@ const hoveredObjectRadius = 8;
 const zoomMaxSize = 50;
 const zoomMinSize = 10;
 
-const { timelineIndex } = storeToRefs(useConstellationsStore());
 const { raRad: engineRaRad, decRad: engineDecRad, zoomDeg: engineZoomDeg } = storeToRefs(getEngineStore());
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -55,6 +55,7 @@ const detailsPosY = ref(0);
 const backgroundImage = ref<HTMLImageElement | null>(null);
 const isHoveringObject = ref(false);
 const celestialObjectThumbnail = ref("");
+const clickedMarkerID = ref<string | null>(null);
 
 // A helper class for tweening colors. I don't see an built-in type that
 // obviously does what we want here??
@@ -134,6 +135,19 @@ class SkymapContext {
 
         return { x, y };
     }
+
+    canvasToSky(x: number, y: number): { raDeg: number, decDeg: number } {
+      const raCenter = 0;
+      const raScale = this.width / 360;
+      const raOffset = this.width / 2;
+      const raDeg = (x - raOffset) / raScale + raCenter;
+
+      const decCenter = 0;
+      const decScale = -this.height / 180;
+      const decDeg = decCenter + ((y - this.height / 2) / decScale);
+
+      return { raDeg, decDeg };
+    }
 }
 
 // Markers -- points that show up on the map.
@@ -145,17 +159,11 @@ class SkymapContext {
 // when rendering the canvas.
 
 const ANIMATION_DURATION_MS = 5000; // milliseconds
-const GENERAL_SCENE_COLOR = new Rgba(0.44, 0.44, 0.48, 1.0); // #6f6f7a
-const NEXT_SCENE_COLOR = new Rgba(0.12, 0.75, 0.54, 1.0); // #1fbf89
-const CURRENT_SCENE_COLOR = new Rgba(0.14, 0.91, 0.65, 1.0); // #25e8a6
 
 class Marker {
-    // The scene that this marker corresponds to, identified by its index in the
-    // timeline.
-    readonly timelineIndex: number;
     readonly raDeg: number;
     readonly decDeg: number;
-    readonly content: SceneContentHydratedT;
+    readonly scene: SkymapSceneInfo;
 
     isHovered: boolean = false;
     isBeingRemoved: boolean = false;
@@ -172,10 +180,9 @@ class Marker {
     targetColor: Rgba;
 
     constructor(scene: SkymapSceneInfo) {
-        this.timelineIndex = scene.itemIndex;
         this.raDeg = scene.place.ra_rad * R2D;
         this.decDeg = scene.place.dec_rad * R2D;
-        this.content = scene.content;
+        this.scene = scene;
 
         this.currentColor = Rgba.newBlack();
         this.currentLineWidth = 1;
@@ -195,19 +202,9 @@ class Marker {
         context.ctx.stroke();
     }
 
-    sendToDesiredScene(curTimelineIndex: number) {
-        const d = this.timelineIndex - curTimelineIndex;
-
-        if (d == 0) {
-            this.targetColor.setTo(CURRENT_SCENE_COLOR);
-            this.targetLineWidth = 2;
-        } else if (d == 1) {
-            this.targetColor.setTo(NEXT_SCENE_COLOR);
-            this.targetLineWidth = 1;
-        } else {
-            this.targetColor.setTo(GENERAL_SCENE_COLOR);
-            this.targetLineWidth = 1;
-        }
+    sendToDesiredScene(scene: SkymapSceneInfo) {
+        this.targetColor.setTo(new Rgba(scene.color.r / 255, scene.color.g / 255, scene.color.b / 255, scene.color.a / 255));
+        this.targetLineWidth = scene.linewidth;
 
         this.needsAnimation = true;
         this.isBeingRemoved = false;
@@ -283,11 +280,20 @@ interface AssessMarkerHoversResult {
     anythingChanged: boolean;
 }
 
+const sceneFilterPass1 = (scene: SkymapSceneInfo) => !(scene.current || scene.adjacent);
+const sceneFilterPass2 = (scene: SkymapSceneInfo) => scene.adjacent;
+const sceneFilterPass3 = (scene: SkymapSceneInfo) => scene.current;
+const sceneFilterPasses = [sceneFilterPass1, sceneFilterPass2, sceneFilterPass3];
+
 class MarkerCollection {
-    readonly markers: Map<number, Marker> = new Map();
+    readonly markers: Map<string, Marker> = new Map();
     needsAnimation: boolean = false;
 
-    syncWithScenes(scenes: SkymapSceneInfo[], curTimelineIndex: number) {
+    // TODO: If a scene is repeated in the list, only the later one will be drawn
+    // This is bad if the current scene is repeated later in the list as a "future" scene
+    // Need to trim out duplicates
+
+    syncWithScenes(scenes: SkymapSceneInfo[]) {
         this.needsAnimation = false;
 
         // Any marker that we don't catch below should go away
@@ -295,15 +301,20 @@ class MarkerCollection {
             marker.isBeingRemoved = true;
         }
 
-        for (var scene of scenes) {
-            let marker = this.markers.get(scene.itemIndex);
+        for (var filter of sceneFilterPasses) {
+            for (var scene of scenes) {
+                if (!filter(scene)) {
+                  continue;
+                }
+                let marker = this.markers.get(scene.id);
 
-            if (marker === undefined) {
-                marker = new Marker(scene);
-                this.markers.set(scene.itemIndex, marker);
+                if (marker === undefined) {
+                    marker = new Marker(scene);
+                    this.markers.set(scene.id, marker);
+                }
+
+                marker.sendToDesiredScene(scene);
             }
-
-            marker.sendToDesiredScene(curTimelineIndex);
         }
 
         for (var marker of this.markers.values()) {
@@ -331,15 +342,10 @@ class MarkerCollection {
         // "least important" to "most important", since stacked markers will
         // overwrite one another. This seems easier (and faster?) than trying to
         // sort the list.
-
-        const tlidx = timelineIndex.value;
-        const filterPass1 = (m: Marker) => (m.timelineIndex < tlidx) || (m.timelineIndex > tlidx + 1);
-        const filterPass2 = (m: Marker) => (m.timelineIndex == tlidx + 1);
-        const filterPass3 = (m: Marker) => (m.timelineIndex == tlidx);
-
-        for (var filter of [filterPass1, filterPass2, filterPass3]) {
-            for (var marker of this.markers.values()) {
-                if (!filter(marker)) {
+        
+        for (var filter of sceneFilterPasses) {
+            for (const [id, marker] of this.markers.entries()) {
+                if (!filter(marker.scene)) {
                     continue;
                 }
 
@@ -349,7 +355,7 @@ class MarkerCollection {
                 // If this marker is on its way towards removal, and it has gotten
                 // there, we can get rid of it.
                 if (!marker.needsAnimation && marker.isBeingRemoved) {
-                    markersToRemove.push(marker.timelineIndex);
+                    markersToRemove.push(id);
                 }
             }
         }
@@ -359,10 +365,10 @@ class MarkerCollection {
         }
     }
 
-    getSelectedIndex(): number | null {
+    getSelectedScene(): SkymapSceneInfo | null {
         for (var marker of this.markers.values()) {
             if (marker.isHovered) {
-                return marker.timelineIndex;
+                return marker.scene;
             }
         }
 
@@ -523,9 +529,10 @@ class SkymapRenderer {
 
             let t = "";
 
-            if (selected.content.image_layers && selected.content.image_layers.length > 0) {
+            const content = selected.scene.content;
+            if (content && content.image_layers && content.image_layers.length > 0) {
                 t = URLHelpers.singleton.rewrite(
-                    selected.content.image_layers[0].image.wwt.thumbnail_url,
+                    content.image_layers[0].image.wwt.thumbnail_url,
                     URLRewriteMode.AsIfAbsolute
                 );
             }
@@ -558,17 +565,49 @@ watch(engineDecRad, renderer.queueRender);
 watch(engineZoomDeg, renderer.queueRender);
 
 watchEffect(() => {
-    markerCollection.syncWithScenes(scenes.value, timelineIndex.value);
+    markerCollection.syncWithScenes(scenes.value);
     renderer.queueRender();
 });
 
 // Mousing over the canvas for previews -- breaking encapsulation a bit here
 
-function onMouseClick(_event: MouseEvent) {
-    const index = markerCollection.getSelectedIndex();
+function onMouseClick(event: MouseEvent) {
+    const scene = markerCollection.getSelectedScene();
 
-    if (index !== null) {
-        emits("selected", index);
+    if (scene !== null) {
+        emits("selected", scene);
+        return;
+    }
+
+    const canvas = canvasRef.value;
+    if (canvas !== null) {
+      const ctx = canvas.getContext('2d');
+      if (ctx === null) {
+        return;
+      }
+      const context = new SkymapContext(canvas.width, canvas.height, ctx);
+      const { raDeg, decDeg } = context.canvasToSky(event.offsetX, event.offsetY);
+
+      const raRad = raDeg * D2R;
+      const decRad = decDeg * D2R;
+      getTessellationCell($backendCall, "global", raRad, decRad).then(async (cell) => {
+        const scene = await getScene($backendCall, cell.scene_id);
+        if (scene === null) {
+          return;
+        }
+        const color = Color.fromArgb(255, 196, 180, 84);
+        const marker = new Marker({ ...scene, color, linewidth: 1, current: false, adjacent: false } );
+        if (clickedMarkerID.value !== null) {
+          const oldMarker = markerCollection.markers.get(clickedMarkerID.value);
+          oldMarker?.sendToDestruction();
+        }
+        markerCollection.markers.set(scene.id, marker);
+        clickedMarkerID.value = scene.id;
+        const rgba = new Rgba(color.r, color.g, color.b, color.a);
+        marker.currentColor = rgba;
+        marker.targetColor = rgba;
+        renderer.queueRender();
+      });
     }
 }
 

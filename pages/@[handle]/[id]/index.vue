@@ -46,7 +46,6 @@ const constellationsStore = useConstellationsStore();
 const {
   describedScene,
   desiredScene,
-  timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
@@ -109,7 +108,7 @@ watchEffect(() => {
 });
 
 onMounted(() => {
-  timelineSource.value = null;
+  constellationsStore.useHandleTimeline(handle);
 
   // This is all to handle the case when `data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our

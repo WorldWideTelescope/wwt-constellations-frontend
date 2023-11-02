@@ -3,13 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { nextTick } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
-const { timelineSource } = storeToRefs(constellationsStore);
 
 useHead({
   title: "WorldWide Telescope",
@@ -45,10 +43,10 @@ useServerSeoMeta({
 });
 
 onMounted(() => {
-  timelineSource.value = "";
+  constellationsStore.useGlobalTimeline();
 
   nextTick(async () => {
-    await constellationsStore.ensureTimelineCoverage(8);
+    await constellationsStore.ensureForwardCoverage(8);
   });
 });
 </script>

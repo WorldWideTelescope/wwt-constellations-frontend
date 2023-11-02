@@ -1,8 +1,9 @@
 import { $Fetch } from "ofetch";
 import { defineStore } from "pinia";
 import { useBreakpoints } from "@vueuse/core";
+import Yallist from "yallist";
 
-import { getHomeTimeline, getHandleTimeline, GetSceneResponseT } from "~/utils/apis";
+import { getHomeTimeline, getHandleTimeline, GetSceneResponseT, TimelineResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT } from "~/utils/types";
 
 export const useConstellationsStore = defineStore("wwt-constellations", () => {
@@ -42,38 +43,24 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // slewing towards it, etc.
   const desiredScene = ref<SceneDisplayInfoT | null>(null);
 
-  // The ordered list of scene IDs that constitutes our current "timeline". This
-  // list is completed from the start of the timeline to as far as it goes; we
-  // may be able to extend it by fetching more scenes. If we are not currently
-  // navigating a timeline, the list is empty. All of these scene IDs must have
-  // corresponding records in the `knownScenes` map.
-  const timeline = ref<string[]>([]);
+  // The history of visited scenes
+  const sceneHistory = ref(new Yallist<GetSceneResponseT>());
+  const currentHistoryNode = ref<Yallist.Node<GetSceneResponseT> | null>(sceneHistory.value.head);
+  const futureScenes = ref<GetSceneResponseT[]>([]);
 
-  // The index of the currently viewed scene within the `timeline` array.
-  // Someone should make sure that this selection, `describedScene`, and
-  // `desiredScene` stay in some reasonable level of synchronization, but they
-  // can in principle vary. This should be -1 if nothing is selected or we're
-  // not in a timeline mode (i.e., `timeline` is empty).
-  const timelineIndex = ref(-1);
+  type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
 
-  // The source of further items for the timeline, if we need them. There are
-  // three broad possibilities. If this is null, we're not in a timeline mode,
-  // and there's nothing to fetch. If this is the empty string, we're exploring
-  // the "home" timeline. Otherwise, the value of this field is the name of a
-  // handle, and we're exploring that handle's timeline.
-  const timelineSource = ref<string | null>("");
+  let getNextScenes: ScenesGetter | null = getHomeTimeline;
+  let nextNeededPage = 0;
+  type NextSceneSourceType = { type: 'global' } |
+                             { type: 'single-scene', id: string } |
+                             { type: 'handle'; handle: string } |
+                             { type: 'nearby', baseID: string };
+  let nextSceneSource = ref<NextSceneSourceType>({ type: 'global' });
 
-  var getTimeline: typeof getHomeTimeline | null = getHomeTimeline;
-  var timelineSequence = 0;
-  var nextNeededTimelinePage = 0;
 
-  // Set up state for a single scene. NOTE: before calling this function, you
-  // must have already set timelineSource to null and let a render clock tick
-  // elapse! This is because the watcher for changes to `timelineSource` below
-  // will reset knownScenes. This is all quite gnarly and gross and should be
-  // rationalized.
+  // Set up state for a single scene
   function setupForSingleScene(scene: GetSceneResponseT) {
-    timelineIndex.value = -1;
     describedScene.value = scene;
     desiredScene.value = {
       id: scene.id,
@@ -81,99 +68,183 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       content: scene.content,
     };
     knownScenes.value.set(scene.id, scene);
+    updateNextSceneSource({ type: 'single-scene', id: scene.id });
+    moveHistoryToScene(scene.id);
   }
 
-  // Ensure that the timeline data structure extends at least `n` items past the
-  // current index. If the timeline was initially empty, this will set the
-  // current index to the first position. If something fails badly in the
-  // backend, it is possible that this function will give up without actually
-  // achieving its goal.
-  async function ensureTimelineCoverage(n: number) {
-    // If we're not in a timeline mode, the most appropriate thing to do is
-    // nothing.
-    if (getTimeline === null) {
+  // Ensure that the future scenes data structure contains at least `n` items.
+  // If something fails badly in the backend, it is possible that this function
+  // will give up without actually achieving its goal.
+  async function ensureForwardCoverage(n: number) {
+    if (getNextScenes === null) {
       return;
     }
-
-    const init_index = (timelineIndex.value < 0);
-    const target_length = init_index ? n : timelineIndex.value + n;
-    const our_sequence = timelineSequence;
-    const MAX_ATTEMPTS = 5;
 
     // Note that we are currently using $backendCall, not $backendAuthCall,
     // because none of the feeds are personalized. To get personalized feeds
     // we'll need to change that. (And we might also need to fix things up so
     // that we can make authenticated calls in the server-side rendering phase.)
+    const MAX_ATTEMPTS = 5;
+    const targetLength = n;
+    const navigationMode = nextSceneSource;
     const { $backendCall } = useNuxtApp();
 
-    for (var attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+
       // If, during one of our asynchronous attempts, the app has
-      // moved on to caring about a different timeline altogether,
-      // go home.
-      if (timelineSequence != our_sequence) {
+      // changed its navigation mode, return.
+      if (needToChangeSceneSource(navigationMode.value)) {
         return;
       }
 
-      // If we're in the same sequence but we've gotten enough items, we're
-      // done.
-      if (timeline.value.length >= target_length) {
+      if (futureScenes.value.length >= targetLength) {
         break;
       }
 
-      // Try to get the next page that we think is needed.
-      const our_page = nextNeededTimelinePage;
-      const result = await getTimeline($backendCall, our_page);
+      const page = nextNeededPage;
+      const result = await getNextScenes($backendCall, page);
 
-      // Due to the "await", some unknowable amount of time has passed since we
-      // put in the API request, and someone else may already have filled in the
-      // timeline or switched us to a new timeline. Only edit the global
-      // structure if it appears that our results are still wanted and needed.
-
-      if (timelineSequence == our_sequence && nextNeededTimelinePage == our_page) {
-        for (var scene of result.results) {
+      if (nextNeededPage === page && !needToChangeSceneSource(navigationMode.value)) {
+        for (const scene of result.results) {
           knownScenes.value.set(scene.id, scene);
-          timeline.value.push(scene.id);
+          futureScenes.value.push(scene);
         }
-
-        nextNeededTimelinePage += 1;
       }
-    }
 
-    if (init_index) {
-      timelineIndex.value = 0;
+      nextNeededPage += 1;
     }
   }
 
-  async function setTimelineIndex(n: number) {
-    timelineIndex.value = n;
-    await ensureTimelineCoverage(n + 5);
+  function moveBack(count=1) {
+    let remaining = count;
+    let node = currentHistoryNode.value;
+    if (node === null) {
+      return;
+    }
+    let prevNode: Yallist.Node<GetSceneResponseT> | null = null;
+    while (remaining > 0 && (prevNode = node.prev)) {
+      if (prevNode) {
+        node = prevNode;
+       }
+       remaining -= 1;
+    }
+    currentHistoryNode.value = node;
+    const scene = node.value;
+    if (scene) {
+      desiredScene.value = scene;
+    }
   }
 
-  watch(timelineSource, async (newSource, oldSource) => {
-    if (newSource == null) {
-      getTimeline = null;
-      nextNeededTimelinePage = 0;
-      timelineSequence += 1;
-      timeline.value = [];
-      timelineIndex.value = -1;
-      knownScenes.value = new Map();
+  async function moveForward(count=1) {
+    if (count <= 0) {
+      return;
+    }
 
-      if (describedScene.value !== null) {
-        knownScenes.value.set(describedScene.value.id, describedScene.value);
-      }
-    } else if (newSource != oldSource) {
-      if (newSource == "") {
-        getTimeline = getHomeTimeline;
+    // These two variables are just containers so that we don't need to update ref values more than once
+    let scene: GetSceneResponseT | undefined = undefined;
+    let node: Yallist.Node<GetSceneResponseT> | undefined = undefined;
+
+    const scenesToAdd: GetSceneResponseT[] = [];
+
+    let remaining = count;
+    while (remaining > 0) {
+      const next = currentHistoryNode.value?.next;
+      if (next) {
+        node = next;
       } else {
-        getTimeline = (fetcher: $Fetch, page: number) => getHandleTimeline(fetcher, newSource, page);
+        if (futureScenes.value.length === 0) {
+          await ensureForwardCoverage(remaining);  // Should this be larger?
+        }
+        scene = futureScenes.value.shift();
+        if (scene) {
+          scenesToAdd.push(scene);
+        }
       }
-
-      nextNeededTimelinePage = 0;
-      timelineSequence += 1;
-      timeline.value = [];
-      timelineIndex.value = -1;
+      remaining--;
     }
-  });
+
+    sceneHistory.value.push(...scenesToAdd);
+    if (scene) {
+      currentHistoryNode.value = sceneHistory.value.tail;
+    } else if (node) {
+      currentHistoryNode.value = node;
+    }
+
+  }
+
+  async function moveHistoryToScene(id: string) {
+    let scene = knownScenes.value.get(id);
+    if (scene === undefined) {
+      const { $backendCall } = useNuxtApp();
+      const fetchedScene = await getScene($backendCall, id);
+      if (fetchedScene === null) {
+        return;
+      }
+      scene = fetchedScene;
+    }
+
+    sceneHistory.value.push(scene);
+    currentHistoryNode.value = sceneHistory.value.tail;
+
+    if (scene !== undefined) {
+      const futureIndex = futureScenes.value.findIndex(s => s.id === scene?.id);
+      if (futureIndex >= 0) {
+        futureScenes.value.splice(futureIndex, 1);
+      }
+    }
+  }
+
+  function previousScene(): GetSceneResponseT | null {
+    return currentHistoryNode.value?.prev?.value ?? null;
+  }
+
+  function needToChangeSceneSource(source: NextSceneSourceType) {
+    return !((source.type === 'global' && nextSceneSource.value.type === 'global') ||
+             (source.type === 'single-scene' && nextSceneSource.value.type === 'single-scene') ||
+             (source.type === 'handle' && nextSceneSource.value.type === 'handle' && source.handle === nextSceneSource.value.handle) ||
+             (source.type === 'nearby' && nextSceneSource.value.type === 'nearby' && source.baseID === nextSceneSource.value.baseID));
+  }
+
+  function updateNextSceneSource(source: NextSceneSourceType) {
+    if (!needToChangeSceneSource(source)) {
+      return;
+    }
+    if (source.type === 'global') {
+      getNextScenes = getHomeTimeline;
+    } else if (source.type === 'handle') {
+      getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
+    } else if (source.type === 'nearby') {
+      // TODO: How to handle pagination for the nearby timeline?
+      getNextScenes = async (fetcher, page) => {
+        if (page === 0) {
+          return getNearbyTimeline(fetcher, source.baseID);
+        } else {
+          return { results: [] };
+        }
+      }
+    } else if (source.type === 'single-scene') {
+      getNextScenes = async (_fetcher, _page) => { return { results: [] }; };
+    }
+    
+    nextSceneSource.value = source;
+    sceneHistory.value.tail = currentHistoryNode.value;
+    futureScenes.value = [];
+    nextNeededPage = 0;
+  }
+
+  function useGlobalTimeline() {
+    updateNextSceneSource({ type: 'global' });
+  }
+
+  function useHandleTimeline(handle: string) {
+    updateNextSceneSource({ type: 'handle', handle });
+  }
+
+  function useNearbyTimeline(baseID: string) {
+    updateNextSceneSource({ type: 'nearby', baseID });
+    moveHistoryToScene(baseID);
+    ensureForwardCoverage(8);
+  }
 
   // Cross-component plumbing for the region-of-interest display
 
@@ -190,21 +261,29 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   return {
     describedScene,
     desiredScene,
-    ensureTimelineCoverage,
     isMobile,
     isMovingToScene,
     knownScenes,
     loggedIn,
     roiEditHeightPercentage,
     roiEditWidthPercentage,
-    setTimelineIndex,
     setupForSingleScene,
     showWWT,
-    timeline,
-    timelineIndex,
-    timelineSource,
     viewNeedsInitialization,
     viewportBottomBlockage,
     viewportLeftBlockage,
+
+    sceneHistory,
+    currentHistoryNode,
+    futureScenes,
+    moveBack,
+    moveForward,
+    moveHistoryToScene,
+    previousScene,
+    ensureForwardCoverage,
+    useGlobalTimeline,
+    useHandleTimeline,
+    useNearbyTimeline,
+    nextSceneSource,
   }
 });

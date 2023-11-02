@@ -48,7 +48,6 @@ const {
   desiredScene,
   roiEditHeightPercentage,
   roiEditWidthPercentage,
-  timelineSource
 } = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
@@ -63,12 +62,12 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 
 watchEffect(() => {
   if (scene_data.value !== null) {
-    constellationsStore.setupForSingleScene(scene_data.value);
+    constellationsStore.setupForScene(scene_data.value);
   }
 });
 
 onMounted(() => {
-  timelineSource.value = null;
+  constellationsStore.useHandleTimeline();
 
   // This is all to handle the case when `data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our
