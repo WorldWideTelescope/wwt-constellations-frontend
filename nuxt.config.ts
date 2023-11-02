@@ -78,7 +78,7 @@ export default defineNuxtConfig({
           // above, which in turn can be configured at runtime with
           // $NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG.
           src: 'https://www.googletagmanager.com/gtag/js?id=defaulted',
-          targetCookieIds: ['cookie_control_consent', 'cookie_control_enabled_cookies']
+          targetCookieIds: ['_ga', '_gid']
         },
       ],
     },
