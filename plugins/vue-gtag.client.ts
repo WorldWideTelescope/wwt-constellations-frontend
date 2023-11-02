@@ -26,7 +26,7 @@ export default defineNuxtPlugin(nuxtApp => {
       if (cookieControl.cookiesEnabledIds.value?.includes("ga")) {
         nuxtApp.vueApp.use(VueGtag, {
           config: { id: nuxtConfig.public.googleAnalyticsTag }
-        });
+        }, useRouter());
       }
     });
   }
