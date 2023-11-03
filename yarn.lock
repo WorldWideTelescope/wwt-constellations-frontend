@@ -1468,6 +1468,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/web-bluetooth@npm:^0.0.18":
+  version: 0.0.18
+  resolution: "@types/web-bluetooth@npm:0.0.18"
+  checksum: 5ab99b3f5bf1a7c86e35a463ad57fdd7bb570a49195d94dbdcd8dedc59067f11caddcda5dfee7b144c8f2e18d85b4b2922c0d5c78f7798686d8a8795fb1393f0
+  languageName: node
+  linkType: hard
+
 "@types/xml@npm:^1.0.8":
   version: 1.0.8
   resolution: "@types/xml@npm:1.0.8"
@@ -1781,10 +1788,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/core@npm:^10.5.0":
+  version: 10.5.0
+  resolution: "@vueuse/core@npm:10.5.0"
+  dependencies:
+    "@types/web-bluetooth": ^0.0.18
+    "@vueuse/metadata": 10.5.0
+    "@vueuse/shared": 10.5.0
+    vue-demi: ">=0.14.6"
+  checksum: 9144847c7ec3e2997e324946c573f0f2da32629d7db8c1e5bfc8fd99cc0eb8e2c129691631bd8f9bc3be8c56796d1f057f151b567c7c5a56b7a85dfe6e3c75d5
+  languageName: node
+  linkType: hard
+
 "@vueuse/metadata@npm:10.2.1":
   version: 10.2.1
   resolution: "@vueuse/metadata@npm:10.2.1"
   checksum: 1672c0e6e6a54fe397c04b83bf4b78a8db410df272010f5db829e9f72ed285d526ca8bb4d7a3373b17aac2fb37c83d866f6077e667f54afc1ae20bf1ab1a5478
+  languageName: node
+  linkType: hard
+
+"@vueuse/metadata@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@vueuse/metadata@npm:10.5.0"
+  checksum: 8db966e86a7a3233d1c36c4aa46510b555f211a40899ab89cfd5f09280e6b325014722185bf0dbb9806b0ca5aff5c1217ded108aef79cd07c72800c573c4fc4a
   languageName: node
   linkType: hard
 
@@ -1810,6 +1836,15 @@ __metadata:
   dependencies:
     vue-demi: ">=0.14.5"
   checksum: eeb19c0448d3f238615e24c738d2a6ebdc8b7d840405dd8704b5d0a3cd84ac3a8d5ec87856b501fac89f0f3bb868e7339d46e5fc3ece02c07160aedd41e507b2
+  languageName: node
+  linkType: hard
+
+"@vueuse/shared@npm:10.5.0":
+  version: 10.5.0
+  resolution: "@vueuse/shared@npm:10.5.0"
+  dependencies:
+    vue-demi: ">=0.14.6"
+  checksum: 8ec1b6e18ccdff2940efbee943539831ce54d59294bb1b1e309c82a845035807ee6b11cca29c3eca2df321e79136b13650399c54cde366212e8b2c69c4befb48
   languageName: node
   linkType: hard
 
@@ -1986,6 +2021,7 @@ __metadata:
     "@types/xml": ^1.0.8
     "@types/yallist": ^4.0.2
     "@vicons/material": ^0.12.0
+    "@vueuse/core": ^10.5.0
     "@vueuse/nuxt": ^10.1.2
     "@wwtelescope/astro": ^0.2.2
     "@wwtelescope/engine": ^7.27.0
@@ -8477,6 +8513,22 @@ __metadata:
     vue-demi-fix: bin/vue-demi-fix.js
     vue-demi-switch: bin/vue-demi-switch.js
   checksum: ff44b9372b8224590514252a2f73363cced6062205f9628a6b130dccb80e2023d55cd9d1da94aeb68d5539b7ea9eedcecf88ab281a3a9ff48b8db4c5366b9643
+  languageName: node
+  linkType: hard
+
+"vue-demi@npm:>=0.14.6":
+  version: 0.14.6
+  resolution: "vue-demi@npm:0.14.6"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^3.0.0-0 || ^2.6.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  bin:
+    vue-demi-fix: bin/vue-demi-fix.js
+    vue-demi-switch: bin/vue-demi-switch.js
+  checksum: 424b1f340d5111fc4d4a0f8042c14ae836ba983bc968773a6d955d6846202d7e6f951993ac1525be8732b0cfe0c81d94ab88f427c97bfa86ead08db06491279b
   languageName: node
   linkType: hard
 

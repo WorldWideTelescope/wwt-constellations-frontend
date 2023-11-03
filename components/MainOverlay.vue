@@ -44,16 +44,14 @@
         </n-icon>
       </template>
       <template v-else>
-        <div class="mobile-full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
-          <n-grid cols="1">
-            <n-grid-item class="mobile-full-page" v-for="scene in contextScenes"
-              :style="{ 'height': mobile_page_height + 'px' }">
-              <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="scene.currentlyShown" :scene="scene"
-                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
-              </transition>
-            </n-grid-item>
-          </n-grid>
+        <div class="mobile-full-page-container" ref="fullPageContainerRef">
+          <div class="mobile-full-page" ref="mobileScenePanelRef"
+            :style="{ 'height': mobile_page_height + 'px', bottom: mobileScenePanelBottom }">
+            <transition name="fade" appear>
+              <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="describedScene !== null" :scene="describedScene"
+                :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+            </transition>
+          </div>
         </div>
       </template>
     </template>
@@ -82,6 +80,8 @@ import {
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
 import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+
+import { useSwipe } from "@vueuse/core";
 
 import { Color } from "@wwtelescope/engine";
 
@@ -170,6 +170,9 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
 
   return history.concat(future).map((scene, itemIndex) => {
     const currentlyShown = (scene === currentScene);
+    if (currentlyShown) {
+      scrollIndex.value = itemIndex;
+    }
     return { currentlyShown, itemIndex, ...scene };
   });
 });
@@ -178,6 +181,8 @@ const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
 const feedRootRef = ref<HTMLDivElement>();
+const mobileScenePanelRef = ref<HTMLDivElement>();
+const scrollIndex = ref(0);
 
 const targetOutsideViewport = ref(false);
 
@@ -217,6 +222,42 @@ onMounted(() => {
   });
 });
 
+const mobileScenePanelBottom = ref('');
+const { lengthY } = useSwipe(
+  mobileScenePanelRef,
+  {
+    passive: true,
+    onSwipe(_event: TouchEvent) {
+      if (fullPageContainerRef.value) {
+        mobileScenePanelBottom.value = `${lengthY.value}px`;
+      }
+    },
+    onSwipeEnd(_event: TouchEvent) {
+      if (!fullPageContainerRef.value || !mobileScenePanelRef.value) {
+        return;
+      }
+
+      mobileScenePanelRef?.value.classList.add("bottom-animation");
+      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.5) {
+        mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
+        constellationsStore.moveForward();
+      } else if (lengthY.value < -25) {
+        constellationsStore.moveBack();
+        mobileScenePanelBottom.value = 'var(--footer-height)';
+      } else {
+        mobileScenePanelBottom.value = 'var(--footer-height)';
+      }
+
+      setTimeout(() => {
+        const panel = mobileScenePanelRef.value;
+        if (panel) {
+          panel.classList.remove("bottom-animation");
+          mobileScenePanelBottom.value = 'var(--footer-height)';
+        }
+      }, 150);
+    }
+  });
+
 onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
@@ -227,23 +268,6 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
     constellationsStore.useNearbyTimeline(sceneInfo.id);
   } else {
     constellationsStore.moveHistoryToScene(sceneInfo.id);
-  }
-}
-
-function onScroll(event: UIEvent) {
-  const target = event.target as HTMLDivElement;
-  if (target) {
-    const n = Math.round(target.scrollTop / (target.offsetHeight));
-    constellationsStore.moveForward(n);
-  }
-}
-
-function scrollTo(index: number) {
-  if (fullPageContainerRef.value) {
-    const element = fullPageContainerRef.value as HTMLDivElement;
-    if (element) {
-      element.scrollTop = Math.round(index * (element.offsetHeight));
-    }
   }
 }
 
@@ -285,23 +309,6 @@ watch(currentHistoryNode, async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    // Get the index of the current scene
-    // This is not ideal, but this watcher also shouldn't run very often
-    let index = 0;
-    let found = false;
-    let node = sceneHistory.value.head;
-    while (node !== null) {
-      const currentScene = currentHistoryNode.value;
-      if (currentScene && node.value.id === currentScene.value.id) {
-        found = true;
-        break;
-      }
-      node = node.next;
-      index += 1;
-    }
-    if (found) {
-      scrollTo(index);
-    }
     recenter();
   }
 });
@@ -416,11 +423,17 @@ watchEffect(() => {
 }
 
 .mobile-full-page {
+  position: absolute;
   display: flex;
   align-items: flex-end;
   scroll-snap-align: start;
   padding-left: 10px;
   padding-right: 10px;
+  width: calc(100% - 20px);
+}
+
+.bottom-animation {
+  transition: bottom 0.1s ease-in;
 }
 
 .fade-enter-active,
