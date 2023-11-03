@@ -6,14 +6,17 @@ export default defineNuxtPlugin(nuxtApp => {
   if (nuxtConfig.public.googleAnalyticsTag) {
     const cookieControl = useCookieControl();
 
-    // When this cookie is activated, the cookie-control package makes a request
-    // to the `src` URL defined in `nuxt.config.ts`. But we'd like to configure
-    // our analytics tag at runtime, whereas those config settings are frozen at
-    // build time. So, override the frozen setting manually here, on plugin
-    // startup.
+    // The cookie-control package holds a list of the cookie IDs associated with
+    // this framework. These are mostly set in `nuxt.config.ts`, but there is
+    // one whose ID depends on the analytics tag. We'd like to configure that
+    // tag at runtime, but that means that we can't configure the cookie ID
+    // since the settings in the config file are frozen at *build* time. So, add
+    // in the ID here. This list only seems to be used for deleting cookies
+    // if/when permission is revoked, which frankly doesn't seem like a very
+    // important use case, but let's try to get it right.
     for (const desc of cookieControl.moduleOptions.cookies.optional) {
       if (desc.id == "ga") {
-        desc.src = "https://www.googletagmanager.com/gtag/js?id=" + nuxtConfig.public.googleAnalyticsTag;
+        desc.targetCookieIds?.push(nuxtConfig.public.googleAnalyticsTag.replace("G-", "_ga_"));
       }
     }
 
