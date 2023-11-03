@@ -15,7 +15,7 @@ import {
   SceneCreationInfoT,
   ScenePreviews,
   TessellationCell,
-  TessellationCellT
+  TessellationCellT,
 } from "./types";
 
 function checkForError(item: any) {
@@ -95,6 +95,28 @@ export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Pr
 
     if (isLeft(maybe)) {
       throw new Error(`GET /misc/update-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    }
+
+    return maybe.right;
+  });
+}
+
+
+
+// Endpoint: POST /misc/update-global-tessellation
+
+export const MiscUpdateGlobalTessellationResponse = t.type({});
+
+export type MiscUpdateGlobalTessellationResponseT = t.TypeOf<typeof MiscUpdateGlobalTessellationResponse>;
+
+export async function miscUpdateGlobalTessellation(fetcher: $Fetch): Promise<MiscUpdateGlobalTessellationResponseT> {
+  return fetcher("/misc/update-global-tessellation", { method: "POST" }).then((data) => {
+    checkForError(data);
+
+    const maybe = MiscUpdateGlobalTessellationResponse.decode(data);
+
+    if (isLeft(maybe)) {
+      throw new Error(`GET /misc/update-global-tessellation: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
     }
 
     return maybe.right;
@@ -213,13 +235,18 @@ export async function handleImageInfo(
 
 // Endpoint: GET /handle/:handle/sceneinfo?page=$int&pagesize=$int
 
-export const HandleSceneInfo = t.type({
-  _id: t.string,
-  creation_date: t.string,
-  impressions: t.number,
-  likes: t.number,
-  text: t.string,
-});
+export const HandleSceneInfo = t.intersection([
+  t.type({
+    _id: t.string,
+    creation_date: t.string,
+    impressions: t.number,
+    likes: t.number,
+    text: t.string,
+  }), t.partial({
+    clicks: t.number,
+    shares: t.number,
+  })
+]);
 
 export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
 
@@ -261,6 +288,8 @@ export const HandleSceneStats = t.type({
   count: t.number,
   impressions: t.number,
   likes: t.number,
+  clicks: t.number,
+  shares: t.number,
 });
 
 export const HandleStatsResponse = t.type({
@@ -491,6 +520,8 @@ export const GetSceneResponse = t.type({
   creation_date: t.string,
   likes: t.number,
   impressions: t.number,
+  clicks: t.number,
+  shares: t.number,
   place: PlaceDetails,
   content: SceneContentHydrated,
   text: t.string,
@@ -601,7 +632,6 @@ export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateR
   });
 }
 
-
 // Endpoint: GET /handle/:handle/timeline?page=$number
 
 export const TimelineResponse = t.type({
@@ -635,6 +665,18 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
 
   if (isLeft(maybe)) {
     throw new Error(`GET /scenes/home-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  }
+
+  return maybe.right;
+}
+
+export async function getNearbyTimeline(fetcher: $Fetch, sceneID: string): Promise<TimelineResponseT> {
+  const data = await fetcher(`/scene/${sceneID}/nearby-global`, { query: { size: 30 } });
+  checkForError(data);
+  const maybe = TimelineResponse.decode(data);
+
+  if (isLeft(maybe)) {
+    throw new Error(`GET /tessellations/nearby-feed: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
   }
 
   return maybe.right;
@@ -706,7 +748,7 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
 }
 
 
-// Endpoint: GET /tessellations/cell
+// Endpoint: GET /tessellations/:name/cell
 
 export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
   const data = await fetcher(`/tessellations/${tessellationName}/cell`, { query: { ra: raRad, dec: decRad } });
@@ -714,7 +756,7 @@ export async function getTessellationCell(fetcher: $Fetch, tessellationName: str
   const maybe = TessellationCell.decode(data);
 
   if (isLeft(maybe)) {
-    throw new Error(`GET /tessellation/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+    throw new Error(`GET /tessellations/:name/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
   }
 
   return maybe.right;

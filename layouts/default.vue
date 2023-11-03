@@ -13,7 +13,7 @@
 
           <n-divider vertical style="height: 24px;" />
 
-          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="World Wide Telescope logo" />
+          <img :src="require('~/assets/images/wwtlogo.png')" style="width: 24px;" alt="WorldWide Telescope logo" />
 
           <Breadcrumb />
 
@@ -43,7 +43,7 @@
                 <template #header>
                   <n-space :align="'center'" :size="'small'">
                     <img :src="require('/assets/images/wwtlogo.png')" style="width: 24px;"
-                      alt="World Wide Telescope logo" />
+                      alt="WorldWide Telescope logo" />
                     WorldWide Telescope
                   </n-space>
                   <div style="margin-top: 3px; width: 100%; text-align: center; font-size: smaller">a <NuxtLink
@@ -54,6 +54,25 @@
                   {{ menuItem.name }}
                 </n-button>
                 <template #footer>
+                  <n-text style="font-size: smaller">WWT has been supported by
+                    <a href="https://numfocus.org" target="_blank">NumFOCUS</a>,
+                    the <a href="https://cfa.harvard.edu" target="_blank">Center
+                      for Astrophysics | Harvard &amp; Smithsonian</a>, the <a href="https://aas.org"
+                      target="_blank">American Astronomical
+                      Society</a> (AAS), the
+                    <a href="https://dotnetfoundation.org" target="_blank">.NET
+                      Foundation</a>, and other sponsors. See <a
+                      href="https://worldwidetelescope.org/about/acknowledgments/" target="_blank">the Acknowledgements
+                      page</a> for more
+                    information. This material is based upon work supported by
+                    the National Science Foundation under Grant Nos. <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1550701" target="_blank">1550701</a>, <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1642446" target="_blank">1642446</a>, and <a
+                      href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2004840" target="_blank">2004840</a>. Any
+                    opinions, findings, and
+                    conclusions or recommendations expressed in this material
+                    are those of the author(s) and do not necessarily reflect
+                    the views of the National Science Foundation.</n-text>
                   <n-button @click="logInOut">
                     {{ loggedIn ? 'Log out' : 'Log in' }}
                   </n-button>
@@ -97,6 +116,7 @@ import {
   NLayoutHeader,
   NNotificationProvider,
   NSpace,
+  NText,
 } from "~/utils/fixnaive.mjs";
 
 import { useConstellationsStore } from "~/stores/constellations";
@@ -128,8 +148,10 @@ function logInOut() {
   }
 
   if (loggedIn.value) {
+    // It would be nice to redirect to the current path, but since redirect URLs
+    // have to belong to a specific list, that's not generically possible.
     $keycloak.logout({
-      redirectUri: window.location.href
+      redirectUri: makeRedirectUrl(window.location, "/"),
     }).then(() => {
       loggedIn.value = false;
     }).catch((error: Error) => {
@@ -137,7 +159,7 @@ function logInOut() {
     });
   } else {
     $keycloak.login({
-      redirectUri: window.location.href,
+      redirectUri: makeRedirectUrl(window.location, "/"),
       prompt: 'login'
     }).then(() => {
       loggedIn.value = true;

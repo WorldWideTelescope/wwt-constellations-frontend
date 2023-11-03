@@ -48,7 +48,7 @@ onMounted(() => {
   if (!$keycloak.refreshToken) {
     $keycloak.init({
       onLoad: "check-sso",
-      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso`
+      silentCheckSsoRedirectUri: makeRedirectUrl(window.location, "/silent-check-sso"),
     }).then(() => {
       loggedIn.value = $keycloak.authenticated ?? false;
     });

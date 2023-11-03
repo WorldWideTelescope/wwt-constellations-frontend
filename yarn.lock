@@ -1477,6 +1477,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/yallist@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@types/yallist@npm:4.0.2"
+  checksum: 85a24b6eb2de54e2a905f8bcd45388f5dcde3d3722490d592cb5ef07926fb750b7d5785ee8d923994ca9bc01316f47a0352b9dbc87aeb920733da08fc2aeb6ed
+  languageName: node
+  linkType: hard
+
 "@types/yargs-parser@npm:*":
   version: 21.0.0
   resolution: "@types/yargs-parser@npm:21.0.0"
@@ -1977,6 +1984,7 @@ __metadata:
     "@types/escape-html": ^1
     "@types/uuid": ^9.0.1
     "@types/xml": ^1.0.8
+    "@types/yallist": ^4.0.2
     "@vicons/material": ^0.12.0
     "@vueuse/nuxt": ^10.1.2
     "@wwtelescope/astro": ^0.2.2
@@ -2013,6 +2021,7 @@ __metadata:
     vue-social-sharing: next
     vue3-popper: ^1.5.0
     webpack: ^5.0.0
+    yallist: ^4.0.0
   languageName: unknown
   linkType: soft
 

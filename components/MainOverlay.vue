@@ -1,31 +1,40 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <ClientOnly>
-      <n-button
-        v-if="showNeighborArrows"
-        v-for="neighbor in neighborScenes"
-        class="neighbor-arrow"
-        :bordered="false"
-        @click="() => constellationsStore.setupForSingleScene(neighbor)"
-        :style="neighborArrowStyle(neighbor)"
-      >
+      <n-button v-if="showNeighborArrows" v-for="neighbor in neighborScenes" class="neighbor-arrow" :bordered="false"
+        @click="() => constellationsStore.setupForSingleScene(neighbor)" :style="neighborArrowStyle(neighbor)">
         <n-icon size="30" color="white">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080" height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
-            <g transform="matrix(1 0 0 1 540 540)" id="5e37fbc9-afa3-4ee7-9700-3bde04719136"  >
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080"
+            height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
+            <g transform="matrix(1 0 0 1 540 540)" id="5e37fbc9-afa3-4ee7-9700-3bde04719136">
             </g>
-            <g transform="matrix(1 0 0 1 540 540)" id="3b68765a-11c4-4d1d-a495-a1bdf884d74f"  >
-            <rect style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1; visibility: hidden;" vector-effect="non-scaling-stroke"  x="-540" y="-540" rx="0" ry="0" width="1080" height="1080" />
+            <g transform="matrix(1 0 0 1 540 540)" id="3b68765a-11c4-4d1d-a495-a1bdf884d74f">
+              <rect
+                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1; visibility: hidden;"
+                vector-effect="non-scaling-stroke" x="-540" y="-540" rx="0" ry="0" width="1080" height="1080" />
             </g>
-            <g transform="matrix(45 0 0 45 842.74 540)"  >
-            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-16.5, -12)" d="M 20.08 11.42 L 16.04 5.77 C 15.7 5.289999999999999 15.149999999999999 5 14.559999999999999 5 C 13.069999999999999 5 12.209999999999999 6.68 13.069999999999999 7.890000000000001 L 16 12 L 13.07 16.11 C 12.200000000000001 17.32 13.07 19 14.56 19 C 15.15 19 15.71 18.71 16.05 18.23 L 20.09 12.58 C 20.33 12.23 20.33 11.77 20.08 11.42 z" stroke-linecap="round" />
+            <g transform="matrix(45 0 0 45 842.74 540)">
+              <path
+                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
+                vector-effect="non-scaling-stroke" transform=" translate(-16.5, -12)"
+                d="M 20.08 11.42 L 16.04 5.77 C 15.7 5.289999999999999 15.149999999999999 5 14.559999999999999 5 C 13.069999999999999 5 12.209999999999999 6.68 13.069999999999999 7.890000000000001 L 16 12 L 13.07 16.11 C 12.200000000000001 17.32 13.07 19 14.56 19 C 15.15 19 15.71 18.71 16.05 18.23 L 20.09 12.58 C 20.33 12.23 20.33 11.77 20.08 11.42 z"
+                stroke-linecap="round" />
             </g>
-            <g transform="matrix(45 0 0 45 527.74 540)"  >
-            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-9.5, -12)" d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z" stroke-linecap="round" />
+            <g transform="matrix(45 0 0 45 527.74 540)">
+              <path
+                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
+                vector-effect="non-scaling-stroke" transform=" translate(-9.5, -12)"
+                d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z"
+                stroke-linecap="round" />
             </g>
-            <g transform="matrix(45 0 0 45 216.65 540)"  >
-            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-9.5, -12)" d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z" stroke-linecap="round" />
+            <g transform="matrix(45 0 0 45 216.65 540)">
+              <path
+                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
+                vector-effect="non-scaling-stroke" transform=" translate(-9.5, -12)"
+                d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z"
+                stroke-linecap="round" />
             </g>
-            </svg>
+          </svg>
         </n-icon>
       </n-button>
     </ClientOnly>
@@ -35,8 +44,10 @@
         <n-grid-item v-if="describedHandle">
           <HandlePanel :handle-data="describedHandle" />
         </n-grid-item>
-        <n-grid-item v-if="timelineSource !== null">
-          <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+        <n-grid-item>
+          <n-collapse-transition appear :show="nextSceneSource.type !== 'single-scene'">
+            <Skymap :scenes="skymapScenes" @selected="onItemSelected" />
+          </n-collapse-transition>
         </n-grid-item>
         <n-grid-item>
           <Toolbar @goPrev="goPrev" @goNext="goNext" @centerScene="recenter"
@@ -90,6 +101,7 @@
 <script setup lang="ts">
 import {
   NButton,
+  NCollapseTransition,
   NGrid,
   NGridItem,
   NIcon,
@@ -107,6 +119,7 @@ import {
 } from "@vicons/material";
 
 import { distance } from "@wwtelescope/astro";
+import { Color } from "@wwtelescope/engine";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
@@ -131,23 +144,51 @@ const {
   describedScene,
   desiredScene,
   isMobile,
-  knownScenes,
-  timeline,
-  timelineIndex,
-  timelineSource,
+  sceneHistory,
+  currentHistoryNode,
+  futureScenes,
   viewportBottomBlockage,
   viewportLeftBlockage,
-  isMovingToScene
+  isMovingToScene,
+  nextSceneSource
 } = storeToRefs(constellationsStore);
 
-// The list of scenes shown in the skymap; just a subset of the timeline.
-const skymapScenes = computed<SkymapSceneInfo[]>(() => {
-  const i0 = Math.max(timelineIndex.value - 5, 0);
-  const i1 = Math.min(timelineIndex.value + 6, timeline.value.length);
+// The list of scenes shown in the skymap
 
-  return timeline.value.slice(i0, i1).map((id, relIndex) => {
-    const scene = knownScenes.value.get(id)!;
-    return { itemIndex: i0 + relIndex, place: scene.place, content: scene.content };
+const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
+const ADJACENT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
+const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
+const skymapScenes = computed<SkymapSceneInfo[]>(() => {
+
+  let scenes = [];
+  let currentIndex = 0;
+  const previousScene = constellationsStore.previousScene();
+  if (previousScene) {
+    scenes.push(previousScene);
+    currentIndex += 1;
+  }
+  const fromHistory: GetSceneResponseT[] = [];
+  let sceneNode = currentHistoryNode.value;
+  let needed = 5;
+  while (sceneNode && needed > 0) {
+    fromHistory.push(sceneNode.value);
+    sceneNode = sceneNode.next;
+    needed -= 1;
+  }
+  scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, needed));
+  return scenes.map((s, relIndex) => {
+    const currentScene = relIndex === currentIndex;
+    const adjacent = Math.abs(relIndex - currentIndex) === 1;
+    const color = currentScene ? CURRENT_SCENE_COLOR : (adjacent ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR);
+    return {
+      id: s.id,
+      content: s.content,
+      place: s.place,
+      color,
+      linewidth: currentScene ? 2 : 1,
+      current: currentScene,
+      adjacent: adjacent,
+    };
   });
 });
 
@@ -165,28 +206,14 @@ const contextScenes = computed<ContextSceneInfo[]>(() => {
   // Maybe this is silly, but pull values out of all of the refs that we use
   // up-front, so that this value is recomputed the same way regardless of which
   // mode we're in.
-  const tlsource = timelineSource.value;
-  const tlindex = timelineIndex.value;
-  const desc = describedScene.value;
-  const tldata = timeline.value;
-  const known = knownScenes.value;
+  const history = sceneHistory.value.toArray();
+  const future = futureScenes.value;
+  const currentScene = currentHistoryNode.value?.value;
 
-  if (tlsource === null || tlindex < 0) {
-    if (desc === null) {
-      return [];
-    }
-
-    return [{
-      currentlyShown: true,
-      ...desc,
-    }];
-  } else {
-    return tldata.map((id, itemIndex) => {
-      const scene = known.get(id)!;
-      const currentlyShown = itemIndex == tlindex;
-      return { currentlyShown, itemIndex, ...scene };
-    });
-  }
+  return history.concat(future).map((scene, itemIndex) => {
+    const currentlyShown = (scene === currentScene);
+    return { currentlyShown, itemIndex, ...scene };
+  });
 });
 
 const showNeighborArrows = ref(false);
@@ -285,8 +312,8 @@ function isOutsideViewport(place: PlaceDetailsT): boolean {
   const point = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D });
   const rootDiv = feedRootRef.value;
   return (rootDiv !== undefined) &&
-          (point.x < 0 || point.x > rootDiv.clientWidth ||
-           point.y < 0 || point.y > rootDiv.clientHeight);
+    (point.x < 0 || point.x > rootDiv.clientWidth ||
+      point.y < 0 || point.y > rootDiv.clientHeight);
 }
 
 const engineStore = getEngineStore();
@@ -298,14 +325,14 @@ const {
 } = storeToRefs(engineStore);
 
 onMounted(() => {
-  if (timelineSource.value !== null) {
-    nextTick(() => {
-      constellationsStore.ensureTimelineCoverage(8);
+  nextTick(() => {
+    constellationsStore.ensureForwardCoverage(8).then(() => {
+      constellationsStore.moveForward();
     });
-  }
+  });
 
   swipeAnimationTimer.value = setInterval(() => {
-    showSwipeAnimation.value = timelineIndex.value == 0 && !showSwipeAnimation.value;
+    showSwipeAnimation.value = currentHistoryNode.value !== null && !showSwipeAnimation.value;
   }, 10000);
 
   engineStore.$subscribe(() => {
@@ -329,15 +356,20 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
-function onItemSelected(index: number) {
-  constellationsStore.setTimelineIndex(index);
+function onItemSelected(sceneInfo: SceneDisplayInfoT) {
+  const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id);
+  if (index < 0) {
+    constellationsStore.useNearbyTimeline(sceneInfo.id);
+  } else {
+    constellationsStore.moveHistoryToScene(sceneInfo.id);
+  }
 }
 
 function onScroll(event: UIEvent) {
   const target = event.target as HTMLDivElement;
   if (target) {
-    const index = Math.round(target.scrollTop / (target.offsetHeight));
-    onItemSelected(index);
+    const n = Math.round(target.scrollTop / (target.offsetHeight));
+    constellationsStore.moveForward(n);
   }
 }
 
@@ -363,30 +395,17 @@ async function recenter() {
 }
 
 function goNext() {
-  const idx = timelineIndex.value;
-
-  if (idx >= 0 && idx < (knownScenes.value.size - 1)) {
-    const n = idx + 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveForward();
 }
 
 function goPrev() {
-  const idx = timelineIndex.value;
-
-  if (idx > 0) {
-    const n = idx - 1;
-    constellationsStore.setTimelineIndex(n);
-    scrollTo(n);
-  }
+  constellationsStore.moveBack();
 }
 
-watchEffect(async () => {
-  if (timelineIndex.value >= 0) {
-    const id = timeline.value[timelineIndex.value];
-    describedScene.value = knownScenes.value.get(id)!;
-
+watch(currentHistoryNode, async () => {
+  const currentScene = currentHistoryNode.value?.value;
+  if (currentScene) {
+    describedScene.value = currentScene;
     if (describedScene.value) {
       desiredScene.value = {
         id: describedScene.value.id,
@@ -395,13 +414,29 @@ watchEffect(async () => {
       };
     }
 
-    await constellationsStore.ensureTimelineCoverage(8);
+    await constellationsStore.ensureForwardCoverage(8);
   }
 });
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    scrollTo(timelineIndex.value);
+    // Get the index of the current scene
+    // This is not ideal, but this watcher also shouldn't run very often
+    let index = 0;
+    let found = false;
+    let node = sceneHistory.value.head;
+    while (node !== null) {
+      const currentScene = currentHistoryNode.value;
+      if (currentScene && node.value.id === currentScene.value.id) {
+        found = true;
+        break;
+      }
+      node = node.next;
+      index += 1;
+    }
+    if (found) {
+      scrollTo(index);
+    }
     recenter();
   }
 });
@@ -418,8 +453,8 @@ function updateArrowVisibility() {
   }
 }
 
-watch(wwt_ra_rad, () => updateArrowVisibility()); 
-watch(wwt_dec_rad, () => updateArrowVisibility()); 
+watch(wwt_ra_rad, () => updateArrowVisibility());
+watch(wwt_dec_rad, () => updateArrowVisibility());
 
 watch(desiredScene, () => {
   showNeighborArrows.value = false;
@@ -796,7 +831,9 @@ watchEffect(() => {
 }
 
 @keyframes arrow-color-cycle {
-  16.7%, 50% {
+
+  16.7%,
+  50% {
     color: rgb(191, 243, 226);
   }
 
@@ -804,7 +841,8 @@ watchEffect(() => {
     color: #7fe7c4;
   }
 
-  66%, 100% {
+  66%,
+  100% {
     color: white;
   }
 }

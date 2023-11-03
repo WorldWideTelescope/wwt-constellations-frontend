@@ -35,7 +35,7 @@ definePageMeta({
 const { $backendCall, $backendAuthCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
-const { loggedIn, timelineSource } = storeToRefs(constellationsStore);
+const { loggedIn } = storeToRefs(constellationsStore);
 
 const route = useRoute();
 const handle = route.params.handle as string;
@@ -65,9 +65,9 @@ watchEffect(async () => {
 });
 
 onMounted(() => {
-  timelineSource.value = handle;
+  constellationsStore.useHandleTimeline(handle);
   nextTick(() => {
-    constellationsStore.ensureTimelineCoverage(8);
+    constellationsStore.ensureForwardCoverage(8);
   });
 });
 </script>

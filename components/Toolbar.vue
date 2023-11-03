@@ -1,8 +1,8 @@
 <template>
     <n-space justify="space-between" class="button-bar">
         <n-button-group>
-            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button" v-show="isTimelineMode"
-                :disabled="!hasPrev">
+            <n-button id="prev-button" @click="$emit('goPrev')" aria-label="Go previous button"
+                v-show="nextSceneSource.type !== 'single-scene'" :disabled="!hasPrev">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="prev-button">
                         <NavigateBeforeRound />
@@ -15,8 +15,7 @@
                 :class="{ 'button-toggled': !isExploreMode }" aria-label="Feed button">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="feed-button">
-                        <SwipeVerticalFilled v-if="isTimelineMode" />
-                        <ArticleFilled v-else />
+                        <SwipeVerticalFilled />
                     </n-icon>
                 </template>
             </n-button>
@@ -39,8 +38,9 @@
             </n-button>
         </n-button-group>
         <n-button-group>
-            <n-button id="next-button" @click="clickNext" aria-label="Go next button" v-show="isTimelineMode"
-                :disabled="!hasNext" :class="{ 'clickme': nextNotYetClicked }">
+            <n-button id="next-button" @click="clickNext" aria-label="Go next button"
+                v-show="nextSceneSource.type !== 'single-scene'" :disabled="!hasNext"
+                :class="{ 'clickme': nextNotYetClicked }">
                 <template #icon>
                     <n-icon size="25" aria-labelledby="next-button">
                         <NavigateNextRound />
@@ -76,13 +76,15 @@ const constellationsStore = useConstellationsStore();
 
 const {
     isMobile,
-    knownScenes,
-    timelineIndex
+    sceneHistory,
+    currentHistoryNode,
+    futureScenes,
+    nextSceneSource,
 } = storeToRefs(constellationsStore);
 
-const isTimelineMode = computed(() => timelineIndex.value >= 0);
-const hasNext = computed<boolean>(() => (timelineIndex.value >= 0 && timelineIndex.value < (knownScenes.value.size - 1)));
-const hasPrev = computed<boolean>(() => (timelineIndex.value > 0));
+const hasPrev = computed<boolean>(() => !!currentHistoryNode.value?.prev);
+const hasNext = computed<boolean>(() => futureScenes.value.length > 0 ||
+    (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next));
 const nextNotYetClicked = ref(true);
 
 withDefaults(defineProps<{

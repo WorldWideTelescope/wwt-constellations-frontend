@@ -71,8 +71,7 @@ export default defineNuxtConfig({
         {
           id: 'ga',
           name: 'Google Analytics',
-          src: 'https://www.googletagmanager.com/gtag/js?id=' + (process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG || ""),
-          targetCookieIds: ['cookie_control_consent', 'cookie_control_enabled_cookies']
+          targetCookieIds: ['_ga', '_gid']
         },
       ],
     },
