@@ -61,7 +61,8 @@ Environment variables:
 - `NUXT_PUBLIC_HOST_URL` to specify the base URL of this server's public
   frontend; default is `http://localhost:3000`. While most internal URLs are
   relative, this setting is used to construct canonical URLs when they are
-  needed (e.g., social sharing headers).
+  needed (e.g., social sharing headers). This value should *not* end in a
+  slash.
 - `NUXT_PUBLIC_KEYCLOAK_URL` to set the URL to the Keycloak instance; default
   is `http://localhost:8080/`
 
