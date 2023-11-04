@@ -197,6 +197,7 @@ onMounted(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
       constellationsStore.moveForward();
     });
+    mobileScenePanelRef.value?.addEventListener("transitionend", bottomTransitionCleanup);
   });
 
   swipeAnimationTimer.value = setInterval(() => {
@@ -221,6 +222,17 @@ onMounted(() => {
 
   });
 });
+
+function bottomTransitionCleanup(event: TransitionEvent) {
+  if (event.propertyName !== "bottom") {
+    return;
+  }
+  const panel = mobileScenePanelRef.value;
+  if (panel) {
+    panel.classList.remove("bottom-animation");
+    mobileScenePanelBottom.value = 'var(--footer-height)';
+  }
+}
 
 const mobileScenePanelBottom = ref('');
 const { lengthY } = useSwipe(
@@ -248,13 +260,6 @@ const { lengthY } = useSwipe(
         mobileScenePanelBottom.value = 'var(--footer-height)';
       }
 
-      setTimeout(() => {
-        const panel = mobileScenePanelRef.value;
-        if (panel) {
-          panel.classList.remove("bottom-animation");
-          mobileScenePanelBottom.value = 'var(--footer-height)';
-        }
-      }, 150);
     }
   });
 
