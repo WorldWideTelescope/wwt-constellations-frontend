@@ -150,39 +150,11 @@ const skymapScenes = computed<SkymapSceneInfo[]>(() => {
   });
 });
 
-interface ContextSceneInfo extends GetSceneResponseT {
-  currentlyShown: boolean;
-}
-
-// The list of scenes used to construct the set of ScenePanels in mobile mode.
-// In timeline mode, this grows indefinitely to make the Instagram-style
-// infinite scroll possible. When we're not in timeline mode, it contains just
-// the scene that's currently being viewed. This list should almost never be
-// empty, but it can be empty when the app is starting up and no data have been
-// loaded.
-const contextScenes = computed<ContextSceneInfo[]>(() => {
-  // Maybe this is silly, but pull values out of all of the refs that we use
-  // up-front, so that this value is recomputed the same way regardless of which
-  // mode we're in.
-  const history = sceneHistory.value.toArray();
-  const future = futureScenes.value;
-  const currentScene = currentHistoryNode.value?.value;
-
-  return history.concat(future).map((scene, itemIndex) => {
-    const currentlyShown = (scene === currentScene);
-    if (currentlyShown) {
-      scrollIndex.value = itemIndex;
-    }
-    return { currentlyShown, itemIndex, ...scene };
-  });
-});
-
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
 const feedRootRef = ref<HTMLDivElement>();
 const mobileScenePanelRef = ref<HTMLDivElement>();
-const scrollIndex = ref(0);
 
 const targetOutsideViewport = ref(false);
 
@@ -197,7 +169,6 @@ onMounted(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
       constellationsStore.moveForward();
     });
-    // mobileScenePanelRef.value?.addEventListener("transitionend", bottomTransitionCleanup);
   });
 
   swipeAnimationTimer.value = setInterval(() => {
@@ -255,23 +226,28 @@ const { lengthY } = useSwipe(
         return;
       }
 
+      console.log(lengthY.value);
       const hasNext = futureScenes.value.length > 0 ||
                       (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next);
       if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.5 && hasNext) {
+
+        const moveForwardListener = (event: Event) => {
+          constellationsStore.moveForward();
+          event.target?.removeEventListener("transitionend", moveForwardListener);
+        };
+        panel.addEventListener("transitionend", moveForwardListener);
         panel.addEventListener("transitionend", bottomTransitionCleanup);
         panel.classList.add("bottom-animation");
         mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
-        setTimeout(() => {
-          constellationsStore.moveForward();
-        }, 200);
       } else if (lengthY.value < -25 && currentHistoryNode.value?.prev) {
-        constellationsStore.moveBack();
         mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
-        setTimeout(() => {
+
+        window.requestAnimationFrame(() => {
+          constellationsStore.moveBack();
           panel.addEventListener("transitionend", bottomTransitionCleanup);
           panel.classList.add("bottom-animation");
           mobileScenePanelBottom.value = 'var(--footer-height)';
-        }, 100);
+        });
       } else {
         panel.addEventListener("transitionend", bottomTransitionCleanup);
         panel.classList.add("bottom-animation");
