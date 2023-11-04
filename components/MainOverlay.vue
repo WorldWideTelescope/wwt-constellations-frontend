@@ -197,7 +197,7 @@ onMounted(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
       constellationsStore.moveForward();
     });
-    mobileScenePanelRef.value?.addEventListener("transitionend", bottomTransitionCleanup);
+    // mobileScenePanelRef.value?.addEventListener("transitionend", bottomTransitionCleanup);
   });
 
   swipeAnimationTimer.value = setInterval(() => {
@@ -231,6 +231,7 @@ function bottomTransitionCleanup(event: TransitionEvent) {
   if (panel) {
     panel.classList.remove("bottom-animation");
     mobileScenePanelBottom.value = 'var(--footer-height)';
+    panel.removeEventListener("transitionend", bottomTransitionCleanup);
   }
 }
 
@@ -249,14 +250,31 @@ const { lengthY } = useSwipe(
         return;
       }
 
-      mobileScenePanelRef?.value.classList.add("bottom-animation");
-      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.5) {
+      const panel = mobileScenePanelRef.value;
+      if (!panel) {
+        return;
+      }
+
+      const hasNext = futureScenes.value.length > 0 ||
+                      (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next);
+      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.5 && hasNext) {
+        panel.addEventListener("transitionend", bottomTransitionCleanup);
+        panel.classList.add("bottom-animation");
         mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
-        constellationsStore.moveForward();
-      } else if (lengthY.value < -25) {
+        setTimeout(() => {
+          constellationsStore.moveForward();
+        }, 200);
+      } else if (lengthY.value < -25 && currentHistoryNode.value?.prev) {
         constellationsStore.moveBack();
-        mobileScenePanelBottom.value = 'var(--footer-height)';
+        mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
+        setTimeout(() => {
+          panel.addEventListener("transitionend", bottomTransitionCleanup);
+          panel.classList.add("bottom-animation");
+          mobileScenePanelBottom.value = 'var(--footer-height)';
+        }, 100);
       } else {
+        panel.addEventListener("transitionend", bottomTransitionCleanup);
+        panel.classList.add("bottom-animation");
         mobileScenePanelBottom.value = 'var(--footer-height)';
       }
 
@@ -438,7 +456,7 @@ watchEffect(() => {
 }
 
 .bottom-animation {
-  transition: bottom 0.1s ease-in;
+  transition: bottom 0.2s ease-in;
 }
 
 .fade-enter-active,
