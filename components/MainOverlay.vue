@@ -226,7 +226,6 @@ const { lengthY } = useSwipe(
         return;
       }
 
-      console.log(lengthY.value);
       const hasNext = futureScenes.value.length > 0 ||
                       (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next);
       if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.2 && hasNext) {
