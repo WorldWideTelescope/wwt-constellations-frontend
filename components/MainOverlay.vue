@@ -82,16 +82,14 @@
         </n-icon>
       </template>
       <template v-else>
-        <div class="mobile-full-page-container" v-on:scroll.passive="onScroll" ref="fullPageContainerRef">
-          <n-grid cols="1">
-            <n-grid-item class="mobile-full-page" v-for="scene in contextScenes"
-              :style="{ 'height': mobile_page_height + 'px' }">
-              <transition name="fade" appear>
-                <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="scene.currentlyShown" :scene="scene"
-                  :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
-              </transition>
-            </n-grid-item>
-          </n-grid>
+        <div class="mobile-full-page-container" ref="fullPageContainerRef">
+          <div class="mobile-full-page" ref="mobileScenePanelRef"
+            :style="{ 'height': mobile_page_height + 'px', bottom: mobileScenePanelBottom }">
+            <transition name="fade" appear>
+              <ScenePanel :class="{ bouncy: showSwipeAnimation }" v-if="describedScene !== null" :scene="describedScene"
+                :potentially-editable="scenePotentiallyEditable" ref="mobile_overlay" />
+            </transition>
+          </div>
         </div>
       </template>
     </template>
@@ -124,6 +122,8 @@ import { Color } from "@wwtelescope/engine";
 import { useConstellationsStore } from "~/stores/constellations";
 import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
 import { PlaceDetailsT, SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+
+import { useSwipe } from "@vueuse/core";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -305,6 +305,7 @@ const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
 const feedRootRef = ref<HTMLDivElement>();
+const mobileScenePanelRef = ref<HTMLDivElement>();
 
 const targetOutsideViewport = ref(false);
 
@@ -352,6 +353,68 @@ onMounted(() => {
   });
 });
 
+function bottomTransitionCleanup(event: TransitionEvent) {
+  if (event.propertyName !== "bottom") {
+    return;
+  }
+  const panel = mobileScenePanelRef.value;
+  if (panel) {
+    panel.classList.remove("bottom-animation");
+    mobileScenePanelBottom.value = 'var(--footer-height)';
+    panel.removeEventListener("transitionend", bottomTransitionCleanup);
+  }
+}
+
+const mobileScenePanelBottom = ref('');
+const { lengthY } = useSwipe(
+  mobileScenePanelRef,
+  {
+    passive: true,
+    onSwipe(_event: TouchEvent) {
+      if (fullPageContainerRef.value) {
+        mobileScenePanelBottom.value = `${lengthY.value}px`;
+      }
+    },
+    onSwipeEnd(_event: TouchEvent) {
+      if (!fullPageContainerRef.value || !mobileScenePanelRef.value) {
+        return;
+      }
+
+      const panel = mobileScenePanelRef.value;
+      if (!panel) {
+        return;
+      }
+
+      const hasNext = futureScenes.value.length > 0 ||
+        (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next);
+      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.2 && hasNext) {
+
+        const moveForwardListener = (event: Event) => {
+          constellationsStore.moveForward();
+          event.target?.removeEventListener("transitionend", moveForwardListener);
+        };
+        panel.addEventListener("transitionend", moveForwardListener);
+        panel.addEventListener("transitionend", bottomTransitionCleanup);
+        panel.classList.add("bottom-animation");
+        mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
+      } else if (lengthY.value < -25 && currentHistoryNode.value?.prev) {
+        mobileScenePanelBottom.value = `${mobile_page_height.value}px`;
+
+        window.requestAnimationFrame(() => {
+          constellationsStore.moveBack();
+          panel.addEventListener("transitionend", bottomTransitionCleanup);
+          panel.classList.add("bottom-animation");
+          mobileScenePanelBottom.value = 'var(--footer-height)';
+        });
+      } else {
+        panel.addEventListener("transitionend", bottomTransitionCleanup);
+        panel.classList.add("bottom-animation");
+        mobileScenePanelBottom.value = 'var(--footer-height)';
+      }
+
+    }
+  });
+
 onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
@@ -362,23 +425,6 @@ function onItemSelected(sceneInfo: SceneDisplayInfoT) {
     constellationsStore.useNearbyTimeline(sceneInfo.id);
   } else {
     constellationsStore.moveHistoryToScene(sceneInfo.id);
-  }
-}
-
-function onScroll(event: UIEvent) {
-  const target = event.target as HTMLDivElement;
-  if (target) {
-    const n = Math.round(target.scrollTop / (target.offsetHeight));
-    constellationsStore.moveForward(n);
-  }
-}
-
-function scrollTo(index: number) {
-  if (fullPageContainerRef.value) {
-    const element = fullPageContainerRef.value as HTMLDivElement;
-    if (element) {
-      element.scrollTop = Math.round(index * (element.offsetHeight));
-    }
   }
 }
 
@@ -420,23 +466,6 @@ watch(currentHistoryNode, async () => {
 
 watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
-    // Get the index of the current scene
-    // This is not ideal, but this watcher also shouldn't run very often
-    let index = 0;
-    let found = false;
-    let node = sceneHistory.value.head;
-    while (node !== null) {
-      const currentScene = currentHistoryNode.value;
-      if (currentScene && node.value.id === currentScene.value.id) {
-        found = true;
-        break;
-      }
-      node = node.next;
-      index += 1;
-    }
-    if (found) {
-      scrollTo(index);
-    }
     recenter();
   }
 });
@@ -570,11 +599,17 @@ watchEffect(() => {
 }
 
 .mobile-full-page {
+  position: absolute;
   display: flex;
   align-items: flex-end;
   scroll-snap-align: start;
   padding-left: 10px;
   padding-right: 10px;
+  width: calc(100% - 20px);
+}
+
+.bottom-animation {
+  transition: bottom 0.2s ease-in;
 }
 
 .fade-enter-active,
