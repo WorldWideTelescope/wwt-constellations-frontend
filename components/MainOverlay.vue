@@ -1,8 +1,8 @@
 <template>
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <ClientOnly>
-      <n-button v-if="showNeighborArrows" v-for="neighbor in neighborScenes" class="neighbor-arrow" :bordered="false"
-        @click="() => constellationsStore.setupForSingleScene(neighbor)" :style="neighborArrowStyle(neighbor)">
+      <n-button v-if="showNeighborArrows" v-for="n in neighborArrows" class="neighbor-arrow" :bordered="false"
+        @click="() => constellationsStore.useNearbyTimeline(n.sceneId)" :style="n.style">
         <n-icon size="30" color="white">
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080"
             height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
@@ -107,23 +107,19 @@ import {
 
 import { storeToRefs } from "pinia";
 import { nextTick, ref } from "vue";
-import { useResizeObserver } from "@vueuse/core";
+import { useResizeObserver, useSwipe } from "@vueuse/core";
 import {
-  DoubleArrowRound,
   KeyboardArrowDownFilled,
   KeyboardArrowUpFilled,
   KeyboardArrowLeftFilled,
   KeyboardArrowRightFilled,
 } from "@vicons/material";
 
-import { distance } from "@wwtelescope/astro";
 import { Color } from "@wwtelescope/engine";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
-import { PlaceDetailsT, SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
-
-import { useSwipe } from "@vueuse/core";
+import type { GetHandleResponseT, GetSceneResponseT } from "~/utils/apis";
+import type { PlaceDetailsT, SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
 
 const props = withDefaults(defineProps<{
   scenePotentiallyEditable?: boolean,
@@ -152,6 +148,25 @@ const {
   isMovingToScene,
   nextSceneSource
 } = storeToRefs(constellationsStore);
+
+const targetOutsideViewport = ref(false);
+
+function isOutsideViewport(place: PlaceDetailsT): boolean {
+  const point = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D });
+  const rootDiv = feedRootRef.value;
+  return (rootDiv !== undefined) &&
+    (point.x < 0 || point.x > rootDiv.clientWidth ||
+      point.y < 0 || point.y > rootDiv.clientHeight);
+}
+
+const engineStore = getEngineStore();
+
+const {
+  raRad: wwt_ra_rad,
+  decRad: wwt_dec_rad,
+  rollRad: wwt_roll_rad,
+  zoomDeg: wwt_zoom_deg,
+} = storeToRefs(engineStore);
 
 // The list of scenes shown in the skymap
 
@@ -192,75 +207,87 @@ const skymapScenes = computed<SkymapSceneInfo[]>(() => {
   });
 });
 
-interface ContextSceneInfo extends GetSceneResponseT {
-  currentlyShown: boolean;
-}
 
-// The list of scenes used to construct the set of ScenePanels in mobile mode.
-// In timeline mode, this grows indefinitely to make the Instagram-style
-// infinite scroll possible. When we're not in timeline mode, it contains just
-// the scene that's currently being viewed. This list should almost never be
-// empty, but it can be empty when the app is starting up and no data have been
-// loaded.
-const contextScenes = computed<ContextSceneInfo[]>(() => {
-  // Maybe this is silly, but pull values out of all of the refs that we use
-  // up-front, so that this value is recomputed the same way regardless of which
-  // mode we're in.
-  const history = sceneHistory.value.toArray();
-  const future = futureScenes.value;
-  const currentScene = currentHistoryNode.value?.value;
+// "Neighbor arrows" for spatial navigation.
 
-  return history.concat(future).map((scene, itemIndex) => {
-    const currentlyShown = (scene === currentScene);
-    return { currentlyShown, itemIndex, ...scene };
-  });
-});
+// Whether we show the arrows at all is set by our standard "outside of
+// viewport" computation.
+const showNeighborArrows = targetOutsideViewport;
 
-const showNeighborArrows = ref(false);
-
-const neighborScenes = computedAsync<GetSceneResponseT[]>(async () => {
+// The list of all neighbor scenes is obtained by querying a tessellation. TODO:
+// when we're looking at a particular handle's feed, we could/should have a
+// tessellation specific to that handle. Right now we don't compute those,
+// though.
+const allNeighborScenes = computedAsync<GetSceneResponseT[]>(async () => {
   const scene = desiredScene.value;
   if (scene === null) {
     return [];
   }
+
   const place = scene.place;
   const cell = await getTessellationCell($backendCall, "global", place.ra_rad, place.dec_rad);
   const neighbors: GetSceneResponseT[] = [];
+
   for (const neighbor_id of cell.neighbors) {
     const neighbor = await getScene($backendCall, neighbor_id);
     if (neighbor !== null) {
       neighbors.push(neighbor);
     }
   }
+
   return neighbors;
 });
 
-// The calculations here assume that the WWT view takes up the entire screen
-// and that, because of this, the arrows want to live on the side of the screen.
-// If this is ever NOT the case, one could rework this by making the appropriate
-// affine transformation into the screen coordinate space of the WWT canvas.
-function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
-  try {
+// Now we have to go from that list of neighbor scenes to a list of arrows that
+// we might display in the UI.
 
-    const currentScene = describedScene.value;
-    if (currentScene === null || !isOutsideViewport(scene.place)) {
-      return { visibility: 'hidden' };
-    }
+const HALF_PI = 0.5 * Math.PI;
+const TWO_PI = 2 * Math.PI;
 
-    const isCurrentSceneInView = !isOutsideViewport(currentScene.place);
-    const cameraPoint = engineStore.findScreenPointForRADec({ ra: wwt_ra_rad.value * R2D, dec: wwt_dec_rad.value * R2D });
-    const neighborPoint = engineStore.findScreenPointForRADec({ ra: scene.place.ra_rad * R2D, dec: scene.place.dec_rad * R2D });
-    const currentScenePoint = engineStore.findScreenPointForRADec({ ra: currentScene.place.ra_rad * R2D, dec: currentScene.place.dec_rad * R2D });
-    const startPoint = isCurrentSceneInView ? currentScenePoint : cameraPoint;
+interface NeighborArrow {
+  sceneId: string;
+  style: Record<string, any>;
+}
 
-    // This formula looks a bit weird!
-    // We switch the relative ordering of currentPoint and scenePoint between x and y
-    // to account for the fact that y coordinates move downward on the screen.
-    // Also, the overall negative sign is to account for the fact that CSS rotations are clockwise
-    // but we're calculating an angle from standard position.
-    // Since atan2 uses the signs of x and y to determine the angle quadrant, best to just
-    // use an overall sign.
-    const angle = -Math.atan2(startPoint.y - neighborPoint.y, neighborPoint.x - startPoint.x);
+interface Point {
+  x: number;
+  y: number;
+}
+
+const neighborArrows = computed<NeighborArrow[]>(() => {
+  // Prerequisites to do anything useful.
+
+  const currentScene = desiredScene.value;
+  const rootDiv = feedRootRef.value;
+
+  if (currentScene === null || rootDiv === undefined || !showNeighborArrows.value) {
+    return [];
+  }
+
+  // Given an X/Y position, determine a CSS style for an arrow to point to it.
+  // Note that we do all of our work in X/Y pixel coordinates, ignoring the
+  // geometry of the sphere.
+
+  const currentScenePoint = engineStore.findScreenPointForRADec({
+    ra: currentScene.place.ra_rad * R2D,
+    dec: currentScene.place.dec_rad * R2D
+  });
+
+  const cameraPoint = engineStore.findScreenPointForRADec({
+    ra: wwt_ra_rad.value * R2D,
+    dec: wwt_dec_rad.value * R2D
+  });
+
+  const styleForPoint = (point: Point): Record<string, any> => {
+    // This formula looks a bit weird! CSS rotations are clockwise, and an angle
+    // of zero results in an arrow pointing to the right. We switch the relative
+    // ordering of currentPoint and scenePoint between x and y to account for
+    // the fact that y coordinates move downward on the screen. The overall
+    // negative sign accounts for the different parity of CSS and pixel
+    // rotations. Since atan2 uses the signs of x and y to determine the angle
+    // quadrant, best to just use an overall sign.
+
+    const angle = -Math.atan2(cameraPoint.y - point.y, point.x - cameraPoint.x);
 
     // Here we use the standard parametrization of a line from a -> b
     // a and b are points (vectors)
@@ -270,60 +297,124 @@ function neighborArrowStyle(scene: SceneDisplayInfoT): Record<string, any> {
     // In practice, we just calculate the intersection t0 for each line and find the smallest one
     // in the range [0, 1]
     // The four intersections occur at tx0, tx1, ty0, ty1
-    let x = 0;
-    let y = 0;
-    let visible = false;
-    const tx0 = startPoint.x / (startPoint.x - neighborPoint.x);
-    const tx1 = (startPoint.x - window.innerWidth) / (startPoint.x - neighborPoint.x);
-    const ty0 = startPoint.y / (startPoint.y - neighborPoint.y);
-    const ty1 = (startPoint.y - window.innerHeight) / (startPoint.y - neighborPoint.y);
+
+    const tx0 = cameraPoint.x / (cameraPoint.x - point.x);
+    const tx1 = (cameraPoint.x - rootDiv.clientWidth) / (cameraPoint.x - point.x);
+    const ty0 = cameraPoint.y / (cameraPoint.y - point.y);
+    const ty1 = (cameraPoint.y - rootDiv.clientHeight) / (cameraPoint.y - point.y);
     const ts = [tx0, tx1, ty0, ty1].filter(t => t >= 0 && t <= 1).sort();
+
     if (ts.length > 0) {
-      const index = isCurrentSceneInView ? 0 : ts.length - 1;
-      const t = ts[index];
-      x = Math.round(((1 - t) * startPoint.x) + t * neighborPoint.x);
-      y = Math.round(((1 - t) * startPoint.y) + t * neighborPoint.y);
-      visible = true;
+      const t = ts[0];
+      let x = Math.round(((1 - t) * cameraPoint.x) + t * point.x);
+      let y = Math.round(((1 - t) * cameraPoint.y) + t * point.y);
+
+      // Clamp to be inside screen bounds
+      x = Math.max(Math.min(x, rootDiv.clientWidth - 30), 0);
+      y = Math.max(Math.min(y, rootDiv.clientHeight), 0);
+
+      return {
+        transform: `rotate(${angle}rad)`,
+        left: `${x}px`,
+        top: `${y}px`,
+      };
+    } else {
+      return { visibility: 'hidden' };
+    }
+  };
+
+  // That's sufficient to provide an arrow back to "home".
+
+  const arrows: NeighborArrow[] = [
+    { sceneId: currentScene.id, style: styleForPoint(currentScenePoint) },
+  ];
+
+  // For the neighbors, we use "effective" points: we basically clamp the length
+  // of the vector between the current scene and the neighbor scene to not be
+  // "too large". This way, as you pan around the indicator arrows move
+  // pleasingly, even though when you're zoomed in the neighbor scenes are
+  // usually so far away that they really ought to be basically stationary.
+
+  // Size of the full viewport diagonal, in pixels, squared:
+  const viewportsq = rootDiv.clientWidth ** 2 + rootDiv.clientHeight ** 2;
+
+  // Size of the offset between the current viewport center (the camera point)
+  // and the current scene, in pixels, squared:
+  const offsetsq = (cameraPoint.x - currentScenePoint.x) ** 2 + (cameraPoint.y - currentScenePoint.y) ** 2;
+
+  // The yardstick we use to determine whether a point is far away, measured in
+  // pixels, squared. This particular combination of the previous two values is
+  // basically arbitrary.
+  const effectivePointYardstickSq = viewportsq + offsetsq;
+
+  // Our clamping distance, in units of the yardstick, squared. So 25 means
+  // that we clamp the effective vector length at 5 times the yardstick length.
+  const effectivePointFactor = 25;
+
+  // That's everything we need to efficiently compute "effective" points.
+  const computeEffectivePoint = (point: Point): Point => {
+    let dx = point.x - currentScenePoint.x;
+    let dy = point.y - currentScenePoint.y;
+    const ratio = (dx ** 2 + dy ** 2) / effectivePointYardstickSq;
+
+    if (ratio > effectivePointFactor) {
+      const f = Math.sqrt(effectivePointFactor / ratio);
+      dx *= f;
+      dy *= f;
     }
 
-    // Clamp to be inside screen bounds
-    x = Math.max(Math.min(x, window.innerWidth - 40), 5);
-    y = Math.max(Math.min(y, window.innerHeight - 40), 5);
+    point.x = currentScenePoint.x + dx;
+    point.y = currentScenePoint.y + dy;
+    return point;
+  };
 
-    return {
-      transform: `rotate(${angle}rad)`,
-      left: `${x}px`,
-      top: `${y}px`,
-      visibility: visible ? 'visible' : 'hidden',
-    };
-  } catch (error) {
-    return { visibility: 'hidden' };
+  // The effective list of neighbor scenes filters the "all" list to only contain
+  // the ones that are "in the direction of" the current camera position, relative
+  // to the current (desired) scene position. That way, if we start scrolling
+  // right, we won't suddenly get arrows telling us to go left. One could
+  // imagine being picky about the precise definition of "in the direction of",
+  // but a basic half-plane cutoff should work OK.
+
+  const offsetAngle = Math.atan2(
+    cameraPoint.y - currentScenePoint.y,
+    cameraPoint.x - currentScenePoint.x
+  );
+
+  for (const n of allNeighborScenes.value) {
+    const point = engineStore.findScreenPointForRADec({
+      ra: n.place.ra_rad * R2D,
+      dec: n.place.dec_rad * R2D
+    });
+
+    const angle = Math.atan2(point.y - currentScenePoint.y, point.x - currentScenePoint.x);
+
+    // Since we're differencing angles, we have to normalize before comparing magnitudes.
+    let delta = angle - offsetAngle;
+
+    while (delta > Math.PI) {
+      delta -= TWO_PI;
+    }
+
+    while (delta < -Math.PI) {
+      delta += TWO_PI;
+    }
+
+    if (Math.abs(delta) < HALF_PI) {
+      // This neighbor is accepted -- give it an arrow.
+      arrows.push({ sceneId: n.id, style: styleForPoint(computeEffectivePoint(point)) });
+    }
   }
-}
+
+  return arrows;
+});
+
+// The swipe interaction to move to the next scene.
 
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
 const feedRootRef = ref<HTMLDivElement>();
 const mobileScenePanelRef = ref<HTMLDivElement>();
-
-const targetOutsideViewport = ref(false);
-
-function isOutsideViewport(place: PlaceDetailsT): boolean {
-  const point = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D });
-  const rootDiv = feedRootRef.value;
-  return (rootDiv !== undefined) &&
-    (point.x < 0 || point.x > rootDiv.clientWidth ||
-      point.y < 0 || point.y > rootDiv.clientHeight);
-}
-
-const engineStore = getEngineStore();
-const {
-  raRad: wwt_ra_rad,
-  decRad: wwt_dec_rad,
-  rollRad: wwt_roll_rad,
-  zoomDeg: wwt_zoom_deg,
-} = storeToRefs(engineStore);
 
 onMounted(() => {
   nextTick(() => {
@@ -337,11 +428,12 @@ onMounted(() => {
   }, 10000);
 
   engineStore.$subscribe(() => {
-    const place = describedScene.value?.place
-    const rootDiv = feedRootRef.value
-    if (place && rootDiv) {
+    const place = describedScene.value?.place;
+
+    if (place) {
       try {
-        targetOutsideViewport.value = isOutsideViewport(place);
+        // When we're in the midst of moving, we disable outside-of-viewport effects.
+        targetOutsideViewport.value = !isMovingToScene.value && isOutsideViewport(place);
       } catch {
         // The above function can sometimes throw an exception (TypeError:
         // matrix1 is undefined) if one of the WWT engine is just starting up.
@@ -349,7 +441,6 @@ onMounted(() => {
         // the issue.
       }
     }
-
   });
 });
 
@@ -366,6 +457,7 @@ function bottomTransitionCleanup(event: TransitionEvent) {
 }
 
 const mobileScenePanelBottom = ref('');
+
 const { lengthY } = useSwipe(
   mobileScenePanelRef,
   {
@@ -419,6 +511,8 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
+// Various user interactions
+
 function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id);
   if (index < 0) {
@@ -468,25 +562,6 @@ watch(fullPageContainerRef, () => {
   if (fullPageContainerRef.value) {
     recenter();
   }
-});
-
-
-function updateArrowVisibility() {
-  const scene = desiredScene.value;
-  if (!isMovingToScene.value && !showNeighborArrows.value && scene) {
-    const place = scene.place;
-    const threshold = (wwt_zoom_deg.value / 60) * 0.05;
-    if (distance(wwt_ra_rad.value, wwt_dec_rad.value, place.ra_rad, place.dec_rad) > threshold) {
-      showNeighborArrows.value = true;
-    }
-  }
-}
-
-watch(wwt_ra_rad, () => updateArrowVisibility());
-watch(wwt_dec_rad, () => updateArrowVisibility());
-
-watch(desiredScene, () => {
-  showNeighborArrows.value = false;
 });
 
 
@@ -739,7 +814,6 @@ watchEffect(() => {
     display: none;
   }
 }
-
 
 .bounce-y-fade {
   animation: key-bounce-y-fade 3.5s forwards;
