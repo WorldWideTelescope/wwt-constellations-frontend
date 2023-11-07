@@ -602,16 +602,15 @@ watchEffect(() => {
   }
 });
 
-// Right now, the element that we monitor for the mobile overlay size is in a
-// `v-for`, so it comes to us as an array of components rather than a singleton.
-// Also, since the server-side default is desktop mode, the initial value of the
-// ref is null, since the child component is `v-if`ed out of existence.
-const mobile_overlay = ref<ComponentPublicInstance[] | null>(null);
+// For the mobile case, since the server-side default is desktop mode, the
+// initial value of the ref is null, because the child component is `v-if`ed out
+// of existence.
+const mobile_overlay = ref<ComponentPublicInstance | null>(null);
 const mobile_overlay_height = ref(viewportBottomBlockage.value);
 
 watchEffect(() => {
   if (mobile_overlay.value) {
-    useResizeObserver(mobile_overlay.value[0], (entries) => {
+    useResizeObserver(mobile_overlay.value, (entries) => {
       const entry = entries[0];
       if (entry.contentRect.height > 0) {
         mobile_overlay_height.value = entry.contentRect.height;
