@@ -273,35 +273,79 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
     dec: currentScene.place.dec_rad * R2D
   });
 
-  const cameraPoint = engineStore.findScreenPointForRADec({
-    ra: wwt_ra_rad.value * R2D,
-    dec: wwt_dec_rad.value * R2D
-  });
+  const _hack = wwt_ra_rad.value + wwt_dec_rad.value + wwt_roll_rad.value + wwt_zoom_deg.value;
+  const cameraPoint = { x: rootDiv.clientWidth / 2, y: rootDiv.clientHeight / 2 };
+  const desktopPaddingTop = 32; // XXXX hardcoding!!!! pixels
+  const mobileHeaderHeight = 38; // XXXX hardcoding!!!! pixels
+  const buttonBarHeight = 42; // XXXX hardcoding!!!! pixels
+  const scenePanelPadding = 8; // XXXX hardcoding!!!! pixels
+  const arrowSize = 30; // pixels
+  const margin = 4; // pixels
+
+  if (isMobile.value) {
+    cameraPoint.y -= 0.5 * (viewportBottomBlockage.value - mobileHeaderHeight);
+  }
 
   const styleForPoint = (point: Point): Record<string, any> => {
-    // This formula looks a bit weird! CSS rotations are clockwise, and an angle
-    // of zero results in an arrow pointing to the right. We switch the relative
-    // ordering of currentPoint and scenePoint between x and y to account for
-    // the fact that y coordinates move downward on the screen. The overall
-    // negative sign accounts for the different parity of CSS and pixel
-    // rotations. Since atan2 uses the signs of x and y to determine the angle
-    // quadrant, best to just use an overall sign.
+    // Calculate the proper rotation of this arrow. This formula looks a bit
+    // weird! CSS rotations are clockwise, and an angle of zero results in an
+    // arrow pointing to the right. We switch the relative ordering of
+    // currentPoint and scenePoint between x and y to account for the fact that
+    // y coordinates move downward on the screen. The overall negative sign
+    // accounts for the different parity of CSS and pixel rotations. Since atan2
+    // uses the signs of x and y to determine the angle quadrant, best to just
+    // use an overall sign.
 
     const angle = -Math.atan2(cameraPoint.y - point.y, point.x - cameraPoint.x);
 
-    // Here we use the standard parametrization of a line from a -> b
-    // a and b are points (vectors)
-    // i.e. a + t * (b - a) = (1 - t) * a + t * b   0 <= t <= 1
-    // We imagine just moving along the line, with t going from 0 to 1
-    // our intersection point with the screen boundary is the bounding line that we hit first.
-    // In practice, we just calculate the intersection t0 for each line and find the smallest one
-    // in the range [0, 1]
-    // The four intersections occur at tx0, tx1, ty0, ty1
+    // To figure out the proper position, we need to draw a line from the camera
+    // to the point, stopping whenever we hit the viewport edge, with a tweak to
+    // account for the placement of the arrow icon relative to its X/Y
+    // coordinate.
+    //
+    // On desktop, the proper X bounds of the full-screen display are [0,
+    // clientWidth] and the proper Y bounds are [0, clientHeight +
+    // desktopPaddingTop]. On mobile, the X bounds are the same, and the Y
+    // bounds are [0, clientHeight].
+    //
+    // On top of those bounds, we add a margin, and may also need to account for
+    // viewport blockages. In mobile we shrink the effective viewport so the
+    // arrows don't slide under other overlays. Finally, for the right and
+    // bottom edges, we need to subtract arrowSize to account for the way that
+    // the arrow is positioned.
+    //
+    // To actually compute the right position, consider a parametric equation
+    // for a line from A (the camera point) to B (the target point). Express A
+    // and B as 2D vectors and parametrize with t \in [0, 1]:
+    //
+    // P(t)  =  A + t * (B - A)  =  (1 - t) * A + t * B
+    //
+    // To "stop" at, say, x = edge_x, we solve for t such that
+    //
+    // edge_x = A_x + t * (B_x - A_x)  =>  t = (A_x - edge_x) / (A_x - B_x)
+    //
+    // Given a set of edges, the smallest non-negative value of t identifies the
+    // first edge that we hit.
 
-    const tx0 = cameraPoint.x / (cameraPoint.x - point.x);
-    const tx1 = (cameraPoint.x - rootDiv.clientWidth) / (cameraPoint.x - point.x);
-    const ty0 = cameraPoint.y / (cameraPoint.y - point.y);
-    const ty1 = (cameraPoint.y - rootDiv.clientHeight) / (cameraPoint.y - point.y);
+    const x0 = margin;
+    const y0 = margin + (isMobile.value ? mobileHeaderHeight : 0);
+    const x1 = rootDiv.clientWidth - (margin + arrowSize);
+    let y1 = rootDiv.clientHeight - (margin + arrowSize);
+
+    if (isMobile.value) {
+      y1 -= buttonBarHeight;
+
+      if (!isExploreMode.value) {
+        y1 -= viewportBottomBlockage.value + scenePanelPadding;
+      }
+    } else {
+      y1 += desktopPaddingTop;
+    }
+
+    const tx0 = (cameraPoint.x - x0) / (cameraPoint.x - point.x);
+    const tx1 = (cameraPoint.x - x1) / (cameraPoint.x - point.x);
+    const ty0 = (cameraPoint.y - y0) / (cameraPoint.y - point.y);
+    const ty1 = (cameraPoint.y - y1) / (cameraPoint.y - point.y);
     const ts = [tx0, tx1, ty0, ty1].filter(t => t >= 0 && t <= 1).sort();
 
     if (ts.length > 0) {
@@ -309,9 +353,9 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
       let x = Math.round(((1 - t) * cameraPoint.x) + t * point.x);
       let y = Math.round(((1 - t) * cameraPoint.y) + t * point.y);
 
-      // Clamp to be inside screen bounds
-      x = Math.max(Math.min(x, rootDiv.clientWidth - 30), 0);
-      y = Math.max(Math.min(y, rootDiv.clientHeight), 0);
+      // Clamp just in case
+      x = Math.max(Math.min(x, x1), x0);
+      y = Math.max(Math.min(y, y1), y0);
 
       return {
         transform: `rotate(${angle}rad)`,
@@ -319,6 +363,9 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
         top: `${y}px`,
       };
     } else {
+      // TODO: we might get here if the target point is actually in the
+      // viewport. In that case, we could show an icon for it in its actual
+      // position, or something.
       return { visibility: 'hidden' };
     }
   };

@@ -101,7 +101,7 @@ import {
 
 import {
   darkTheme,
-  DrawerPlacement,
+  type DrawerPlacement,
 } from "naive-ui";
 
 import {
@@ -223,7 +223,8 @@ function onFullscreenEvent() {
 
 .content-desktop {
   /* In desktop mode, the main overlay is at the top of the screen, but we need
-   * to make sure that it doesn't overlap the header. */
+   * to make sure that it doesn't overlap the header. Sync this value with
+   * desktopPaddingTop in MainOverlay.vue!*/
   padding-top: 32px;
 }
 
