@@ -230,33 +230,40 @@ engineStore.$subscribe(() => {
   }
 });
 
+
 // The list of scenes shown in the skymap
 
 const CURRENT_SCENE_COLOR = Color.fromArgb(255, 37, 232, 166);
 const ADJACENT_SCENE_COLOR = Color.fromArgb(255, 31, 191, 137);
 const GENERAL_SCENE_COLOR = Color.fromArgb(255, 111, 111, 122);
-const skymapScenes = computed<SkymapSceneInfo[]>(() => {
 
+const skymapScenes = computed<SkymapSceneInfo[]>(() => {
   let scenes = [];
   let currentIndex = 0;
   const previousScene = constellationsStore.previousScene();
+
   if (previousScene) {
     scenes.push(previousScene);
     currentIndex += 1;
   }
+
   const fromHistory: GetSceneResponseT[] = [];
   let sceneNode = currentHistoryNode.value;
   let needed = 5;
+
   while (sceneNode && needed > 0) {
     fromHistory.push(sceneNode.value);
     sceneNode = sceneNode.next;
     needed -= 1;
   }
+
   scenes = scenes.concat(fromHistory).concat(futureScenes.value.slice(0, needed));
+
   return scenes.map((s, relIndex) => {
     const currentScene = relIndex === currentIndex;
     const adjacent = Math.abs(relIndex - currentIndex) === 1;
     const color = currentScene ? CURRENT_SCENE_COLOR : (adjacent ? ADJACENT_SCENE_COLOR : GENERAL_SCENE_COLOR);
+
     return {
       id: s.id,
       content: s.content,
@@ -349,9 +356,7 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
     const angle = -Math.atan2(cameraPoint.y - point.y, point.x - cameraPoint.x);
 
     // To figure out the proper position, we need to draw a line from the camera
-    // to the point, stopping whenever we hit the viewport edge, with a tweak to
-    // account for the placement of the arrow icon relative to its X/Y
-    // coordinate.
+    // to the point, stopping whenever we hit the viewport edge.
     //
     // The proper bounds of the full-screen display are stored in viewportWidth
     // and viewportHeight. On top of those bounds, we add a margin, and may also
