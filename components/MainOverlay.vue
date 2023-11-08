@@ -149,15 +149,7 @@ const {
   nextSceneSource
 } = storeToRefs(constellationsStore);
 
-const targetOutsideViewport = ref(false);
-
-function isOutsideViewport(place: PlaceDetailsT): boolean {
-  const point = engineStore.findScreenPointForRADec({ ra: place.ra_rad * R2D, dec: place.dec_rad * R2D });
-  const rootDiv = feedRootRef.value;
-  return (rootDiv !== undefined) &&
-    (point.x < 0 || point.x > rootDiv.clientWidth ||
-      point.y < 0 || point.y > rootDiv.clientHeight);
-}
+// Viewport management
 
 const engineStore = getEngineStore();
 
@@ -167,6 +159,76 @@ const {
   rollRad: wwt_roll_rad,
   zoomDeg: wwt_zoom_deg,
 } = storeToRefs(engineStore);
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+const feedRootRef = ref<HTMLDivElement>();
+const feedRootWidth = ref(0);
+const feedRootHeight = ref(0);
+
+useResizeObserver(feedRootRef, (entries) => {
+  const entry = entries[0];
+  feedRootWidth.value = entry.contentRect.width;
+  feedRootHeight.value = entry.contentRect.height;
+});
+
+const viewportWidth = feedRootWidth;
+
+// On desktop, the effective height of the viewport has to be adjusted to
+// factor in the top padding. This magic hardcoded number is set in th
+// CSS in `default.vue`.
+const desktopPaddingTop = 32;
+
+const viewportHeight = computed(() => {
+  return feedRootHeight.value + (isMobile.value ? 0 : desktopPaddingTop);
+});
+
+function raDecToXY(place: PlaceDetailsT): Point {
+  // Reference the viewport parameters so that Vue knows to recompute this value
+  // if anything changes.
+  const _hack = (
+    wwt_ra_rad.value +
+    wwt_dec_rad.value +
+    wwt_roll_rad.value +
+    wwt_zoom_deg.value +
+    viewportWidth.value +
+    viewportHeight.value
+  );
+
+  return engineStore.findScreenPointForRADec({
+    ra: place.ra_rad * R2D,
+    dec: place.dec_rad * R2D
+  });
+}
+
+function isOutsideViewport(place: PlaceDetailsT): boolean {
+  const point = raDecToXY(place);
+  return viewportWidth.value > 0 && (
+    (point.x < 0 || point.x > viewportWidth.value) ||
+    (point.y < 0 || point.y >= viewportHeight.value)
+  );
+}
+
+const targetOutsideViewport = ref(false);
+
+engineStore.$subscribe(() => {
+  const place = describedScene.value?.place;
+
+  if (place) {
+    try {
+      // When we're in the midst of moving, we disable outside-of-viewport effects.
+      targetOutsideViewport.value = !isMovingToScene.value && isOutsideViewport(place);
+    } catch {
+      // The above function can sometimes throw an exception (TypeError:
+      // matrix1 is undefined) if one of the WWT engine is just starting up.
+      // We should fix the API not to do that, but in the meantime, silence
+      // the issue.
+    }
+  }
+});
 
 // The list of scenes shown in the skymap
 
@@ -249,18 +311,12 @@ interface NeighborArrow {
   style: Record<string, any>;
 }
 
-interface Point {
-  x: number;
-  y: number;
-}
-
 const neighborArrows = computed<NeighborArrow[]>(() => {
   // Prerequisites to do anything useful.
 
   const currentScene = desiredScene.value;
-  const rootDiv = feedRootRef.value;
 
-  if (currentScene === null || rootDiv === undefined || !showNeighborArrows.value) {
+  if (currentScene === null || viewportWidth.value <= 0 || !showNeighborArrows.value) {
     return [];
   }
 
@@ -268,14 +324,8 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
   // Note that we do all of our work in X/Y pixel coordinates, ignoring the
   // geometry of the sphere.
 
-  const currentScenePoint = engineStore.findScreenPointForRADec({
-    ra: currentScene.place.ra_rad * R2D,
-    dec: currentScene.place.dec_rad * R2D
-  });
-
-  const _hack = wwt_ra_rad.value + wwt_dec_rad.value + wwt_roll_rad.value + wwt_zoom_deg.value;
-  const cameraPoint = { x: rootDiv.clientWidth / 2, y: rootDiv.clientHeight / 2 };
-  const desktopPaddingTop = 32; // XXXX hardcoding!!!! pixels
+  const currentScenePoint = raDecToXY(currentScene.place);
+  const cameraPoint = { x: viewportWidth.value / 2, y: viewportHeight.value / 2 };
   const mobileHeaderHeight = 38; // XXXX hardcoding!!!! pixels
   const buttonBarHeight = 42; // XXXX hardcoding!!!! pixels
   const scenePanelPadding = 8; // XXXX hardcoding!!!! pixels
@@ -303,16 +353,12 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
     // account for the placement of the arrow icon relative to its X/Y
     // coordinate.
     //
-    // On desktop, the proper X bounds of the full-screen display are [0,
-    // clientWidth] and the proper Y bounds are [0, clientHeight +
-    // desktopPaddingTop]. On mobile, the X bounds are the same, and the Y
-    // bounds are [0, clientHeight].
-    //
-    // On top of those bounds, we add a margin, and may also need to account for
-    // viewport blockages. In mobile we shrink the effective viewport so the
-    // arrows don't slide under other overlays. Finally, for the right and
-    // bottom edges, we need to subtract arrowSize to account for the way that
-    // the arrow is positioned.
+    // The proper bounds of the full-screen display are stored in viewportWidth
+    // and viewportHeight. On top of those bounds, we add a margin, and may also
+    // need to account for viewport blockages. In mobile we shrink the effective
+    // viewport so the arrows don't slide under other overlays. Finally, for the
+    // right and bottom edges, we need to subtract arrowSize to account for the
+    // way that the arrow appears relative to its specified location.
     //
     // To actually compute the right position, consider a parametric equation
     // for a line from A (the camera point) to B (the target point). Express A
@@ -329,8 +375,8 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
 
     const x0 = margin;
     const y0 = margin + (isMobile.value ? mobileHeaderHeight : 0);
-    const x1 = rootDiv.clientWidth - (margin + arrowSize);
-    let y1 = rootDiv.clientHeight - (margin + arrowSize);
+    const x1 = viewportWidth.value - (margin + arrowSize);
+    let y1 = viewportHeight.value - (margin + arrowSize);
 
     if (isMobile.value) {
       y1 -= buttonBarHeight;
@@ -338,8 +384,6 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
       if (!isExploreMode.value) {
         y1 -= viewportBottomBlockage.value + scenePanelPadding;
       }
-    } else {
-      y1 += desktopPaddingTop;
     }
 
     const tx0 = (cameraPoint.x - x0) / (cameraPoint.x - point.x);
@@ -383,7 +427,7 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
   // usually so far away that they really ought to be basically stationary.
 
   // Size of the full viewport diagonal, in pixels, squared:
-  const viewportsq = rootDiv.clientWidth ** 2 + rootDiv.clientHeight ** 2;
+  const viewportsq = viewportWidth.value ** 2 + viewportHeight.value ** 2;
 
   // Size of the offset between the current viewport center (the camera point)
   // and the current scene, in pixels, squared:
@@ -428,11 +472,7 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
   );
 
   for (const n of allNeighborScenes.value) {
-    const point = engineStore.findScreenPointForRADec({
-      ra: n.place.ra_rad * R2D,
-      dec: n.place.dec_rad * R2D
-    });
-
+    const point = raDecToXY(n.place);
     const angle = Math.atan2(point.y - currentScenePoint.y, point.x - currentScenePoint.x);
 
     // Since we're differencing angles, we have to normalize before comparing magnitudes.
@@ -460,7 +500,6 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
 const showSwipeAnimation = ref(false);
 const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
-const feedRootRef = ref<HTMLDivElement>();
 const mobileScenePanelRef = ref<HTMLDivElement>();
 
 onMounted(() => {
@@ -473,22 +512,6 @@ onMounted(() => {
   swipeAnimationTimer.value = setInterval(() => {
     showSwipeAnimation.value = currentHistoryNode.value !== null && !showSwipeAnimation.value;
   }, 10000);
-
-  engineStore.$subscribe(() => {
-    const place = describedScene.value?.place;
-
-    if (place) {
-      try {
-        // When we're in the midst of moving, we disable outside-of-viewport effects.
-        targetOutsideViewport.value = !isMovingToScene.value && isOutsideViewport(place);
-      } catch {
-        // The above function can sometimes throw an exception (TypeError:
-        // matrix1 is undefined) if one of the WWT engine is just starting up.
-        // We should fix the API not to do that, but in the meantime, silence
-        // the issue.
-      }
-    }
-  });
 });
 
 function bottomTransitionCleanup(event: TransitionEvent) {
