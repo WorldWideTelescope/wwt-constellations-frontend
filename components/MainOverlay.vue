@@ -507,6 +507,9 @@ const swipeAnimationTimer = ref<NodeJS.Timer | undefined>(undefined);
 const fullPageContainerRef = ref<HTMLDivElement>();
 const mobileScenePanelRef = ref<HTMLDivElement>();
 
+const hasNext = computed<boolean>(() => futureScenes.value.length > 0 ||
+  (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next));
+
 onMounted(() => {
   nextTick(() => {
     constellationsStore.ensureForwardCoverage(8).then(() => {
@@ -514,8 +517,10 @@ onMounted(() => {
     });
   });
 
+  showSwipeAnimation.value = false;
+
   swipeAnimationTimer.value = setInterval(() => {
-    showSwipeAnimation.value = currentHistoryNode.value !== null && !showSwipeAnimation.value;
+    showSwipeAnimation.value = hasNext.value && !showSwipeAnimation.value;
   }, 10000);
 });
 
