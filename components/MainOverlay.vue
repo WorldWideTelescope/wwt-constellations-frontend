@@ -3,37 +3,24 @@
     <ClientOnly>
       <n-button v-if="showNeighborArrows" v-for="n in neighborArrows" class="neighbor-arrow" :bordered="false"
         @click="() => constellationsStore.useNearbyTimeline(n.sceneId)" :style="n.style">
-        <n-icon size="30" color="white">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1080"
-            height="1080" viewBox="0 0 1080 1080" xml:space="preserve">
-            <g transform="matrix(1 0 0 1 540 540)" id="5e37fbc9-afa3-4ee7-9700-3bde04719136">
-            </g>
-            <g transform="matrix(1 0 0 1 540 540)" id="3b68765a-11c4-4d1d-a495-a1bdf884d74f">
-              <rect
-                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1; visibility: hidden;"
-                vector-effect="non-scaling-stroke" x="-540" y="-540" rx="0" ry="0" width="1080" height="1080" />
-            </g>
-            <g transform="matrix(45 0 0 45 842.74 540)">
-              <path
-                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
-                vector-effect="non-scaling-stroke" transform=" translate(-16.5, -12)"
-                d="M 20.08 11.42 L 16.04 5.77 C 15.7 5.289999999999999 15.149999999999999 5 14.559999999999999 5 C 13.069999999999999 5 12.209999999999999 6.68 13.069999999999999 7.890000000000001 L 16 12 L 13.07 16.11 C 12.200000000000001 17.32 13.07 19 14.56 19 C 15.15 19 15.71 18.71 16.05 18.23 L 20.09 12.58 C 20.33 12.23 20.33 11.77 20.08 11.42 z"
-                stroke-linecap="round" />
-            </g>
-            <g transform="matrix(45 0 0 45 527.74 540)">
-              <path
-                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
-                vector-effect="non-scaling-stroke" transform=" translate(-9.5, -12)"
-                d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z"
-                stroke-linecap="round" />
-            </g>
-            <g transform="matrix(45 0 0 45 216.65 540)">
-              <path
-                style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
-                vector-effect="non-scaling-stroke" transform=" translate(-9.5, -12)"
-                d="M 13.08 11.42 L 9.05 5.77 C 8.7 5.29 8.15 5 7.56 5 C 6.07 5 5.2 6.68 6.07 7.89 L 9 12 L 6.07 16.11 C 5.2 17.32 6.07 19 7.56 19 C 8.15 19 8.709999999999999 18.71 9.049999999999999 18.23 L 13.09 12.58 C 13.33 12.23 13.33 11.77 13.08 11.42 z"
-                stroke-linecap="round" />
-            </g>
+        <n-icon size="36" color="#8acbec">
+          <svg version="1.1" width="341.34344" height="341.34344" viewBox="0 0 341.34344 341.34344" xml:space="preserve"
+            id="svg2" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+            <defs id="defs1"></defs>
+            <circle cx="170.67172" cy="-170.67172" r="126.45"
+              style="fill:#48484e;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.81;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+              id="circle1" transform="rotate(90)" />
+            <path
+              d="m 262.66551,170.97521 c 0,10.0879 -8.1771,18.265 -18.265,18.265 H 96.945752 c -10.0879,0 -18.265,-8.1771 -18.265,-18.265 0,-10.0879 8.1771,-18.265 18.265,-18.265 H 244.40051 c 10.0879,0 18.265,8.1771 18.265,18.265 z"
+              style="fill:#ffffff;fill-rule:nonzero;stroke:none;stroke-width:2.81;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+              stroke-linecap="round" id="path1" />
+            <path
+              d="m 262.66551,170.67173 c 0,4.67584 -1.78435,9.34887 -5.34743,12.91476 l -53.94919,53.952 c -7.13459,7.13459 -18.69774,7.13459 -25.82952,0 -7.13459,-7.13178 -7.13178,-18.69774 -0.003,-25.82952 l 41.03162,-41.03724 -41.03443,-41.03443 c -7.12897,-7.13459 -7.12897,-18.69774 0,-25.83233 7.13459,-7.131785 18.69774,-7.131785 25.83233,0 l 53.94919,53.952 c 3.56589,3.56308 5.35024,8.24173 5.35024,12.91476 z"
+              style="fill:#ffffff;fill-rule:nonzero;stroke:none;stroke-width:2.81;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+              stroke-linecap="round" id="path2" />
+            <circle
+              style="fill:none;fill-opacity:1;stroke:currentColor;stroke-width:24;stroke-linejoin:round;stroke-dasharray:none"
+              id="path3" cx="170.67172" cy="170.67172" r="158.67172" />
           </svg>
         </n-icon>
       </n-button>
@@ -336,7 +323,7 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
   const mobileHeaderHeight = 38; // XXXX hardcoding!!!! pixels
   const buttonBarHeight = 42; // XXXX hardcoding!!!! pixels
   const scenePanelPadding = 8; // XXXX hardcoding!!!! pixels
-  const arrowSize = 30; // pixels
+  const arrowSize = 36; // pixels
   const margin = 4; // pixels
 
   if (isMobile.value) {
@@ -1018,20 +1005,21 @@ watchEffect(() => {
   pointer-events: all;
 }
 
-@keyframes arrow-color-cycle {
-
-  16.7%,
-  50% {
-    color: rgb(191, 243, 226);
+@keyframes pulse-arrow-color {
+  0% {
+    color: #8acbec;
   }
 
-  33% {
-    color: #7fe7c4;
+  10% {
+    color: #8acbec;
   }
 
-  66%,
+  85% {
+    color: #215276;
+  }
+
   100% {
-    color: white;
+    color: #215276;
   }
 }
 
@@ -1041,25 +1029,10 @@ watchEffect(() => {
   padding: 0px;
   z-index: -1000;
 
-  &:hover svg {
-    g {
-      animation: arrow-color-cycle;
-      animation-duration: 0.45s;
-      animation-iteration-count: infinite;
-    }
-
-    g:nth-child(3) {
-      animation-delay: 0.3s;
-    }
-
-    g:nth-child(4) {
-      animation-delay: 0.15s;
-    }
-
-    g:nth-child(5) {
-      animation-delay: 0s;
+  svg {
+    circle:nth-child(5) {
+      animation: pulse-arrow-color 1.6s alternate infinite;
     }
   }
-
 }
 </style>
