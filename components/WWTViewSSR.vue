@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { ComponentPublicInstance, ref } from "vue";
+import { type ComponentPublicInstance, ref } from "vue";
 
 import { applyImageSetLayerSetting } from "@wwtelescope/engine-helpers";
 import { useConstellationsStore } from "~/stores/constellations";

@@ -292,7 +292,9 @@ const allNeighborScenes = computedAsync<GetSceneResponseT[]>(async () => {
   }
 
   return neighbors;
-});
+},
+  [] // The initial value, used while the async computation is evaluating
+);
 
 // Now we have to go from that list of neighbor scenes to a list of arrows that
 // we might display in the UI.
@@ -609,27 +611,15 @@ function goPrev() {
   constellationsStore.moveBack();
 }
 
-watch(currentHistoryNode, async () => {
-  const currentScene = currentHistoryNode.value?.value;
-  if (currentScene) {
-    describedScene.value = currentScene;
-    if (describedScene.value) {
-      desiredScene.value = {
-        id: describedScene.value.id,
-        place: describedScene.value.place,
-        content: describedScene.value.content,
-      };
+watch(
+  fullPageContainerRef,
+  (newRef) => {
+    if (newRef) {
+      recenter();
     }
-
-    await constellationsStore.ensureForwardCoverage(8);
-  }
-});
-
-watch(fullPageContainerRef, () => {
-  if (fullPageContainerRef.value) {
-    recenter();
-  }
-});
+  },
+  { immediate: true }
+);
 
 
 // Managing the height of the grid items in mobile mode. We need each item to be
@@ -661,13 +651,17 @@ useResizeObserver(desktop_overlay, (entries) => {
   desktop_overlay_width.value = entry.contentRect.width;
 });
 
-watchEffect(() => {
-  if (isMobile.value || props.showSceneEditor) {
-    viewportLeftBlockage.value = 0;
-  } else {
-    viewportLeftBlockage.value = desktop_overlay_width.value;
-  }
-});
+watch(
+  [isMobile, desktop_overlay_width],
+  ([newIsMobile, newDesktopOverlayWidth]) => {
+    if (newIsMobile || props.showSceneEditor) {
+      viewportLeftBlockage.value = 0;
+    } else {
+      viewportLeftBlockage.value = newDesktopOverlayWidth;
+    }
+  },
+  { immediate: true }
+);
 
 // For the mobile case, since the server-side default is desktop mode, the
 // initial value of the ref is null, because the child component is `v-if`ed out
@@ -675,24 +669,32 @@ watchEffect(() => {
 const mobile_overlay = ref<ComponentPublicInstance | null>(null);
 const mobile_overlay_height = ref(viewportBottomBlockage.value);
 
-watchEffect(() => {
-  if (mobile_overlay.value) {
-    useResizeObserver(mobile_overlay.value, (entries) => {
-      const entry = entries[0];
-      if (entry.contentRect.height > 0) {
-        mobile_overlay_height.value = entry.contentRect.height;
-      }
-    });
-  }
-});
+watch(
+  mobile_overlay,
+  (newMobileOverlay) => {
+    if (newMobileOverlay) {
+      useResizeObserver(newMobileOverlay, (entries) => {
+        const entry = entries[0];
+        if (entry.contentRect.height > 0) {
+          mobile_overlay_height.value = entry.contentRect.height;
+        }
+      });
+    }
+  },
+  { immediate: true }
+);
 
-watchEffect(() => {
-  if (isMobile.value && !props.showSceneEditor) {
-    viewportBottomBlockage.value = mobile_overlay_height.value;
-  } else {
-    viewportBottomBlockage.value = 0;
-  }
-});
+watch(
+  [isMobile, mobile_overlay_height],
+  ([newIsMobile, newMobileOverlayHeight]) => {
+    if (newIsMobile && !props.showSceneEditor) {
+      viewportBottomBlockage.value = newMobileOverlayHeight;
+    } else {
+      viewportBottomBlockage.value = 0;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped lang="less">

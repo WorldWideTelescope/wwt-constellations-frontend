@@ -29,7 +29,7 @@ import {
 import { InsertChartRound } from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { GetHandleResponseT } from "~/utils/apis";
+import { type GetHandleResponseT } from "~/utils/apis";
 
 const { $backendAuthCall } = useNuxtApp();
 
@@ -48,15 +48,19 @@ const { handleData } = toRefs(props);
 
 const can_dashboard = ref(false);
 
-watchEffect(async () => {
-  if (!loggedIn.value) {
-    can_dashboard.value = false;
-  } else {
-    const fetcher = await $backendAuthCall();
-    const result = await handlePermissions(fetcher, handleData.value.handle);
-    can_dashboard.value = result && result.view_dashboard || false;
-  }
-});
+watch(
+  loggedIn,
+  async (newLoggedIn) => {
+    if (!newLoggedIn) {
+      can_dashboard.value = false;
+    } else {
+      const fetcher = await $backendAuthCall();
+      const result = await handlePermissions(fetcher, handleData.value.handle);
+      can_dashboard.value = result && result.view_dashboard || false;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped lang="less">

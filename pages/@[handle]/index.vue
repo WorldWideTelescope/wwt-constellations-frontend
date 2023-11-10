@@ -6,8 +6,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { nextTick } from "vue";
-import { RouteLocationNormalized } from "vue-router";
+import { type RouteLocationNormalized } from "vue-router";
 
 import { getHandle, handlePermissions } from "~/utils/apis";
 import { useConstellationsStore } from "~/stores/constellations";

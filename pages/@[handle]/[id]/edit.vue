@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { RouteLocationNormalized } from "vue-router";
+import { type RouteLocationNormalized } from "vue-router";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { getScene } from "~/utils/apis";
@@ -60,9 +60,9 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
 
 // Managing the "desired scene" state
 
-watchEffect(() => {
+watchEffect(async () => {
   if (scene_data.value !== null) {
-    constellationsStore.setupForScene(scene_data.value);
+    await constellationsStore.setupForSingleScene(scene_data.value);
   }
 });
 
