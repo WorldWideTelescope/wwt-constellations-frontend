@@ -1,10 +1,10 @@
-import { $Fetch } from "ofetch";
+import { type $Fetch } from "ofetch";
 import { defineStore } from "pinia";
 import { useBreakpoints } from "@vueuse/core";
 import Yallist from "yallist";
 
-import { getHomeTimeline, getHandleTimeline, GetSceneResponseT, TimelineResponseT } from "~/utils/apis";
-import { SceneDisplayInfoT } from "~/utils/types";
+import { getHomeTimeline, getHandleTimeline, type GetSceneResponseT, type TimelineResponseT } from "~/utils/apis";
+import { type SceneDisplayInfoT } from "~/utils/types";
 
 export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // Whether the user is logged in.
@@ -43,43 +43,72 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   // slewing towards it, etc.
   const desiredScene = ref<SceneDisplayInfoT | null>(null);
 
-  // The history of visited scenes
-  const sceneHistory = ref(new Yallist<GetSceneResponseT>());
-  const currentHistoryNode = ref<Yallist.Node<GetSceneResponseT> | null>(sceneHistory.value.head);
-  const futureScenes = ref<GetSceneResponseT[]>([]);
+  // "Timeline sources". We have a general concept of a timeline: an ordered
+  // list of scenes that we might navigate around. That list might come from
+  // various places: the global timeline, the timeline associated with a
+  // particular handle, etc. This chunk of code manages these different sources.
 
-  type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
+  type NextSceneSourceType =
+    { type: 'global' } |
+    { type: 'single-scene', id: string } |
+    { type: 'handle'; handle: string } |
+    { type: 'nearby', baseID: string };
 
-  let getNextScenes: ScenesGetter | null = getHomeTimeline;
-  let nextNeededPage = 0;
-  type NextSceneSourceType = { type: 'global' } |
-                             { type: 'single-scene', id: string } |
-                             { type: 'handle'; handle: string } |
-                             { type: 'nearby', baseID: string };
   let nextSceneSource = ref<NextSceneSourceType>({ type: 'global' });
 
+  // This is basically an equality test for NextSceneSourceType.
+  function needToChangeSceneSource(source: NextSceneSourceType) {
+    return !((source.type === 'global' && nextSceneSource.value.type === 'global') ||
+      (source.type === 'single-scene' && nextSceneSource.value.type === 'single-scene') ||
+      (source.type === 'handle' && nextSceneSource.value.type === 'handle' && source.handle === nextSceneSource.value.handle) ||
+      (source.type === 'nearby' && nextSceneSource.value.type === 'nearby' && source.baseID === nextSceneSource.value.baseID));
+  }
 
-  // Set up state for a single scene
-  function setupForSingleScene(scene: GetSceneResponseT) {
-    describedScene.value = scene;
-    desiredScene.value = {
-      id: scene.id,
-      place: scene.place,
-      content: scene.content,
-    };
-    knownScenes.value.set(scene.id, scene);
-    updateNextSceneSource({ type: 'single-scene', id: scene.id });
-    moveHistoryToScene(scene.id);
+  // In pracice, we fill out the timeline by calling the `getNextScenes`
+  // function and using that to fill out `futureScenes`, a list of upcoming
+  // scenes in the timeline.
+
+  type ScenesGetter = (fetcher: $Fetch, pageNum: number) => Promise<TimelineResponseT>;
+  let getNextScenes: ScenesGetter = getHomeTimeline;
+  let nextNeededPage = 0;
+  const futureScenes = ref<GetSceneResponseT[]>([]);
+
+  // Use this function to set the timeline source. If the desired source is the
+  // same as the current one, nothing happens and this function returns false.
+  // Otherwise we update `getNextScenes`, reset the `futureScenes` state, and
+  // return true.
+  function updateNextSceneSource(source: NextSceneSourceType): boolean {
+    if (!needToChangeSceneSource(source)) {
+      return false;
+    }
+
+    if (source.type === 'global') {
+      getNextScenes = getHomeTimeline;
+    } else if (source.type === 'handle') {
+      getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
+    } else if (source.type === 'nearby') {
+      // TODO: How to handle pagination for the nearby timeline?
+      getNextScenes = async (fetcher, page) => {
+        if (page === 0) {
+          return await getNearbyTimeline(fetcher, source.baseID);
+        } else {
+          return { results: [] };
+        }
+      }
+    } else if (source.type === 'single-scene') {
+      getNextScenes = async (_fetcher, _page) => { return { results: [] }; };
+    }
+
+    nextSceneSource.value = source;
+    futureScenes.value = [];
+    nextNeededPage = 0;
+    return true;
   }
 
   // Ensure that the future scenes data structure contains at least `n` items.
   // If something fails badly in the backend, it is possible that this function
   // will give up without actually achieving its goal.
   async function ensureForwardCoverage(n: number) {
-    if (getNextScenes === null) {
-      return;
-    }
-
     // Note that we are currently using $backendCall, not $backendAuthCall,
     // because none of the feeds are personalized. To get personalized feeds
     // we'll need to change that. (And we might also need to fix things up so
@@ -90,7 +119,6 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     const { $backendCall } = useNuxtApp();
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-
       // If, during one of our asynchronous attempts, the app has
       // changed its navigation mode, return.
       if (needToChangeSceneSource(navigationMode.value)) {
@@ -115,27 +143,61 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     }
   }
 
-  function moveBack(count=1) {
-    let remaining = count;
+
+  // Separate from the timeline source, we maintain a navigable history of visited scenes.
+
+  const sceneHistory = ref(new Yallist<GetSceneResponseT>());
+  const currentHistoryNode = ref<Yallist.Node<GetSceneResponseT> | null>(sceneHistory.value.head);
+
+  // Set the current history item. This function ties the history to
+  // `desiredScene` and `describedScene`: it will set them to match the new
+  // current item.
+  function setCurrentHistoryNode(node: Yallist.Node<GetSceneResponseT>) {
+    currentHistoryNode.value = node;
+
+    if (node.value) {
+      if (describedScene.value === null || describedScene.value.id != node.value.id) {
+        describedScene.value = node.value;
+      }
+
+      if (desiredScene.value === null || desiredScene.value.id != node.value.id) {
+        desiredScene.value = {
+          id: node.value.id,
+          place: node.value.place,
+          content: node.value.content,
+        };
+      }
+
+      knownScenes.value.set(node.value.id, node.value);
+    }
+  }
+
+  function moveBack(count = 1) {
+    if (count <= 0) {
+      return;
+    }
+
     let node = currentHistoryNode.value;
     if (node === null) {
       return;
     }
+
     let prevNode: Yallist.Node<GetSceneResponseT> | null = null;
-    while (remaining > 0 && (prevNode = node.prev)) {
+
+    while (count > 0 && (prevNode = node.prev)) {
       if (prevNode) {
         node = prevNode;
-       }
-       remaining -= 1;
+      }
+
+      count -= 1;
     }
-    currentHistoryNode.value = node;
-    const scene = node.value;
-    if (scene) {
-      desiredScene.value = scene;
-    }
+
+    setCurrentHistoryNode(node);
   }
 
-  async function moveForward(count=1) {
+  // This function is async because it might need to go to the timeline to find
+  // out what scenes come next.
+  async function moveForward(count = 1) {
     if (count <= 0) {
       return;
     }
@@ -146,45 +208,51 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
 
     const scenesToAdd: GetSceneResponseT[] = [];
 
-    let remaining = count;
-    while (remaining > 0) {
+    while (count > 0) {
       const next = currentHistoryNode.value?.next;
+
       if (next) {
         node = next;
       } else {
         if (futureScenes.value.length === 0) {
-          await ensureForwardCoverage(remaining);  // Should this be larger?
+          await ensureForwardCoverage(count);  // Should this be larger?
         }
+
         scene = futureScenes.value.shift();
         if (scene) {
           scenesToAdd.push(scene);
         }
       }
-      remaining--;
+
+      count--;
     }
 
     sceneHistory.value.push(...scenesToAdd);
     if (scene) {
-      currentHistoryNode.value = sceneHistory.value.tail;
+      setCurrentHistoryNode(sceneHistory.value.tail!);
     } else if (node) {
-      currentHistoryNode.value = node;
+      setCurrentHistoryNode(node);
     }
-
   }
 
+  // This basically makes the specified scene the current one: it appends it to
+  // the history and makes it current, updating the "desired" and "described"
+  // scene values.
   async function moveHistoryToScene(id: string) {
     let scene = knownScenes.value.get(id);
+
     if (scene === undefined) {
       const { $backendCall } = useNuxtApp();
       const fetchedScene = await getScene($backendCall, id);
       if (fetchedScene === null) {
         return;
       }
+
       scene = fetchedScene;
     }
 
     sceneHistory.value.push(scene);
-    currentHistoryNode.value = sceneHistory.value.tail;
+    setCurrentHistoryNode(sceneHistory.value.tail!);
 
     if (scene !== undefined) {
       const futureIndex = futureScenes.value.findIndex(s => s.id === scene?.id);
@@ -198,52 +266,31 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
     return currentHistoryNode.value?.prev?.value ?? null;
   }
 
-  function needToChangeSceneSource(source: NextSceneSourceType) {
-    return !((source.type === 'global' && nextSceneSource.value.type === 'global') ||
-             (source.type === 'single-scene' && nextSceneSource.value.type === 'single-scene') ||
-             (source.type === 'handle' && nextSceneSource.value.type === 'handle' && source.handle === nextSceneSource.value.handle) ||
-             (source.type === 'nearby' && nextSceneSource.value.type === 'nearby' && source.baseID === nextSceneSource.value.baseID));
+
+  // Set up state for a single scene
+
+  async function setupForSingleScene(scene: GetSceneResponseT) {
+    updateNextSceneSource({ type: 'single-scene', id: scene.id });
+    await moveHistoryToScene(scene.id);
   }
 
-  function updateNextSceneSource(source: NextSceneSourceType) {
-    if (!needToChangeSceneSource(source)) {
-      return;
+  async function useGlobalTimeline() {
+    if (updateNextSceneSource({ type: 'global' })) {
+      await ensureForwardCoverage(8);
     }
-    if (source.type === 'global') {
-      getNextScenes = getHomeTimeline;
-    } else if (source.type === 'handle') {
-      getNextScenes = (fetcher, page) => getHandleTimeline(fetcher, source.handle, page);
-    } else if (source.type === 'nearby') {
-      // TODO: How to handle pagination for the nearby timeline?
-      getNextScenes = async (fetcher, page) => {
-        if (page === 0) {
-          return getNearbyTimeline(fetcher, source.baseID);
-        } else {
-          return { results: [] };
-        }
-      }
-    } else if (source.type === 'single-scene') {
-      getNextScenes = async (_fetcher, _page) => { return { results: [] }; };
+  }
+
+  async function useHandleTimeline(handle: string) {
+    if (updateNextSceneSource({ type: 'handle', handle })) {
+      await ensureForwardCoverage(8);
     }
-    
-    nextSceneSource.value = source;
-    sceneHistory.value.tail = currentHistoryNode.value;
-    futureScenes.value = [];
-    nextNeededPage = 0;
   }
 
-  function useGlobalTimeline() {
-    updateNextSceneSource({ type: 'global' });
-  }
-
-  function useHandleTimeline(handle: string) {
-    updateNextSceneSource({ type: 'handle', handle });
-  }
-
-  function useNearbyTimeline(baseID: string) {
-    updateNextSceneSource({ type: 'nearby', baseID });
-    moveHistoryToScene(baseID);
-    ensureForwardCoverage(8);
+  async function useNearbyTimeline(baseID: string) {
+    if (updateNextSceneSource({ type: 'nearby', baseID })) {
+      await moveHistoryToScene(baseID);
+      await ensureForwardCoverage(8);
+    }
   }
 
   // Cross-component plumbing for the region-of-interest display

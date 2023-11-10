@@ -2,7 +2,7 @@
   <div id="feed-root" :class="{ 'disable-pe': isExploreMode }" ref="feedRootRef">
     <ClientOnly>
       <n-button v-if="showNeighborArrows" v-for="n in neighborArrows" class="neighbor-arrow" :bordered="false"
-        @click="() => constellationsStore.useNearbyTimeline(n.sceneId)" :style="n.style">
+        @click="clickNeighbor(n.sceneId)" :style="n.style">
         <n-icon size="36" color="#8acbec">
           <svg version="1.1" width="341.34344" height="341.34344" viewBox="0 0 341.34344 341.34344" xml:space="preserve"
             id="svg2" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
@@ -135,6 +135,21 @@ const {
   isMovingToScene,
   nextSceneSource
 } = storeToRefs(constellationsStore);
+
+
+// Ensure that we're always looking at something. The different page
+// components are responsible for setting the timeline type.
+
+onMounted(() => {
+  nextTick(async () => {
+    await constellationsStore.ensureForwardCoverage(8);
+
+    if (describedScene.value === null) {
+      await constellationsStore.moveForward();
+    }
+  });
+});
+
 
 // Viewport management
 
@@ -489,6 +504,12 @@ const neighborArrows = computed<NeighborArrow[]>(() => {
   return arrows;
 });
 
+async function clickNeighbor(targetSceneId: string) {
+  await constellationsStore.useNearbyTimeline(targetSceneId);
+  await navigateTo("/");
+}
+
+
 // The swipe interaction to move to the next scene.
 
 const showSwipeAnimation = ref(false);
@@ -500,12 +521,6 @@ const hasNext = computed<boolean>(() => futureScenes.value.length > 0 ||
   (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next));
 
 onMounted(() => {
-  nextTick(() => {
-    constellationsStore.ensureForwardCoverage(8).then(() => {
-      constellationsStore.moveForward();
-    });
-  });
-
   showSwipeAnimation.value = false;
 
   swipeAnimationTimer.value = setInterval(() => {
@@ -546,10 +561,7 @@ const { lengthY } = useSwipe(
         return;
       }
 
-      const hasNext = futureScenes.value.length > 0 ||
-        (sceneHistory.value.length > 0 && !!currentHistoryNode.value?.next);
-      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.2 && hasNext) {
-
+      if (lengthY.value > fullPageContainerRef.value.offsetHeight * 0.2 && hasNext.value) {
         const moveForwardListener = (event: Event) => {
           constellationsStore.moveForward();
           event.target?.removeEventListener("transitionend", moveForwardListener);
@@ -580,14 +592,15 @@ onBeforeUnmount(() => {
   clearInterval(swipeAnimationTimer.value);
 });
 
+
 // Various user interactions
 
-function onItemSelected(sceneInfo: SceneDisplayInfoT) {
+async function onItemSelected(sceneInfo: SceneDisplayInfoT) {
   const index = skymapScenes.value.findIndex(scene => scene.id === sceneInfo.id);
   if (index < 0) {
-    constellationsStore.useNearbyTimeline(sceneInfo.id);
+    await constellationsStore.useNearbyTimeline(sceneInfo.id);
   } else {
-    constellationsStore.moveHistoryToScene(sceneInfo.id);
+    await constellationsStore.moveHistoryToScene(sceneInfo.id);
   }
 }
 

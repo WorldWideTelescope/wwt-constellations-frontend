@@ -3,11 +3,14 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { nextTick } from "vue";
 
 import { useConstellationsStore } from "~/stores/constellations";
 
 const constellationsStore = useConstellationsStore();
+
+const { nextSceneSource } = storeToRefs(constellationsStore);
 
 useHead({
   title: "WorldWide Telescope",
@@ -42,11 +45,11 @@ useServerSeoMeta({
   twitterImage: require("~/assets/images/wwt_banner.jpg"),
 });
 
-onMounted(() => {
-  constellationsStore.useGlobalTimeline();
-
-  nextTick(async () => {
-    await constellationsStore.ensureForwardCoverage(8);
-  });
+onMounted(async () => {
+  if (nextSceneSource.value.type == "single-scene") {
+    await constellationsStore.useNearbyTimeline(nextSceneSource.value.id);
+  } else if (nextSceneSource.value.type == "handle") {
+    await constellationsStore.useGlobalTimeline();
+  }
 });
 </script>

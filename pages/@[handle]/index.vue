@@ -63,11 +63,8 @@ watchEffect(async () => {
   }
 });
 
-onMounted(() => {
-  constellationsStore.useHandleTimeline(handle);
-  nextTick(() => {
-    constellationsStore.ensureForwardCoverage(8);
-  });
+onMounted(async () => {
+  await constellationsStore.useHandleTimeline(handle);
 });
 </script>
 
