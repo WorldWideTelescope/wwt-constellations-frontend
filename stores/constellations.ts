@@ -303,34 +303,40 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
   const viewportLeftBlockage = ref(0);
   const viewportBottomBlockage = ref(0);
 
-  const isMovingToScene = ref(false);
+  // Various UI elements want to track whether we're in the midst of moving to a
+  // scene. We can't just keep track of this with a boolean, though, because
+  // multiple moves can be triggered simultaneously (by interrupting one with
+  // another).
+
+  const numActiveMoves = ref(0);
+  const isMovingToScene = computed(() => numActiveMoves.value > 0);
 
   return {
+    currentHistoryNode,
     describedScene,
     desiredScene,
+    ensureForwardCoverage,
+    futureScenes,
     isMobile,
     isMovingToScene,
     knownScenes,
     loggedIn,
-    roiEditHeightPercentage,
-    roiEditWidthPercentage,
-    setupForSingleScene,
-    showWWT,
-    viewNeedsInitialization,
-    viewportBottomBlockage,
-    viewportLeftBlockage,
-
-    sceneHistory,
-    currentHistoryNode,
-    futureScenes,
     moveBack,
     moveForward,
     moveHistoryToScene,
+    nextSceneSource,
+    numActiveMoves,
     previousScene,
-    ensureForwardCoverage,
+    roiEditHeightPercentage,
+    roiEditWidthPercentage,
+    sceneHistory,
+    setupForSingleScene,
+    showWWT,
     useGlobalTimeline,
     useHandleTimeline,
     useNearbyTimeline,
-    nextSceneSource,
+    viewNeedsInitialization,
+    viewportBottomBlockage,
+    viewportLeftBlockage,
   }
 });

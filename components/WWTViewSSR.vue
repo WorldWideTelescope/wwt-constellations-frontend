@@ -25,9 +25,9 @@ const constellationsStore = useConstellationsStore();
 const {
   desiredScene,
   describedScene,
+  numActiveMoves,
   viewportBottomBlockage,
   viewportLeftBlockage,
-  isMovingToScene
 } = storeToRefs(constellationsStore);
 
 const wwt = ref<ComponentPublicInstance | null>(null);
@@ -160,7 +160,7 @@ watch(desiredScene, async (newScene) => {
   }
 
   // Finally, launch the goto
-  isMovingToScene.value = true;
+  numActiveMoves.value += 1;
 
   engineStore.gotoRADecZoom({
     raRad: setup.raRad,
@@ -173,7 +173,7 @@ watch(desiredScene, async (newScene) => {
   }).catch(() => {
     // As above, if this goto is superseded, no problem.
   }).finally(() => {
-    isMovingToScene.value = false;
+    numActiveMoves.value -= 1;
   }).then(() => {
     addImpression($backendCall, newScene.id).then((success) => {
       if (describedScene.value && success) {
