@@ -56,13 +56,25 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
 });
 
-// Managing the "desired scene" state
+// Managing the "desired scene" state.
+//
+// For this, the editor, we have an extra wrinkle where we need to futz with the
+// "blockage" setup to auto-center the view the way we would like. In order for
+// this futzing to "take", we need to force an update to `desiredScene`, even if
+// it matches the current scene -- which will be the overwhelmingly common case,
+// since the main way to edit a scene is from its scene-specific page.
 
-watchEffect(async () => {
-  if (scene_data.value !== null) {
-    await constellationsStore.setupForSingleScene(scene_data.value);
-  }
-});
+watch(scene_data,
+  async (newSceneData) => {
+    if (newSceneData !== null) {
+      constellationsStore.desiredScene = null;
+      constellationsStore.viewportBottomBlockage = 0;
+      constellationsStore.viewportLeftBlockage = 0;
+      await constellationsStore.setupForSingleScene(newSceneData);
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   // This is all to handle the case when `scene_data` is non-null right off the bat,
@@ -76,6 +88,9 @@ onMounted(async () => {
     await store.waitForReady();
 
     if (scene_data.value !== null) {
+      constellationsStore.desiredScene = null;
+      constellationsStore.viewportBottomBlockage = 0;
+      constellationsStore.viewportLeftBlockage = 0;
       await constellationsStore.setupForSingleScene(scene_data.value);
     }
   });
