@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { RouteLocationNormalized } from "vue-router";
+import { type RouteLocationNormalized } from "vue-router";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { getScene } from "~/utils/apis";
@@ -44,8 +44,6 @@ const { $backendCall } = useNuxtApp();
 
 const constellationsStore = useConstellationsStore();
 const {
-  describedScene,
-  desiredScene,
   roiEditHeightPercentage,
   roiEditWidthPercentage,
 } = storeToRefs(constellationsStore);
@@ -58,18 +56,28 @@ const { data: scene_data } = await useAsyncData(`scene-${id}`, async () => {
   return getScene($backendCall, id);
 });
 
-// Managing the "desired scene" state
+// Managing the "desired scene" state.
+//
+// For this, the editor, we have an extra wrinkle where we need to futz with the
+// "blockage" setup to auto-center the view the way we would like. In order for
+// this futzing to "take", we need to force an update to `desiredScene`, even if
+// it matches the current scene -- which will be the overwhelmingly common case,
+// since the main way to edit a scene is from its scene-specific page.
 
-watchEffect(() => {
-  if (scene_data.value !== null) {
-    constellationsStore.setupForScene(scene_data.value);
-  }
-});
+watch(scene_data,
+  async (newSceneData) => {
+    if (newSceneData !== null) {
+      constellationsStore.desiredScene = null;
+      constellationsStore.viewportBottomBlockage = 0;
+      constellationsStore.viewportLeftBlockage = 0;
+      await constellationsStore.setupForSingleScene(newSceneData);
+    }
+  },
+  { immediate: true }
+);
 
-onMounted(() => {
-  constellationsStore.useHandleTimeline();
-
-  // This is all to handle the case when `data` is non-null right off the bat,
+onMounted(async () => {
+  // This is all to handle the case when `scene_data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our
   // changes. Is there a cleaner way to unify this and the `watch()` codepath?
   nextTick(async () => {
@@ -80,12 +88,10 @@ onMounted(() => {
     await store.waitForReady();
 
     if (scene_data.value !== null) {
-      describedScene.value = scene_data.value;
-      desiredScene.value = {
-        id: scene_data.value.id,
-        place: scene_data.value.place,
-        content: scene_data.value.content,
-      };
+      constellationsStore.desiredScene = null;
+      constellationsStore.viewportBottomBlockage = 0;
+      constellationsStore.viewportLeftBlockage = 0;
+      await constellationsStore.setupForSingleScene(scene_data.value);
     }
   });
 });

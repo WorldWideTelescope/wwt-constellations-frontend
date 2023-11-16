@@ -109,7 +109,7 @@ import {
 } from "@vicons/material";
 
 import { useConstellationsStore } from "~/stores/constellations";
-import { GetSceneResponseT, addLike } from "~/utils/apis";
+import { type GetSceneResponseT, addLike } from "~/utils/apis";
 import ShareButton from "./ShareButton.vue";
 
 const { $backendAuthCall, $backendCall } = useNuxtApp();
@@ -207,15 +207,19 @@ async function toggleLike() {
 
 const can_edit = ref(false);
 
-watchEffect(async () => {
-  if (!loggedIn.value || !props.potentiallyEditable) {
-    can_edit.value = false;
-  } else {
-    const fetcher = await $backendAuthCall();
-    const result = await scenePermissions(fetcher, scene.value.id);
-    can_edit.value = result && result.edit || false;
-  }
-});
+watch(
+  loggedIn,
+  async (newLoggedIn) => {
+    if (!newLoggedIn || !props.potentiallyEditable) {
+      can_edit.value = false;
+    } else {
+      const fetcher = await $backendAuthCall();
+      const result = await scenePermissions(fetcher, scene.value.id);
+      can_edit.value = result && result.edit || false;
+    }
+  },
+  { immediate: true }
+);
 
 // Image permissions
 

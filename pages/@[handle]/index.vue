@@ -6,8 +6,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { nextTick } from "vue";
-import { RouteLocationNormalized } from "vue-router";
+import { type RouteLocationNormalized } from "vue-router";
 
 import { getHandle, handlePermissions } from "~/utils/apis";
 import { useConstellationsStore } from "~/stores/constellations";
@@ -64,11 +63,8 @@ watchEffect(async () => {
   }
 });
 
-onMounted(() => {
-  constellationsStore.useHandleTimeline(handle);
-  nextTick(() => {
-    constellationsStore.ensureForwardCoverage(8);
-  });
+onMounted(async () => {
+  await constellationsStore.useHandleTimeline(handle);
 });
 </script>
 

@@ -2000,9 +2000,9 @@ __metadata:
   linkType: hard
 
 "@wwtelescope/astro@npm:>=0.1.0, @wwtelescope/astro@npm:>=0.2.2, @wwtelescope/astro@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "@wwtelescope/astro@npm:0.2.2"
-  checksum: c75b4ebffab3396afc81073b47a9d6a299d11c8e5704779f13e73ebf06ba013f84f08a644a680b97138e32133dea1a864d591ef49435c28f92c453ad22d856cb
+  version: 0.2.5
+  resolution: "@wwtelescope/astro@npm:0.2.5"
+  checksum: 10b9dc7fc74a8353d3fc5a97443298d31344e90a1940c803b2849b1656af34f2b779ff893f19f5e30410013df9704c68c55bdf157d3e901c6543d78ba2f55a43
   languageName: node
   linkType: hard
 
@@ -2024,9 +2024,9 @@ __metadata:
     "@vueuse/core": ^10.5.0
     "@vueuse/nuxt": ^10.1.2
     "@wwtelescope/astro": ^0.2.2
-    "@wwtelescope/engine": ^7.27.0
-    "@wwtelescope/engine-helpers": ^0.15
-    "@wwtelescope/engine-pinia": ^0.7
+    "@wwtelescope/engine": ^7.29.3
+    "@wwtelescope/engine-helpers": ^0.16
+    "@wwtelescope/engine-pinia": ^0.9
     "@wwtelescope/engine-types": ^0.6.4
     axe-core: ^4.7.1
     css-loader: ^6
@@ -2061,46 +2061,46 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@wwtelescope/engine-helpers@npm:>=0.15.0, @wwtelescope/engine-helpers@npm:^0.15":
-  version: 0.15.0
-  resolution: "@wwtelescope/engine-helpers@npm:0.15.0"
+"@wwtelescope/engine-helpers@npm:>=0.15.0, @wwtelescope/engine-helpers@npm:^0.16":
+  version: 0.16.0
+  resolution: "@wwtelescope/engine-helpers@npm:0.16.0"
   dependencies:
     "@wwtelescope/astro": ">=0.1.0"
-    "@wwtelescope/engine": ^7.27.0
+    "@wwtelescope/engine": ^7.29.1
     "@wwtelescope/engine-types": ">=0.6.0"
-  checksum: 2b03d9e452e83b5b65cc5a1570fe59febb696be6ded6fdecb7f532f19057439d9af92df035d20a1d362d94c96f88df7c86483b8c4d52d0f799c4694005c2d4d9
+  checksum: c0c5efbe7d45316202f1b3100121ce2743bdf456f6898bead4a8c917bb08d5fb703aa0e1cdcee8ed2cfb8b7cb4367d2e34102c58a52778074dcda35a8813da13
   languageName: node
   linkType: hard
 
-"@wwtelescope/engine-pinia@npm:^0.7":
-  version: 0.7.0
-  resolution: "@wwtelescope/engine-pinia@npm:0.7.0"
+"@wwtelescope/engine-pinia@npm:^0.9":
+  version: 0.9.0
+  resolution: "@wwtelescope/engine-pinia@npm:0.9.0"
   dependencies:
     "@wwtelescope/astro": ">=0.2.2"
-    "@wwtelescope/engine": ^7.27.0
+    "@wwtelescope/engine": ^7.29.1
     "@wwtelescope/engine-helpers": ">=0.15.0"
     "@wwtelescope/engine-types": ">=0.6.3"
     pinia: ^2.0.22
     vue: ^3
-  checksum: 71d5104d5d04bcf52c87804034111f48970c574ccc86fedb38b0a8ea7b9288a4c7d2c94fc1de6bbc0767bbe924462b3045765ce4214b62608a9a2820f35beb25
+  checksum: f5fd7ebf326cc182f046fa76ead901a983267ebf365f0ccd5289ab2eb613062b1dc9659f6ed15c7c9ac75b72f0c6515b0ac1eee2eb371fb3e95a1115e53a9611
   languageName: node
   linkType: hard
 
 "@wwtelescope/engine-types@npm:>=0.6.0, @wwtelescope/engine-types@npm:>=0.6.3, @wwtelescope/engine-types@npm:^0.6.4":
-  version: 0.6.4
-  resolution: "@wwtelescope/engine-types@npm:0.6.4"
-  checksum: d5234eb4d3deabc78f56ab5fb8f8581643748d194b74dba73c880edb8404c480c77ac660c644f5707eea5c2fbee63983ad04bd40ac66a0d0c819720207fb8107
+  version: 0.6.7
+  resolution: "@wwtelescope/engine-types@npm:0.6.7"
+  checksum: ff858a7588ae8ab5c5230e9520b0703e654ccea13d6c252d8ad13650f532dd3198a56f0e60e507d91da3263d56ec7960fb3c711d4d13cfbe96d290f16c1de9f0
   languageName: node
   linkType: hard
 
-"@wwtelescope/engine@npm:^7.27.0":
-  version: 7.28.1
-  resolution: "@wwtelescope/engine@npm:7.28.1"
+"@wwtelescope/engine@npm:^7.29.1, @wwtelescope/engine@npm:^7.29.3":
+  version: 7.29.3
+  resolution: "@wwtelescope/engine@npm:7.29.3"
   dependencies:
     "@wwtelescope/engine-types": ">=0.6.0"
     pako: ^1.0.11
     uuid: ^8.3.2
-  checksum: dbb87cd8efa07e831f663ecea446a8c290cc9ac27701b45ef7f5dc9c0ae536428d0246577935f708b98a5af627e1d29aa99c89f0b182def235f9a7426c87ba57
+  checksum: d0d487373415619a57b58cc263ac7c03f8f3d3e1f0e84415dd92c5e88c736a5ce14de3f383c3bfca9809fa6721dc80b375b998b641457a52632187e0882720f0
   languageName: node
   linkType: hard
 

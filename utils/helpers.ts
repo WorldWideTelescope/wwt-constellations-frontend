@@ -78,6 +78,19 @@ export interface WWTCameraSetup {
  */
 export function wwtSetupForPlace(place: PlaceDetailsT, viewport_shape: ViewportShape): WWTCameraSetup {
   const rollRad = place.roll_rad ?? 0;
+
+  // If we're transitioning out of a `showWWT = false` situation, the viewport size
+  // will be invalid. In that case, we can't do anything fancy, so don't.
+
+  if (viewport_shape.width < 1 || viewport_shape.height < 1) {
+    return {
+      raRad: place.ra_rad,
+      decRad: place.dec_rad,
+      rollRad,
+      zoomDeg: place.roi_height_deg * 6,
+    };
+  }
+
   const effective_width = Math.max(viewport_shape.width - viewport_shape.left_blockage, 1);
   const effective_height = Math.max(viewport_shape.height - viewport_shape.bottom_blockage, 1);
 

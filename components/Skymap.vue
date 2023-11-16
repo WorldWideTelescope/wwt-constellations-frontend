@@ -26,7 +26,7 @@
 import { storeToRefs } from "pinia";
 import { Color, URLHelpers, URLRewriteMode } from "@wwtelescope/engine";
 
-import { SceneDisplayInfoT, SkymapSceneInfo } from "~/utils/types";
+import { type SceneDisplayInfoT, type SkymapSceneInfo } from "~/utils/types";
 import { R2D } from "~/utils/constants";
 import { getEngineStore } from "~/utils/helpers";
 
@@ -137,16 +137,16 @@ class SkymapContext {
     }
 
     canvasToSky(x: number, y: number): { raDeg: number, decDeg: number } {
-      const raCenter = 0;
-      const raScale = this.width / 360;
-      const raOffset = this.width / 2;
-      const raDeg = (x - raOffset) / raScale + raCenter;
+        const raCenter = 0;
+        const raScale = this.width / 360;
+        const raOffset = this.width / 2;
+        const raDeg = (x - raOffset) / raScale + raCenter;
 
-      const decCenter = 0;
-      const decScale = -this.height / 180;
-      const decDeg = decCenter + ((y - this.height / 2) / decScale);
+        const decCenter = 0;
+        const decScale = -this.height / 180;
+        const decDeg = decCenter + ((y - this.height / 2) / decScale);
 
-      return { raDeg, decDeg };
+        return { raDeg, decDeg };
     }
 }
 
@@ -304,7 +304,7 @@ class MarkerCollection {
         for (var filter of sceneFilterPasses) {
             for (var scene of scenes) {
                 if (!filter(scene)) {
-                  continue;
+                    continue;
                 }
                 let marker = this.markers.get(scene.id);
 
@@ -342,7 +342,7 @@ class MarkerCollection {
         // "least important" to "most important", since stacked markers will
         // overwrite one another. This seems easier (and faster?) than trying to
         // sort the list.
-        
+
         for (var filter of sceneFilterPasses) {
             for (const [id, marker] of this.markers.entries()) {
                 if (!filter(marker.scene)) {
@@ -564,10 +564,14 @@ watch(engineRaRad, renderer.queueRender);
 watch(engineDecRad, renderer.queueRender);
 watch(engineZoomDeg, renderer.queueRender);
 
-watchEffect(() => {
-    markerCollection.syncWithScenes(scenes.value);
-    renderer.queueRender();
-});
+watch(
+    scenes,
+    (newScenes) => {
+        markerCollection.syncWithScenes(newScenes);
+        renderer.queueRender();
+    },
+    { immediate: true }
+);
 
 // Mousing over the canvas for previews -- breaking encapsulation a bit here
 
@@ -581,33 +585,33 @@ function onMouseClick(event: MouseEvent) {
 
     const canvas = canvasRef.value;
     if (canvas !== null) {
-      const ctx = canvas.getContext('2d');
-      if (ctx === null) {
-        return;
-      }
-      const context = new SkymapContext(canvas.width, canvas.height, ctx);
-      const { raDeg, decDeg } = context.canvasToSky(event.offsetX, event.offsetY);
+        const ctx = canvas.getContext('2d');
+        if (ctx === null) {
+            return;
+        }
+        const context = new SkymapContext(canvas.width, canvas.height, ctx);
+        const { raDeg, decDeg } = context.canvasToSky(event.offsetX, event.offsetY);
 
-      const raRad = raDeg * D2R;
-      const decRad = decDeg * D2R;
-      getTessellationCell($backendCall, "global", raRad, decRad).then(async (cell) => {
-        const scene = await getScene($backendCall, cell.scene_id);
-        if (scene === null) {
-          return;
-        }
-        const color = Color.fromArgb(255, 196, 180, 84);
-        const marker = new Marker({ ...scene, color, linewidth: 1, current: false, adjacent: false } );
-        if (clickedMarkerID.value !== null) {
-          const oldMarker = markerCollection.markers.get(clickedMarkerID.value);
-          oldMarker?.sendToDestruction();
-        }
-        markerCollection.markers.set(scene.id, marker);
-        clickedMarkerID.value = scene.id;
-        const rgba = new Rgba(color.r, color.g, color.b, color.a);
-        marker.currentColor = rgba;
-        marker.targetColor = rgba;
-        renderer.queueRender();
-      });
+        const raRad = raDeg * D2R;
+        const decRad = decDeg * D2R;
+        getTessellationCell($backendCall, "global", raRad, decRad).then(async (cell) => {
+            const scene = await getScene($backendCall, cell.scene_id);
+            if (scene === null) {
+                return;
+            }
+            const color = Color.fromArgb(255, 196, 180, 84);
+            const marker = new Marker({ ...scene, color, linewidth: 1, current: false, adjacent: false });
+            if (clickedMarkerID.value !== null) {
+                const oldMarker = markerCollection.markers.get(clickedMarkerID.value);
+                oldMarker?.sendToDestruction();
+            }
+            markerCollection.markers.set(scene.id, marker);
+            clickedMarkerID.value = scene.id;
+            const rgba = new Rgba(color.r, color.g, color.b, color.a);
+            marker.currentColor = rgba;
+            marker.targetColor = rgba;
+            renderer.queueRender();
+        });
     }
 }
 

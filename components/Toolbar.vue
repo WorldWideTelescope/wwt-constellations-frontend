@@ -142,7 +142,7 @@ function clickNext() {
     animation: pulse-bg 1.6s alternate infinite;
 
     .n-button__state-border {
-        animation: pulse-bo=rder 1.6s alternate infinite;
+        animation: pulse-border 1.6s alternate infinite;
     }
 }
 

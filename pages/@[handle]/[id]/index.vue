@@ -4,8 +4,7 @@
 
 <script setup lang="ts">
 import ellipsize from "ellipsize";
-import { storeToRefs } from "pinia";
-import { RouteLocationNormalized } from "vue-router";
+import { type RouteLocationNormalized } from "vue-router";
 
 import { useConstellationsStore } from "~/stores/constellations";
 import { getScene } from "~/utils/apis";
@@ -43,10 +42,6 @@ const { $backendCall } = useNuxtApp();
 const nuxtConfig = useRuntimeConfig();
 
 const constellationsStore = useConstellationsStore();
-const {
-  describedScene,
-  desiredScene,
-} = storeToRefs(constellationsStore);
 const store = getEngineStore();
 const route = useRoute();
 
@@ -99,18 +94,19 @@ useServerSeoMeta({
   twitterPlayerHeight: 600,
 });
 
-// Managing the "desired scene" state
+// Managing the timeline / "desired scene" state
 
-watchEffect(() => {
-  if (scene_data.value !== null) {
-    constellationsStore.setupForSingleScene(scene_data.value);
-  }
-});
+watch(scene_data,
+  async (newSceneData) => {
+    if (newSceneData !== null) {
+      await constellationsStore.setupForSingleScene(newSceneData);
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
-  constellationsStore.useHandleTimeline(handle);
-
-  // This is all to handle the case when `data` is non-null right off the bat,
+  // This is all to handle the case when `scene_data` is non-null right off the bat,
   // given that we have to wait for the store to become ready to apply our
   // changes. Is there a cleaner way to unify this and the `watch()` codepath?
   nextTick(async () => {
@@ -121,12 +117,7 @@ onMounted(() => {
     await store.waitForReady();
 
     if (scene_data.value !== null) {
-      describedScene.value = scene_data.value;
-      desiredScene.value = {
-        id: scene_data.value.id,
-        place: scene_data.value.place,
-        content: scene_data.value.content,
-      };
+      await constellationsStore.setupForSingleScene(scene_data.value);
     }
   });
 });

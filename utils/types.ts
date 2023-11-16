@@ -137,7 +137,7 @@ export const TessellationCell = t.type({
   neighbors: t.array(t.string),
   location: t.type({
     ra: t.number,
-    dec: t.number
+    dec: t.number,
   }),
   scene_id: t.string
 });
