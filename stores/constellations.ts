@@ -132,14 +132,16 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       const page = nextNeededPage;
       const result = await getNextScenes($backendCall, page);
 
+      // Once again, we must make sure that the navigation situation hasn't
+      // change on us while we were waiting for getNextScenes() to resolve.
       if (nextNeededPage === page && !needToChangeSceneSource(navigationMode.value)) {
         for (const scene of result.results) {
           knownScenes.value.set(scene.id, scene);
           futureScenes.value.push(scene);
         }
-      }
 
-      nextNeededPage += 1;
+        nextNeededPage += 1;
+      }
     }
   }
 
@@ -202,6 +204,10 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
       return;
     }
 
+    // Make sure that we always have forward coverage past the target, so that
+    // the "next" button remains available if it should!
+    await ensureForwardCoverage(count + 1);
+
     // These two variables are just containers so that we don't need to update ref values more than once
     let scene: GetSceneResponseT | undefined = undefined;
     let node: Yallist.Node<GetSceneResponseT> | undefined = undefined;
@@ -215,7 +221,9 @@ export const useConstellationsStore = defineStore("wwt-constellations", () => {
         node = next;
       } else {
         if (futureScenes.value.length === 0) {
-          await ensureForwardCoverage(count);  // Should this be larger?
+          // Just in case ... once again, ensure that we go past the target to
+          // be able to properly make the "next" button clickable or not.
+          await ensureForwardCoverage(count + 1);
         }
 
         scene = futureScenes.value.shift();
