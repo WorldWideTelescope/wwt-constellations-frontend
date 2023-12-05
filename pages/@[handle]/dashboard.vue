@@ -77,7 +77,7 @@
 import { storeToRefs } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
 
-import { ArrowBackRound } from "@vicons/material";
+import { ArrowBackRound, CheckSharp } from "@vicons/material";
 
 import {
   NButton,
@@ -91,6 +91,7 @@ import {
   NInput,
   NRow,
   NStatistic,
+  NSwitch,
   NTabs,
   NTabPane,
   useNotification
@@ -103,6 +104,7 @@ import {
   handleStats,
   HandleStatsResponseT,
   ImageSummaryT,
+  SceneUpdateRequestT,
   updateHandle,
 } from "~/utils/apis";
 
@@ -209,6 +211,21 @@ const sceneColumns = [
     key: "shares",
     render: (row: HandleSceneInfoT) => row.shares || 0,
   },
+  {
+    title: "Published",
+    key: "published",
+    render: (row: HandleSceneInfoT) => {
+      return h(NSwitch,
+        {
+          value: row.published,
+          onUpdateValue: (value) => {
+            row.published = value;
+            onSceneUpdate(row);
+          },
+        },
+        () => []);
+    },
+  }
 ];
 
 const sceneData = ref<HandleSceneInfoT[]>([]);
@@ -238,6 +255,11 @@ async function onSceneTablePageChange(page: number) {
     scenePagination.itemCount = result.total_count;
     sceneIsLoading.value = false;
   }
+}
+
+async function onSceneUpdate(info: HandleSceneInfoT) {
+  const fetcher = await $backendAuthCall();
+  updateScene(fetcher, info._id, info);
 }
 
 onMounted(() => {
