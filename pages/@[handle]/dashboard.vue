@@ -77,7 +77,7 @@
 import { storeToRefs } from "pinia";
 import { RouteLocationNormalized } from "vue-router";
 
-import { ArrowBackRound, CheckSharp } from "@vicons/material";
+import { ArrowBackRound } from "@vicons/material";
 
 import {
   NButton,

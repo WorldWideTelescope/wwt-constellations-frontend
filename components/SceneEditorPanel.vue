@@ -77,12 +77,12 @@
 
     <n-grid-item>
       <n-text depth="3" style="font-size: smaller;">
-        Published Status:
+        Publication Status:
       </n-text>
-      <n-text>
-        {{ published_status ? 'Published' : 'Not Published' }}
-      </n-text>
-      <n-space justify="end">
+      <n-space justify="space-between">
+        <n-text>
+          {{ published_status ? 'Published' : 'Not Published' }}
+        </n-text>
         <n-button :loading="published_status_loading" @click="onUpdatePublished">
           {{ published_status ? 'Unpublish' : 'Publish' }}
         </n-button>
