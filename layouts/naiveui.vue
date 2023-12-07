@@ -48,7 +48,7 @@ onUnmounted(() => {
 }
 
 #inner {
-  max-width: 40rem;
+  max-width: 50rem;
   margin: 0 auto;
   color: #FFF;
 }

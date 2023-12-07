@@ -242,6 +242,7 @@ export const HandleSceneInfo = t.intersection([
     impressions: t.number,
     likes: t.number,
     text: t.string,
+    published: t.boolean,
   }), t.partial({
     clicks: t.number,
     shares: t.number,
@@ -528,6 +529,7 @@ export const GetSceneResponse = t.type({
   liked: t.boolean,
   outgoing_url: t.union([t.string, t.undefined]),
   previews: ScenePreviews,
+  published: t.boolean,
 });
 
 export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
@@ -620,6 +622,7 @@ export const SceneUpdateRequest = t.partial({
   place: PlaceDetails,
   text: t.string,
   content: SceneContentUpdateRequest,
+  published: t.boolean,
 });
 
 export type SceneUpdateRequestT = t.TypeOf<typeof SceneUpdateRequest>;

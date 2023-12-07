@@ -74,6 +74,20 @@
         </n-button>
       </n-space>
     </n-grid-item>
+
+    <n-grid-item>
+      <n-text depth="3" style="font-size: smaller;">
+        Publication Status:
+      </n-text>
+      <n-space justify="space-between">
+        <n-text>
+          {{ published_status ? 'Published' : 'Not Published' }}
+        </n-text>
+        <n-button :loading="published_status_loading" @click="onUpdatePublished">
+          {{ published_status ? 'Unpublish' : 'Publish' }}
+        </n-button>
+      </n-space>
+    </n-grid-item>
   </n-grid>
 </template>
 
@@ -286,7 +300,7 @@ const { data: background_data } = await useAsyncData("backgrounds", async () => 
 watchEffect(() => {
   const bgdata = background_data.value;
 
-  if (bgdata) {
+  if (bgdata && bgdata.length > 0) {
     background_options.value = bgdata.map((item) => {
       return {
         label: item.note,
@@ -326,6 +340,24 @@ async function onUpdateBackground() {
   notification.success({ content: "Background updated.", duration: 3000 });
   background_loading.value = false;
 }
+
+const published_status = ref(false);
+const published_status_loading = ref(false);
+watchEffect(() => {
+  published_status.value = scene.value.published;
+  published_status_loading.value = false;
+});
+
+async function onUpdatePublished() {
+  const fetcher = await $backendAuthCall();
+  published_status_loading.value = true;
+  published_status.value = !published_status.value;
+  await updateScene(fetcher, scene.value.id, { published: published_status.value });
+  const message = `Scene ${published_status.value ? 'published' : 'unpublished'}`;
+  notification.success({ content: message, duration: 3000 });
+  published_status_loading.value = false;
+}
+
 
 </script>
 
