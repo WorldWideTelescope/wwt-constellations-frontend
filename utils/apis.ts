@@ -776,3 +776,20 @@ export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number
   return [...maybe.right.features];
 
 }
+
+export const FeatureQueueResponse = S.struct({
+  scenes: S.array(GetSceneResponse),
+});
+
+export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneResponseT[]> {
+  const data = await fetcher(`/features/queue`);
+  checkForError(data);
+
+  const maybe = S.decodeUnknownEither(FeatureQueueResponse)(data);
+
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /features/queue: API response did not match schema ${formatError(maybe.left)}`);
+  }
+
+  return [...maybe.right.scenes];
+}
