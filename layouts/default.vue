@@ -17,7 +17,18 @@
 
           <Breadcrumb />
 
-          <WhatsNew />
+          <a href="/webclient/" target="_blank">
+            <n-button strong type="info" size="small" id="webclient-button" aria-label="Open the WWT webclient">
+              <n-icon size="18" aria-labelledby="webclient-button">
+                <SendTimeExtensionRound />
+              </n-icon>
+              <n-text class="icon-button-label">
+                WWT Webclient
+              </n-text>
+            </n-button>
+          </a>
+
+          <!-- <WhatsNew /> -->
 
           <div style="flex: 1;"></div>
 
@@ -97,6 +108,7 @@ import {
   FullscreenOutlined,
   FullscreenExitOutlined,
   MenuRound,
+  SendTimeExtensionRound,
 } from "@vicons/material";
 
 import {
@@ -232,5 +244,13 @@ function onFullscreenEvent() {
   font-size: 1.2rem;
   width: 100%;
   padding: 10px 0px;
+}
+
+#webclient-button {
+  background-color: rgba(102, 175, 211, 0.5);
+
+  i {
+    color: rgba(255, 255, 255, 0.82);
+  }
 }
 </style>
