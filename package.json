@@ -1,7 +1,6 @@
 {
   "dependencies": {
-    "@nuxt/webpack-builder": "^3.4.3",
-    "@pinia/nuxt": "^0.4.7",
+    "@pinia/nuxt": "^0.5.1",
     "@vueuse/core": "^10.5.0",
     "@vueuse/nuxt": "^10.1.2",
     "@wwtelescope/astro": "^0.2.2",
@@ -30,6 +29,7 @@
   "devDependencies": {
     "@css-render/vue3-ssr": "^0.15.12",
     "@dargmuesli/nuxt-cookie-control": "^5.9.2",
+    "@nuxt/webpack-builder": "^3.4.3",
     "@nuxtjs/google-analytics": "^2.4.0",
     "@types/ellipsize": "^0.1",
     "@types/escape-html": "^1",
@@ -43,9 +43,10 @@
     "file-loader": "^6.2",
     "less-loader": "^11.1.0",
     "naive-ui": "^2.34",
-    "nuxt": "^3.4.3",
+    "nuxt": "^3.10.1",
     "postcss": "^8.4",
     "postcss-loader": "^7",
+    "typescript": "^5.3",
     "url-loader": "^4.1",
     "vue-axe": "^3.1.2",
     "vue-loader": "^17",
@@ -54,9 +55,6 @@
   "name": "@wwtelescope/constellations-frontend",
   "packageManager": "yarn@3.6.0",
   "private": true,
-  "resolutions": {
-    "tslib": "<2.5.3"
-  },
   "scripts": {
     "build": "nuxi build",
     "dev": "nuxi dev",
@@ -64,5 +62,6 @@
     "preview": "nuxi preview",
     "start": "nuxi start"
   },
+  "type": "module",
   "version": "0.0.0-dev.0"
 }
