@@ -2,20 +2,20 @@
 
 // Interfaces associated with backend APIs
 
-import { isLeft } from "fp-ts/lib/Either.js";
-import * as t from "io-ts";
-import { PathReporter } from "io-ts/lib/PathReporter.js";
-import { $Fetch } from "ofetch";
+import * as S from "@effect/schema/Schema";
+import { formatError } from "@effect/schema/TreeFormatter";
+import * as Either from "effect/Either";
+import { type $Fetch } from "ofetch";
 
 import {
   ImageStorage,
   ImageWwt,
   PlaceDetails,
   SceneContentHydrated,
-  SceneCreationInfoT,
+  type SceneCreationInfoT,
   ScenePreviews,
   TessellationCell,
-  TessellationCellT,
+  type TessellationCellT,
 } from "./types";
 
 function checkForError(item: any) {
@@ -35,20 +35,20 @@ function checkForError(item: any) {
 
 //export interface AmISuperuserRequest { }
 
-export const AmISuperuserResponse = t.type({
-  result: t.boolean,
+export const AmISuperuserResponse = S.struct({
+  result: S.boolean,
 });
 
-export type AmISuperuserResponseT = t.TypeOf<typeof AmISuperuserResponse>;
+export type AmISuperuserResponseT = S.Schema.To<typeof AmISuperuserResponse>;
 
 export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserResponseT> {
   return fetcher("/misc/amisuperuser").then((data) => {
     checkForError(data);
 
-    const maybe = AmISuperuserResponse.decode(data);
+    const maybe = S.decodeUnknownEither(AmISuperuserResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /misc/amisuperuser: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /misc/amisuperuser: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -60,18 +60,18 @@ export async function amISuperuser(fetcher: $Fetch): Promise<AmISuperuserRespons
 
 //export interface MiscConfigDatabaseRequest { }
 
-export const MiscConfigDatabaseResponse = t.type({});
+export const MiscConfigDatabaseResponse = S.struct({});
 
-export type MiscConfigDatabaseResponseT = t.TypeOf<typeof MiscConfigDatabaseResponse>;
+export type MiscConfigDatabaseResponseT = S.Schema.To<typeof MiscConfigDatabaseResponse>;
 
 export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDatabaseResponseT> {
   return fetcher("/misc/config-database", { method: 'POST' }).then((data) => {
     checkForError(data);
 
-    const maybe = MiscConfigDatabaseResponse.decode(data);
+    const maybe = S.decodeUnknownEither(MiscConfigDatabaseResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /misc/config-database: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /misc/config-database: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -83,18 +83,18 @@ export async function miscConfigDatabase(fetcher: $Fetch): Promise<MiscConfigDat
 
 //export interface MiscConfigDatabaseRequest { }
 
-export const MiscUpdateTimelineResponse = t.type({});
+export const MiscUpdateTimelineResponse = S.struct({});
 
-export type MiscUpdateTimelineResponseT = t.TypeOf<typeof MiscUpdateTimelineResponse>;
+export type MiscUpdateTimelineResponseT = S.Schema.To<typeof MiscUpdateTimelineResponse>;
 
 export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Promise<MiscUpdateTimelineResponseT> {
   return fetcher("/misc/update-timeline", { query: { "initial_id": initialId }, method: 'POST' }).then((data) => {
     checkForError(data);
 
-    const maybe = MiscUpdateTimelineResponse.decode(data);
+    const maybe = S.decodeUnknownEither(MiscUpdateTimelineResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /misc/update-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /misc/update-timeline: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -105,18 +105,18 @@ export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Pr
 
 // Endpoint: POST /misc/update-global-tessellation
 
-export const MiscUpdateGlobalTessellationResponse = t.type({});
+export const MiscUpdateGlobalTessellationResponse = S.struct({});
 
-export type MiscUpdateGlobalTessellationResponseT = t.TypeOf<typeof MiscUpdateGlobalTessellationResponse>;
+export type MiscUpdateGlobalTessellationResponseT = S.Schema.To<typeof MiscUpdateGlobalTessellationResponse>;
 
 export async function miscUpdateGlobalTessellation(fetcher: $Fetch): Promise<MiscUpdateGlobalTessellationResponseT> {
   return fetcher("/misc/update-global-tessellation", { method: "POST" }).then((data) => {
     checkForError(data);
 
-    const maybe = MiscUpdateGlobalTessellationResponse.decode(data);
+    const maybe = S.decodeUnknownEither(MiscUpdateGlobalTessellationResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /misc/update-global-tessellation: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /misc/update-global-tessellation: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -126,12 +126,12 @@ export async function miscUpdateGlobalTessellation(fetcher: $Fetch): Promise<Mis
 
 // Endpoint: GET /handle/:handle
 
-export const GetHandleResponse = t.type({
-  handle: t.string,
-  display_name: t.string,
+export const GetHandleResponse = S.struct({
+  handle: S.string,
+  display_name: S.string,
 });
 
-export type GetHandleResponseT = t.TypeOf<typeof GetHandleResponse>;
+export type GetHandleResponseT = S.Schema.To<typeof GetHandleResponse>;
 
 // Returns null if a 404 is returned, i.e. the handle is not found.
 export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHandleResponseT | null> {
@@ -139,10 +139,10 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
     const data = await fetcher(`/handle/${encodeURIComponent(handle)}`);
     checkForError(data);
 
-    const maybe = GetHandleResponse.decode(data);
+    const maybe = S.decodeUnknownEither(GetHandleResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /handle/:handle: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /handle/:handle: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -159,21 +159,21 @@ export async function getHandle(fetcher: $Fetch, handle: string): Promise<GetHan
 
 // Endpoint: GET /handle/:handle/permissions
 
-export const HandlePermissionsResponse = t.type({
-  handle: t.string,
-  view_dashboard: t.boolean,
+export const HandlePermissionsResponse = S.struct({
+  handle: S.string,
+  view_dashboard: S.boolean,
 });
 
-export type HandlePermissionsResponseT = t.TypeOf<typeof HandlePermissionsResponse>;
+export type HandlePermissionsResponseT = S.Schema.To<typeof HandlePermissionsResponse>;
 
 export async function handlePermissions(fetcher: $Fetch, handle: string): Promise<HandlePermissionsResponseT | null> {
   try {
     const data = await fetcher(`/handle/${encodeURIComponent(handle)}/permissions`);
     checkForError(data);
-    const maybe = HandlePermissionsResponse.decode(data);
+    const maybe = S.decodeUnknownEither(HandlePermissionsResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /handle/:handle/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /handle/:handle/permissions: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -190,27 +190,23 @@ export async function handlePermissions(fetcher: $Fetch, handle: string): Promis
 
 // Endpoint: GET /handle/:handle/imageinfo?page=$int&pagesize=$int
 
-export const ImageSummary = t.intersection([
-  t.type({
-    _id: t.string,
-    handle_id: t.string,
-    creation_date: t.string,
-    note: t.string,
-    storage: ImageStorage,
-  }),
-  t.partial({
-    alt_text: t.string,
-  })
-]);
-
-export type ImageSummaryT = t.TypeOf<typeof ImageSummary>;
-
-export const HandleImageInfoResponse = t.type({
-  total_count: t.number,
-  results: t.array(ImageSummary),
+export const ImageSummary = S.struct({
+  _id: S.string,
+  handle_id: S.string,
+  creation_date: S.string,
+  note: S.string,
+  storage: ImageStorage,
+  alt_text: S.optional(S.string, { exact: true }),
 });
 
-export type HandleImageInfoResponseT = t.TypeOf<typeof HandleImageInfoResponse>;
+export type ImageSummaryT = S.Schema.To<typeof ImageSummary>;
+
+export const HandleImageInfoResponse = S.struct({
+  total_count: S.number,
+  results: S.array(ImageSummary),
+});
+
+export type HandleImageInfoResponseT = S.Schema.To<typeof HandleImageInfoResponse>;
 
 export async function handleImageInfo(
   fetcher: $Fetch,
@@ -223,10 +219,10 @@ export async function handleImageInfo(
     { query: { page: page_num, pagesize: page_size } }
   );
   checkForError(data);
-  const maybe = HandleImageInfoResponse.decode(data);
+  const maybe = S.decodeUnknownEither(HandleImageInfoResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /handle/:handle/imageinfo: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/imageinfo: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
@@ -235,28 +231,25 @@ export async function handleImageInfo(
 
 // Endpoint: GET /handle/:handle/sceneinfo?page=$int&pagesize=$int
 
-export const HandleSceneInfo = t.intersection([
-  t.type({
-    _id: t.string,
-    creation_date: t.string,
-    impressions: t.number,
-    likes: t.number,
-    text: t.string,
-    published: t.boolean,
-  }), t.partial({
-    clicks: t.number,
-    shares: t.number,
-  })
-]);
-
-export type HandleSceneInfoT = t.TypeOf<typeof HandleSceneInfo>;
-
-export const HandleSceneInfoResponse = t.type({
-  total_count: t.number,
-  results: t.array(HandleSceneInfo),
+export const HandleSceneInfo = S.struct({
+  _id: S.string,
+  creation_date: S.string,
+  impressions: S.number,
+  likes: S.number,
+  text: S.string,
+  published: S.boolean,
+  clicks: S.optional(S.number, { exact: true }),
+  shares: S.optional(S.number, { exact: true }),
 });
 
-export type HandleSceneInfoResponseT = t.TypeOf<typeof HandleSceneInfoResponse>;
+export type HandleSceneInfoT = S.Schema.To<typeof HandleSceneInfo>;
+
+export const HandleSceneInfoResponse = S.struct({
+  total_count: S.number,
+  results: S.array(HandleSceneInfo),
+});
+
+export type HandleSceneInfoResponseT = S.Schema.To<typeof HandleSceneInfoResponse>;
 
 export async function handleSceneInfo(
   fetcher: $Fetch,
@@ -269,10 +262,10 @@ export async function handleSceneInfo(
     { query: { page: page_num, pagesize: page_size } }
   );
   checkForError(data);
-  const maybe = HandleSceneInfoResponse.decode(data);
+  const maybe = S.decodeUnknownEither(HandleSceneInfoResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /handle/:handle/sceneinfo: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/sceneinfo: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
@@ -281,33 +274,33 @@ export async function handleSceneInfo(
 
 // Endpoint: GET /handle/:handle/stats
 
-export const HandleImageStats = t.type({
-  count: t.number,
+export const HandleImageStats = S.struct({
+  count: S.number,
 });
 
-export const HandleSceneStats = t.type({
-  count: t.number,
-  impressions: t.number,
-  likes: t.number,
-  clicks: t.number,
-  shares: t.number,
+export const HandleSceneStats = S.struct({
+  count: S.number,
+  impressions: S.number,
+  likes: S.number,
+  clicks: S.number,
+  shares: S.number,
 });
 
-export const HandleStatsResponse = t.type({
-  handle: t.string,
+export const HandleStatsResponse = S.struct({
+  handle: S.string,
   images: HandleImageStats,
   scenes: HandleSceneStats,
 });
 
-export type HandleStatsResponseT = t.TypeOf<typeof HandleStatsResponse>;
+export type HandleStatsResponseT = S.Schema.To<typeof HandleStatsResponse>;
 
 export async function handleStats(fetcher: $Fetch, handle: string): Promise<HandleStatsResponseT> {
   const data = await fetcher(`/handle/${encodeURIComponent(handle)}/stats`);
   checkForError(data);
-  const maybe = HandleStatsResponse.decode(data);
+  const maybe = S.decodeUnknownEither(HandleStatsResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /handle/:handle/stats: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/stats: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
@@ -318,17 +311,17 @@ export async function handleStats(fetcher: $Fetch, handle: string): Promise<Hand
 //
 // This is an undocumented superuser-only API, for now.
 
-export const HandleCreateRequest = t.type({
-  display_name: t.string,
+export const HandleCreateRequest = S.struct({
+  display_name: S.string,
 });
 
-export type HandleCreateRequestT = t.TypeOf<typeof HandleCreateRequest>;
+export type HandleCreateRequestT = S.Schema.To<typeof HandleCreateRequest>;
 
-export const HandleCreateResponse = t.type({
-  id: t.string,
+export const HandleCreateResponse = S.struct({
+  id: S.string,
 });
 
-export type HandleCreateResponseT = t.TypeOf<typeof HandleCreateResponse>;
+export type HandleCreateResponseT = S.Schema.To<typeof HandleCreateResponse>;
 
 export async function createHandle(fetcher: $Fetch, handle: string, req: HandleCreateRequestT): Promise<HandleCreateResponseT> {
   const path = `/handle/${encodeURIComponent(handle)}`;
@@ -336,10 +329,10 @@ export async function createHandle(fetcher: $Fetch, handle: string, req: HandleC
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
 
-    const maybe = HandleCreateResponse.decode(data);
+    const maybe = S.decodeUnknownEither(HandleCreateResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /handle/:handle: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -349,11 +342,11 @@ export async function createHandle(fetcher: $Fetch, handle: string, req: HandleC
 
 // Endpoint: PATCH /handle/:handle
 
-export const HandleUpdateRequest = t.partial({
-  display_name: t.string,
+export const HandleUpdateRequest = S.struct({
+  display_name: S.optional(S.string, { exact: true }),
 });
 
-export type HandleUpdateRequestT = t.TypeOf<typeof HandleUpdateRequest>;
+export type HandleUpdateRequestT = S.Schema.To<typeof HandleUpdateRequest>;
 
 export async function updateHandle(fetcher: $Fetch, handle: string, req: HandleUpdateRequestT): Promise<void> {
   const path = `/handle/${encodeURIComponent(handle)}`;
@@ -366,15 +359,15 @@ export async function updateHandle(fetcher: $Fetch, handle: string, req: HandleU
 
 // Endpoint: POST /handle/:handle/add-owner
 
-export const HandleAddOwnerRequest = t.type({
-  account_id: t.string,
+export const HandleAddOwnerRequest = S.struct({
+  account_id: S.string,
 });
 
-export type HandleAddOwnerRequestT = t.TypeOf<typeof HandleAddOwnerRequest>;
+export type HandleAddOwnerRequestT = S.Schema.To<typeof HandleAddOwnerRequest>;
 
-export const HandleAddOwnerResponse = t.type({});
+export const HandleAddOwnerResponse = S.struct({});
 
-export type HandleAddOwnerResponseT = t.TypeOf<typeof HandleAddOwnerResponse>;
+export type HandleAddOwnerResponseT = S.Schema.To<typeof HandleAddOwnerResponse>;
 
 export async function addHandleOwner(
   fetcher: $Fetch,
@@ -386,10 +379,10 @@ export async function addHandleOwner(
   return fetcher(path, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
 
-    const maybe = HandleAddOwnerResponse.decode(data);
+    const maybe = S.decodeUnknownEither(HandleAddOwnerResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /handle/:handle/add-owner: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle/add-owner: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -399,23 +392,19 @@ export async function addHandleOwner(
 
 // Endpoint: GET /image/:id
 
-export const GetImageResponse = t.intersection([
-  t.type({
-    id: t.string,
-    handle_id: t.string,
-    handle: GetHandleResponse,
-    creation_date: t.string,
-    wwt: ImageWwt,
-    permissions: ImagePermissions,
-    storage: ImageStorage,
-    note: t.string,
-  }),
-  t.partial({
-    alt_text: t.string,
-  })
-]);
+export const GetImageResponse = S.struct({
+  id: S.string,
+  handle_id: S.string,
+  handle: GetHandleResponse,
+  creation_date: S.string,
+  wwt: ImageWwt,
+  permissions: ImagePermissions,
+  storage: ImageStorage,
+  note: S.string,
+  alt_text: S.optional(S.string, { exact: true }),
+});
 
-export type GetImageResponseT = t.TypeOf<typeof GetImageResponse>;
+export type GetImageResponseT = S.Schema.To<typeof GetImageResponse>;
 
 // Returns null if a 404 is returned, i.e. the image is not found.
 export async function getImage(fetcher: $Fetch, id: string): Promise<GetImageResponseT | null> {
@@ -423,10 +412,10 @@ export async function getImage(fetcher: $Fetch, id: string): Promise<GetImageRes
     const data = await fetcher(`/image/${encodeURIComponent(id)}`);
     checkForError(data);
 
-    const maybe = GetImageResponse.decode(data);
+    const maybe = S.decodeUnknownEither(GetImageResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /image/:id: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /image/:id: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -443,21 +432,21 @@ export async function getImage(fetcher: $Fetch, id: string): Promise<GetImageRes
 
 // Endpoint: GET /image/:id/permissions
 
-export const ImagePermissionsResponse = t.type({
-  id: t.string,
-  edit: t.boolean,
+export const ImagePermissionsResponse = S.struct({
+  id: S.string,
+  edit: S.boolean,
 });
 
-export type ImagePermissionsResponseT = t.TypeOf<typeof ImagePermissionsResponse>;
+export type ImagePermissionsResponseT = S.Schema.To<typeof ImagePermissionsResponse>;
 
 export async function imagePermissions(fetcher: $Fetch, id: string): Promise<ImagePermissionsResponseT | null> {
   try {
     const data = await fetcher(`/image/${encodeURIComponent(id)}/permissions`);
     checkForError(data);
-    const maybe = ImagePermissionsResponse.decode(data);
+    const maybe = S.decodeUnknownEither(ImagePermissionsResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /image/:id/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /image/:id/permissions: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -474,13 +463,13 @@ export async function imagePermissions(fetcher: $Fetch, id: string): Promise<Ima
 
 // Endpoint: PATCH /image/:id
 
-export const ImageUpdateRequest = t.partial({
-  note: t.string,
-  alt_text: t.string,
-  permissions: ImagePermissions,
+export const ImageUpdateRequest = S.struct({
+  note: S.optional(S.string, { exact: true }),
+  alt_text: S.optional(S.string, { exact: true }),
+  permissions: S.optional(ImagePermissions, { exact: true }),
 });
 
-export type ImageUpdateRequestT = t.TypeOf<typeof ImageUpdateRequest>;
+export type ImageUpdateRequestT = S.Schema.To<typeof ImageUpdateRequest>;
 
 export async function updateImage(fetcher: $Fetch, id: string, req: ImageUpdateRequestT): Promise<void> {
   const path = `/image/${encodeURIComponent(id)}`;
@@ -493,19 +482,19 @@ export async function updateImage(fetcher: $Fetch, id: string, req: ImageUpdateR
 
 // Endpoint: GET /images/builtin-backgrounds
 
-const BuiltinBackgroundsResponse = t.type({
-  results: t.array(ImageSummary),
+const BuiltinBackgroundsResponse = S.struct({
+  results: S.array(ImageSummary),
 });
 
 export async function builtinBackgrounds(
   fetcher: $Fetch,
-): Promise<ImageSummaryT[]> {
+): Promise<readonly ImageSummaryT[]> {
   const data = await fetcher("/images/builtin-backgrounds");
   checkForError(data);
-  const maybe = BuiltinBackgroundsResponse.decode(data);
+  const maybe = S.decodeUnknownEither(BuiltinBackgroundsResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /images/builtin-backgrounds: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /images/builtin-backgrounds: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right.results;
@@ -514,35 +503,35 @@ export async function builtinBackgrounds(
 
 // Endpoint: GET /scene/:id
 
-export const GetSceneResponse = t.type({
-  id: t.string,
-  handle_id: t.string,
+export const GetSceneResponse = S.struct({
+  id: S.string,
+  handle_id: S.string,
   handle: GetHandleResponse,
-  creation_date: t.string,
-  likes: t.number,
-  impressions: t.number,
-  clicks: t.number,
-  shares: t.number,
+  creation_date: S.string,
+  likes: S.number,
+  impressions: S.number,
+  clicks: S.number,
+  shares: S.number,
   place: PlaceDetails,
   content: SceneContentHydrated,
-  text: t.string,
-  liked: t.boolean,
-  outgoing_url: t.union([t.string, t.undefined]),
+  text: S.string,
+  liked: S.boolean,
+  outgoing_url: S.union(S.string, S.undefined),
   previews: ScenePreviews,
-  published: t.boolean,
+  published: S.boolean,
 });
 
-export type GetSceneResponseT = t.TypeOf<typeof GetSceneResponse>;
+export type GetSceneResponseT = S.Schema.To<typeof GetSceneResponse>;
 
 // Returns null if a 404 is returned, i.e. the scene is not found.
 export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSceneResponseT | null> {
   try {
     const data = await fetcher(`/scene/${encodeURIComponent(scene_id)}`, { credentials: 'include' });
     checkForError(data);
-    const maybe = GetSceneResponse.decode(data);
+    const maybe = S.decodeUnknownEither(GetSceneResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /scene/:id: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /scene/:id: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -558,21 +547,21 @@ export async function getScene(fetcher: $Fetch, scene_id: string): Promise<GetSc
 
 // Endpoint: POST /handle/:handle/scene
 
-export const CreateSceneResponse = t.type({
-  id: t.string,
-  rel_url: t.string,
+export const CreateSceneResponse = S.struct({
+  id: S.string,
+  rel_url: S.string,
 });
 
-export type CreateSceneResponseT = t.TypeOf<typeof CreateSceneResponse>;
+export type CreateSceneResponseT = S.Schema.To<typeof CreateSceneResponse>;
 
 export async function createScene(fetcher: $Fetch, handle: string, req: SceneCreationInfoT): Promise<CreateSceneResponseT> {
   return fetcher(`/handle/${encodeURIComponent(handle)}/scene`, { method: 'POST', body: req }).then((data) => {
     checkForError(data);
 
-    const maybe = CreateSceneResponse.decode(data);
+    const maybe = S.decodeUnknownEither(CreateSceneResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /handle/:handle/scene: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /handle/:handle/scene: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -582,21 +571,21 @@ export async function createScene(fetcher: $Fetch, handle: string, req: SceneCre
 
 // Endpoint: GET /scene/:id/permissions
 
-export const ScenePermissionsResponse = t.type({
-  id: t.string,
-  edit: t.boolean,
+export const ScenePermissionsResponse = S.struct({
+  id: S.string,
+  edit: S.boolean,
 });
 
-export type ScenePermissionsResponseT = t.TypeOf<typeof ScenePermissionsResponse>;
+export type ScenePermissionsResponseT = S.Schema.To<typeof ScenePermissionsResponse>;
 
 export async function scenePermissions(fetcher: $Fetch, id: string): Promise<ScenePermissionsResponseT | null> {
   try {
     const data = await fetcher(`/scene/${encodeURIComponent(id)}/permissions`);
     checkForError(data);
-    const maybe = ScenePermissionsResponse.decode(data);
+    const maybe = S.decodeUnknownEither(ScenePermissionsResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`GET /scene/:id/permissions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`GET /scene/:id/permissions: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right;
@@ -613,19 +602,19 @@ export async function scenePermissions(fetcher: $Fetch, id: string): Promise<Sce
 
 // Endpoint: PATCH /scene/:id
 
-const SceneContentUpdateRequest = t.partial({
-  background_id: t.string,
+const SceneContentUpdateRequest = S.struct({
+  background_id: S.optional(S.string, { exact: true }),
 });
 
-export const SceneUpdateRequest = t.partial({
-  outgoing_url: t.string,
-  place: PlaceDetails,
-  text: t.string,
-  content: SceneContentUpdateRequest,
-  published: t.boolean,
+export const SceneUpdateRequest = S.struct({
+  outgoing_url: S.optional(S.string, { exact: true }),
+  place: S.optional(PlaceDetails, { exact: true }),
+  text: S.optional(S.string, { exact: true }),
+  content: S.optional(SceneContentUpdateRequest, { exact: true }),
+  published: S.optional(S.boolean, { exact: true }),
 });
 
-export type SceneUpdateRequestT = t.TypeOf<typeof SceneUpdateRequest>;
+export type SceneUpdateRequestT = S.Schema.To<typeof SceneUpdateRequest>;
 
 export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateRequestT): Promise<void> {
   const path = `/scene/${encodeURIComponent(id)}`;
@@ -637,11 +626,11 @@ export async function updateScene(fetcher: $Fetch, id: string, req: SceneUpdateR
 
 // Endpoint: GET /handle/:handle/timeline?page=$number
 
-export const TimelineResponse = t.type({
-  results: t.array(GetSceneResponse),
+export const TimelineResponse = S.struct({
+  results: S.array(GetSceneResponse),
 });
 
-export type TimelineResponseT = t.TypeOf<typeof TimelineResponse>;
+export type TimelineResponseT = S.Schema.To<typeof TimelineResponse>;
 
 export async function getHandleTimeline(
   fetcher: $Fetch,
@@ -650,10 +639,10 @@ export async function getHandleTimeline(
 ): Promise<TimelineResponseT> {
   const data = await fetcher(`/handle/${encodeURIComponent(handle)}/timeline`, { query: { page: page_num }, credentials: 'include' });
   checkForError(data);
-  const maybe = TimelineResponse.decode(data);
+  const maybe = S.decodeUnknownEither(TimelineResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /handle/:handle/timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /handle/:handle/timeline: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
@@ -664,10 +653,10 @@ export async function getHandleTimeline(
 export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promise<TimelineResponseT> {
   const data = await fetcher(`/scenes/home-timeline`, { query: { page: page_num } });
   checkForError(data);
-  const maybe = TimelineResponse.decode(data);
+  const maybe = S.decodeUnknownEither(TimelineResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /scenes/home-timeline: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /scenes/home-timeline: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
@@ -676,29 +665,29 @@ export async function getHomeTimeline(fetcher: $Fetch, page_num: number): Promis
 export async function getNearbyTimeline(fetcher: $Fetch, sceneID: string): Promise<TimelineResponseT> {
   const data = await fetcher(`/scene/${sceneID}/nearby-global`, { query: { size: 30 } });
   checkForError(data);
-  const maybe = TimelineResponse.decode(data);
+  const maybe = S.decodeUnknownEither(TimelineResponse)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /tessellations/nearby-feed: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /tessellations/nearby-feed: API response did not match schema: ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
 }
 
-export const SceneInteractionResponse = t.type({
-  id: t.string,
-  success: t.boolean
+export const SceneInteractionResponse = S.struct({
+  id: S.string,
+  success: S.boolean
 });
 
-export type SceneInteractionResponseT = t.TypeOf<typeof SceneInteractionResponse>;
+export type SceneInteractionResponseT = S.Schema.To<typeof SceneInteractionResponse>;
 
 export async function addImpression(fetcher: $Fetch, id: string): Promise<boolean> {
   return fetcher(`/scene/${id}/impressions`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
     checkForError(data);
-    const maybe = SceneInteractionResponse.decode(data);
+    const maybe = S.decodeUnknownEither(SceneInteractionResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /scenes/impressions: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /scenes/impressions: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right.success;
@@ -708,10 +697,10 @@ export async function addImpression(fetcher: $Fetch, id: string): Promise<boolea
 export async function addLike(fetcher: $Fetch, id: string): Promise<boolean> {
   return fetcher(`/scene/${id}/likes`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
     checkForError(data);
-    const maybe = SceneInteractionResponse.decode(data);
+    const maybe = S.decodeUnknownEither(SceneInteractionResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /scenes/likes: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right.success;
@@ -721,10 +710,10 @@ export async function addLike(fetcher: $Fetch, id: string): Promise<boolean> {
 export async function removeLike(fetcher: $Fetch, id: string): Promise<boolean> {
   return fetcher(`/scene/${id}/likes`, { method: 'DELETE', credentials: 'include', cache: 'no-store' }).then((data) => {
     checkForError(data);
-    const maybe = SceneInteractionResponse.decode(data);
+    const maybe = S.decodeUnknownEither(SceneInteractionResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /scenes/likes: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /scenes/likes: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right.success;
@@ -734,10 +723,10 @@ export async function removeLike(fetcher: $Fetch, id: string): Promise<boolean> 
 export async function addShare(fetcher: $Fetch, id: string, type: string): Promise<boolean> {
   return fetcher(`/scene/${id}/shares/${type}`, { method: 'POST', credentials: 'include', cache: 'no-store' }).then((data) => {
     checkForError(data);
-    const maybe = SceneInteractionResponse.decode(data);
+    const maybe = S.decodeUnknownEither(SceneInteractionResponse)(data);
 
-    if (isLeft(maybe)) {
-      throw new Error(`POST /scenes/shares: API response did not match schema: ${PathReporter.report(maybe).join("\n")}`);
+    if (Either.isLeft(maybe)) {
+      throw new Error(`POST /scenes/shares: API response did not match schema: ${formatError(maybe.left)}`);
     }
 
     return maybe.right.success;
@@ -756,10 +745,10 @@ export async function initializeSession(fetcher: $Fetch): Promise<void> {
 export async function getTessellationCell(fetcher: $Fetch, tessellationName: string, raRad: number, decRad: number): Promise<TessellationCellT> {
   const data = await fetcher(`/tessellations/${tessellationName}/cell`, { query: { ra: raRad, dec: decRad } });
   checkForError(data);
-  const maybe = TessellationCell.decode(data);
+  const maybe = S.decodeUnknownEither(TessellationCell)(data);
 
-  if (isLeft(maybe)) {
-    throw new Error(`GET /tessellations/:name/cell: API response did not match schema ${PathReporter.report(maybe).join("\n")}`);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /tessellations/:name/cell: API response did not match schema ${formatError(maybe.left)}`);
   }
 
   return maybe.right;
