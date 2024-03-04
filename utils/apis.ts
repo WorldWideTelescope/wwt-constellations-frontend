@@ -810,7 +810,6 @@ export const FeaturesResponse = S.struct({
 export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureResponseT[]> {
   const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
   checkForError(data);
-  console.log(data);
 
   const maybe = S.decodeUnknownEither(FeaturesResponse)(data);
 
