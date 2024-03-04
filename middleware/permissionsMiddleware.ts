@@ -1,8 +1,8 @@
 // Copyright 2023 the .NET Foundation
 
-import { RouteLocationNormalized } from ".nuxt/vue-router";
-import { RouteMiddleware } from "nuxt/app";
-import { $Fetch } from "ofetch";
+import type { RouteLocationNormalized } from "#vue-router";
+import type { RouteMiddleware } from "nuxt/app";
+import type { $Fetch } from "ofetch";
 import { storeToRefs } from "pinia";
 
 import { useConstellationsStore } from "~/stores/constellations";
@@ -43,7 +43,7 @@ export function permissionsMiddleware<P>(getter: PermissionsGetter<P>, validator
       return getter(fetcher, to);
     });
 
-    const allowed = validator(data.value);
+    const allowed = data.value !== null && validator(data.value);
 
     if (!allowed) {
       // The abortNavigation() option sounds appealing but seems to yield 500
