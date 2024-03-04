@@ -775,7 +775,7 @@ export const GetFeatureResponse = S.struct({
 });
 
 export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<SceneFeatureResponseT> {
-  const data = await fetcher(`/feature/${sceneID}`);
+  const data = await fetcher(`/features/${sceneID}`);
   checkForError(data);
 
   const maybe = S.decodeUnknownEither(GetFeatureResponse)(data);
@@ -790,8 +790,8 @@ export const CreateFeatureResponse = S.struct({
   id: S.string
 });
 
-export async function createFeature(fetcher: $Fetch, sceneID: string, time: Date): Promise<string> {
-  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: time } });
+export async function createFeature(fetcher: $Fetch, sceneID: string, timestamp: number): Promise<string> {
+  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: timestamp } });
   checkForError(data);
 
   const maybe = S.decodeUnknownEither(CreateFeatureResponse)(data);
