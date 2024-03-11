@@ -99,7 +99,7 @@
 
         <n-tab-pane name="queue" tab="Queue">
           <h3>Featured Scene Queue</h3>
-          <p>If there aren't any scenes schedules to be featured on a given day, we pull the top item from this queue of scenes.</p>
+          <p>If there aren't any scenes scheduled to be featured on a given day, we pull the top item from this queue of scenes.</p>
              <n-button class="queue-add-button" @click="() => showAddQueueSceneModal = true" :bordered="false" aria-label="Remove feature button">
                <n-icon size="30">
                  <AddRound />
