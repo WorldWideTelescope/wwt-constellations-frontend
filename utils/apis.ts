@@ -5,7 +5,7 @@
 import * as S from "@effect/schema/Schema";
 import { formatError } from "@effect/schema/TreeFormatter";
 import * as Either from "effect/Either";
-import { $Fetch, FetchOptions } from "ofetch";
+import type { $Fetch, FetchOptions } from "ofetch";
 
 import {
   ImagePermissions,
@@ -764,17 +764,19 @@ export async function getTessellationCell(fetcher: $Fetch, tessellationName: str
 
 export const SceneFeatureResponse = S.struct({
   id: S.string,
-  feature_time: S.string,
+  feature_time: S.Date,
   scene: GetSceneResponse,
 });
+export const MutableSceneFeature = S.mutable(SceneFeatureResponse);
 
-export type SceneFeatureResponseT = S.Schema.To<typeof SceneFeatureResponse>;
+export type FeatureResponseT = S.Schema.To<typeof SceneFeatureResponse>;
+export type MutableFeatureResponseT = S.Schema.To<typeof MutableSceneFeature>;
 
 export const GetFeatureResponse = S.struct({
   feature: SceneFeatureResponse
 });
 
-export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<SceneFeatureResponseT> {
+export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<FeatureResponseT> {
   const data = await fetcher(`/features/${sceneID}`);
   checkForError(data);
 
@@ -809,7 +811,7 @@ export const FeaturesResponse = S.struct({
 });
 
 // The start and end timestamps should be Unix timestamps
-export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<SceneFeatureResponseT[]> {
+export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<FeatureResponseT[]> {
   const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
   checkForError(data);
 

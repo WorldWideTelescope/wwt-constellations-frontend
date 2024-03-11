@@ -109,12 +109,11 @@
           <Container
             id="queue-container"
             @drop="onDrop"
+            drag-class="dragging"
           >
-            <Draggable v-for="scene in queue" :key="scene.id">
+            <Draggable v-for="scene in queue" :key="scene.id" class="draggable-item">
               <n-card>
-                <template #cover>
-                  <img :src="scene.previews.thumbnail">
-                </template>
+                <p>{{ `@${scene.handle.handle}` }}</p>
                 <n-ellipsis
                   :tooltip="false"
                   line-clamp="4"
@@ -160,7 +159,7 @@
 import {
   Container,
   Draggable,
-  DropResult
+  type DropResult
 } from "vue3-smooth-dnd";
 
 import {
@@ -191,8 +190,8 @@ import {
   updateFeature,
   getFeatureSceneQueue,
   updateFeatureQueue,
-  GetSceneResponseT,
-  SceneFeatureT,
+  type GetSceneResponseT,
+  type MutableFeatureResponseT,
 } from "~/utils/apis";
 
 import { storeToRefs } from "pinia";
@@ -213,7 +212,7 @@ definePageMeta({
 
 const isSuperuser = ref(false); 
 
-let currentFeatures: Record<number, SceneFeatureT[]> = reactive({});
+let currentFeatures: Record<number, MutableFeatureResponseT[]> = reactive({});
 let queue: Ref<GetSceneResponseT[]> = ref([]);
 
 const showDateFeaturesModal = ref(false);
@@ -261,7 +260,7 @@ function handleChangeDate(_ts: number) {
   showDateFeaturesModal.value = true;
 }
 
-function addToCurrentFeatures(feature: SceneFeatureT) {
+function addToCurrentFeatures(feature: FeatureResponseT) {
   const featureTime = new Date(feature.feature_time);
   const time = stripTime(featureTime).getTime();
   if (time in currentFeatures) {
@@ -271,7 +270,7 @@ function addToCurrentFeatures(feature: SceneFeatureT) {
   }
 }
 
-function removeFromCurrentFeatures(feature: SceneFeatureT) {
+function removeFromCurrentFeatures(feature: FeatureResponseT) {
     const featureTime = new Date(feature.feature_time);
     const time = stripTime(featureTime).getTime();
     const idx = currentFeatures[time].indexOf(feature);
@@ -280,14 +279,13 @@ function removeFromCurrentFeatures(feature: SceneFeatureT) {
     }
 }
 
-async function updateFeatureTime(feature: SceneFeatureT, time: number) {
-  console.log("Feature time changed");
+async function updateFeatureTime(feature: MutableFeatureResponseT, time: number) {
   const fetcher = await $backendAuthCall();
   const update = { feature_time: time };
   try {
     await updateFeature(fetcher, feature.id, update); 
     const newDate = new Date(time);
-    feature.feature_time = newDate.toISOString();
+    feature.feature_time = newDate;
     removeFromCurrentFeatures(feature);
     addToCurrentFeatures(feature);
   } catch (err) {
@@ -309,7 +307,7 @@ async function addFeature(sceneID: string, time: number) {
   }
 }
 
-async function removeFeature(feature: SceneFeatureT) {
+async function removeFeature(feature: FeatureResponseT) {
   try {
     const fetcher = await $backendAuthCall();
     await deleteFeature(fetcher, feature.id);
@@ -427,5 +425,17 @@ watch(
   .remove-button {
     margin-left: auto;
   }
+}
+
+.draggable-item {
+  width: 100%;
+
+  &:hover {
+    cursor: grab;
+  }
+}
+
+.dragging {
+  cursor: grabbing;
 }
 </style>
