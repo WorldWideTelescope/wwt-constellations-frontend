@@ -128,6 +128,14 @@ export const TessellationCell = S.struct({
 
 export type TessellationCellT = S.Schema.To<typeof TessellationCell>;
 
+export const SceneFeature = S.struct({
+  id: S.string,
+  feature_time: S.Date,
+  scene: SceneContentHydrated,
+});
+
+export type SceneFeatureT = S.Schema.To<typeof SceneFeature>;
+
 // Older types, potentially to be removed:
 
 export interface FitsColorMaps {

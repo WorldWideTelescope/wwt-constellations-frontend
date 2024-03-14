@@ -5,9 +5,10 @@
 import * as S from "@effect/schema/Schema";
 import { formatError } from "@effect/schema/TreeFormatter";
 import * as Either from "effect/Either";
-import { type $Fetch } from "ofetch";
+import type { $Fetch, FetchOptions } from "ofetch";
 
 import {
+  ImagePermissions,
   ImageStorage,
   ImageWwt,
   PlaceDetails,
@@ -87,8 +88,12 @@ export const MiscUpdateTimelineResponse = S.struct({});
 
 export type MiscUpdateTimelineResponseT = S.Schema.To<typeof MiscUpdateTimelineResponse>;
 
-export async function miscUpdateTimeline(fetcher: $Fetch, initialId: string): Promise<MiscUpdateTimelineResponseT> {
-  return fetcher("/misc/update-timeline", { query: { "initial_id": initialId }, method: 'POST' }).then((data) => {
+export async function miscUpdateTimeline(fetcher: $Fetch, initialId?: string): Promise<MiscUpdateTimelineResponseT> {
+  const options: FetchOptions = { method: "POST" };
+  if (initialId) {
+    options.query = { "initial_id": initialId };
+  }
+  return fetcher("/misc/update-timeline", options).then((data) => {
     checkForError(data);
 
     const maybe = S.decodeUnknownEither(MiscUpdateTimelineResponse)(data);
@@ -753,3 +758,108 @@ export async function getTessellationCell(fetcher: $Fetch, tessellationName: str
 
   return maybe.right;
 }
+
+
+// Endpoint: GET /features
+
+export const SceneFeatureResponse = S.struct({
+  id: S.string,
+  feature_time: S.Date,
+  scene: GetSceneResponse,
+});
+export const MutableSceneFeature = S.mutable(SceneFeatureResponse);
+
+export type FeatureResponseT = S.Schema.To<typeof SceneFeatureResponse>;
+export type MutableFeatureResponseT = S.Schema.To<typeof MutableSceneFeature>;
+
+export const GetFeatureResponse = S.struct({
+  feature: SceneFeatureResponse
+});
+
+export async function getFeature(fetcher: $Fetch, sceneID: string): Promise<FeatureResponseT> {
+  const data = await fetcher(`/features/${sceneID}`);
+  checkForError(data);
+
+  const maybe = S.decodeUnknownEither(GetFeatureResponse)(data);
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /feature/:id: API response did not match schema ${formatError(maybe.left)}`);
+  }
+
+  return maybe.right.feature;
+}
+
+export const CreateFeatureResponse = S.struct({
+  id: S.string
+});
+
+// The timestamp should be a Unix timestamp
+export async function createFeature(fetcher: $Fetch, sceneID: string, timestamp: number): Promise<string> {
+  const data = await fetcher(`/feature`, { method: 'POST', body: { scene_id: sceneID, feature_time: timestamp } });
+  checkForError(data);
+
+  const maybe = S.decodeUnknownEither(CreateFeatureResponse)(data);
+
+  if (Either.isLeft(maybe)) {
+    throw new Error(`POST /feature: API response did not match schema ${formatError(maybe.left)}`);
+  }
+
+  return maybe.right.id;
+}
+
+export const FeaturesResponse = S.struct({
+  features: S.array(SceneFeatureResponse)
+});
+
+// The start and end timestamps should be Unix timestamps
+export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<FeatureResponseT[]> {
+  const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
+  checkForError(data);
+
+  const maybe = S.decodeUnknownEither(FeaturesResponse)(data);
+
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /features: API response did not match schema ${formatError(maybe.left)}`);
+  }
+
+  return [...maybe.right.features];
+
+}
+
+export const FeatureQueueResponse = S.struct({
+  scenes: S.array(GetSceneResponse),
+});
+
+export async function getFeatureSceneQueue(fetcher: $Fetch): Promise<GetSceneResponseT[]> {
+  const data = await fetcher(`/features/queue`);
+  checkForError(data);
+
+  const maybe = S.decodeUnknownEither(FeatureQueueResponse)(data);
+
+  if (Either.isLeft(maybe)) {
+    throw new Error(`GET /features/queue: API response did not match schema ${formatError(maybe.left)}`);
+  }
+
+  return [...maybe.right.scenes];
+}
+
+export async function updateFeatureQueue(fetcher: $Fetch, sceneIDs: string[]): Promise<void> {
+  const data = await fetcher(`/features/queue`, { method: 'POST', body: { scene_ids: sceneIDs } });
+  checkForError(data);
+}
+
+export const FeatureUpdateRequest = S.struct({
+  feature_time: S.optional(S.number),
+});
+
+export type FeatureUpdateRequestT = S.Schema.To<typeof FeatureUpdateRequest>;
+
+export async function updateFeature(fetcher: $Fetch, featureID: string, update: FeatureUpdateRequestT): Promise<void> {
+  const data = await fetcher(`/features/${featureID}`, { method: 'PATCH', body: update });
+  checkForError(data);
+}
+
+export async function deleteFeature(fetcher: $Fetch, featureID: string): Promise<void> {
+  const data = await fetcher(`/features/${featureID}`, { method: 'DELETE' });
+  checkForError(data);
+}
+
