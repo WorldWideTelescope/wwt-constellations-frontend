@@ -346,6 +346,7 @@ async function addSceneToQueue(sceneID: string) {
   try {
     await updateFeatureQueue(fetcher, queueToTry); 
     queue.value.push(scene);
+    showAddQueueSceneModal.value = false;
     notification.success({ content: "Scene added to front of queue.", duration: 3000 });
   } catch (err) {
     notification.error({ content: "Error adding scene to queue.", duration: 3000 }); 
