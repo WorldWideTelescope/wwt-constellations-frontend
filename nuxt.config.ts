@@ -1,4 +1,4 @@
-import { PublicRuntimeConfig } from "nuxt/schema";
+import { type PublicRuntimeConfig } from "nuxt/schema";
 
 export const publicRuntimeConfig: PublicRuntimeConfig = {
   apiUrl: "http://localhost:7000",
@@ -23,6 +23,7 @@ export default defineNuxtConfig({
           [
             "vueuc",
             "date-fns",
+            "tslib",
             "@juggle/resize-observer",
             "@wwtelescope/engine",
             "@wwtelescope/engine-pinia",
