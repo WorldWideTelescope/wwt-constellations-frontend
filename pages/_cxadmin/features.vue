@@ -12,6 +12,10 @@
           <n-modal
             v-model:show="showAddFeatureModal"
             title="Add a feature"
+            :on-after-leave="() => {
+              addFeatureSceneID = '';
+              addFeatureTime = Date.now();
+            }"
           >
             <n-card
               class="add-feature-card"
@@ -30,7 +34,12 @@
                 type="datetime"
               >
               </n-date-picker>
-              <n-button @click="addFeature(addFeatureSceneID, addFeatureTime)">Add feature</n-button>
+              <n-button
+                @click="addFeature(addFeatureSceneID, addFeatureTime)"
+                :disabled="addFeatureSceneID.length === 0"
+              >
+                Add feature
+              </n-button>
             </n-card>
           </n-modal>
           <n-calendar
@@ -129,6 +138,7 @@
             size="large"
             role="dialog"
             aria-modal="true"
+            :on-after-leave="addToQueueSceneID = ''"
           >
             <n-card>
               <n-input
@@ -138,7 +148,12 @@
               >
               </n-input>
               <div class="button-row">
-                <n-button @click="() => addSceneToQueue(addToQueueSceneID)">Add to queue</n-button>
+                <n-button
+                  @click="() => addSceneToQueue(addToQueueSceneID)"
+                  :disabled="addToQueueSceneID.length === 0"
+                >
+                  Add to queue
+                </n-button>
               </div>
             </n-card>
           </n-modal>
