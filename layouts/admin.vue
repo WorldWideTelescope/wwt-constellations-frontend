@@ -10,6 +10,10 @@
 </template>
 
 <style lang="less">
+.n-config-provider {
+  overflow-y: scroll;
+}
+
 #admin-root {
   pointer-events: all;
   margin: 15px;
