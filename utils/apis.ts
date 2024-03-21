@@ -314,7 +314,7 @@ export async function handleStats(fetcher: $Fetch, handle: string): Promise<Hand
 
 // Endpoint: POST /handle/:handle
 //
-// This is an undocumented superuser-only API, for now.
+// This is an undocumented admin-only API, for now.
 
 export const HandleCreateRequest = S.struct({
   display_name: S.string,
