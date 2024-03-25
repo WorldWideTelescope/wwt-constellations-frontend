@@ -6,44 +6,51 @@
 
     <p>Am I superuser? {{ superuserStatus }}</p>
 
+    <div v-if="loggedIn && roles.length > 0">
+      <p>My roles</p>
+      <ul>
+        <li v-for="role in roles">
+          {{ role }}
+        </li>
+      </ul>
+    </div>
+
     <div v-if="isSuperuser">
       <h3>Config Database</h3>
-
       <p><button @click="onConfigDatabase">Do it</button> Result: {{ configDatabaseResult }}</p>
+    </div>
 
-
+    <div v-if="isSuperuser || roles.includes('manage-handles')">
       <h3>Create Handle</h3>
-
       <p>Name: <input type="text" id="create-handle-name" name="create-handle-name" v-model="createHandleName" /></p>
       <p>Display name: <input type="text" id="create-handle-display" name="create-handle-display"
           v-model="createHandleDisplay" /></p>
       <p><button @click="onCreateHandle">Do it</button> Result: {{ createHandleResult }}</p>
 
-
       <h3>Add Handle Owner</h3>
-
       <p>Handle: <input type="text" id="add-handle-owner-handle" name="add-handle-owner-handle"
           v-model="addHandleOwnerHandle" /></p>
       <p>Account ID: <input type="text" id="add-handle-owner-account" name="add-handle-owner-account"
           v-model="addHandleOwnerAccount" /></p>
       <p><button @click="onAddHandleOwner">Do it</button> Result: {{ addHandleOwnerResult }}</p>
+    </div>
 
-
+    <div v-if="isSuperuser || roles.includes('update-timeline')">
       <h3>Regenerate Global Timeline</h3>
-
       <p>Lead Scene ID: <input type="text" id="regen-timeline-scene" name="regen-timeline-scene"
           v-model="regenTimelineScene" /></p>
       <p><button @click="onRegenTimeline">Do it</button> Result: {{ regenTimelineResult }}</p>
+    </div>
 
-
+    <div v-if="isSuperuser || roles.includes('update-global-tessellation')">
       <h3>Regenerate Global Tessellation</h3>
-
       <p><button @click="onRegenTessellation">Do it</button> Result: {{ regenTessellationResult }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useConstellationsStore } from "~/stores/constellations";
 import {
   addHandleOwner,
   amISuperuser,
@@ -51,7 +58,14 @@ import {
   miscConfigDatabase,
 } from "~/utils/apis";
 
-const { $backendAuthCall } = useNuxtApp();
+import { storeToRefs } from "pinia";
+
+const { $backendAuthCall, $keycloak } = useNuxtApp();
+
+const constellationsStore = useConstellationsStore();
+const {
+  loggedIn,
+} = storeToRefs(constellationsStore);
 
 definePageMeta({
   layout: 'admin'
@@ -65,6 +79,8 @@ definePageMeta({
 
 const isSuperuser = ref(false);
 const superuserStatus = ref("unknown");
+
+const roles = ref<string[]>([]);
 
 async function onCheck() {
   try {
@@ -162,6 +178,18 @@ async function onRegenTessellation() {
     regenTessellationResult.value = `error: ${err}`;
   }
 }
+
+watch(
+  loggedIn,
+  async (newLoggedIn) => {
+    if (process.client && newLoggedIn) {
+      roles.value = $keycloak.realmAccess?.roles ?? [];
+    } else {
+      roles.value = [];
+    }
+  },
+  { immediate: true }
+);
 
 </script>
 
