@@ -1,0 +1,56 @@
+:root {
+  --accent-color: rgb(118, 223, 188);
+  --accent-color-translucent: rgba(118, 223, 188, 0.4);
+  --background-color: rgb(16, 16, 20);
+}
+
+.login-pf {
+  background: var(--background-color);
+}
+
+.login-pf body {
+  background: var(--background-color);
+  color: var(--accent-color);
+  font-family: 'Roboto Condensed', sans serif;
+}
+
+div#kc-header-wrapper {
+  display: none;
+}
+
+.card-pf {
+  /*
+  background-color: rgba(16, 16, 20, 0.5);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  -moz-backdrop-filter: blur(10px);
+  */
+  background-color: var(--background-color);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.pf-c-form-control {
+  background-color: rgb(16, 16, 20);
+  --pf-c-form-control--hover--BorderBottomColor: #76dfbc;
+  --pf-c-form-control--readonly--hover--BorderBottomColor: #76dfbc;
+}
+
+div#kc-header::after {
+  content: "WWT Constellations";
+  font-size: 50pt;
+}
+
+.pf-c-button.pf-m-primary {
+  background-color: var(--background-color);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.pf-c-button.pf-m-primary:hover {
+  background-color: var(--accent-color-translucent);
+}
+
+
