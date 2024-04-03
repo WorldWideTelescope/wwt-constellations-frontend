@@ -43,7 +43,6 @@ div#kc-header-wrapper {
 
 div#kc-header::after {
   content: "WWT Constellations";
-  font-family: 'Microsoft Sans Serif', 'Roboto Condensed', Verdana, Arial, Helvetica, sans serif;
   font-size: 50pt;
 }
 
