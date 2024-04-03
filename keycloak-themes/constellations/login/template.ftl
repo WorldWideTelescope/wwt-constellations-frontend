@@ -12,7 +12,7 @@
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
         </#list>
     </#if>
-    <title>${msg("loginTitle",(realm.displayName!''))}</title>
+    <title>WWT Constellations - Login</title>
     <link rel="icon" href="https://web.wwtassets.org/webclient/images/wwtlogo.png" />
     <#if properties.stylesCommon?has_content>
         <#list properties.stylesCommon?split(' ') as style>
