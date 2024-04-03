@@ -4,6 +4,11 @@
   --background-color: rgb(16, 16, 20);
 }
 
+@font-face {
+  font-family: "Roboto Condensed";
+  src: url("../fonts/RobotoCondensed-VariableFont_wght.ttf");
+}
+
 .login-pf {
   background: var(--background-color);
 }
