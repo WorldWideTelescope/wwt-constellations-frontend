@@ -36,6 +36,7 @@ div#kc-header-wrapper {
 }
 
 .pf-c-form-control {
+  color: white;
   background-color: rgb(16, 16, 20);
   --pf-c-form-control--hover--BorderBottomColor: #76dfbc;
   --pf-c-form-control--readonly--hover--BorderBottomColor: #76dfbc;
