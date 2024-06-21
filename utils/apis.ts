@@ -12,6 +12,7 @@ import {
   ImageStorage,
   ImageWwt,
   PlaceDetails,
+  SceneAstroPix,
   SceneContentHydrated,
   type SceneCreationInfoT,
   ScenePreviews,
@@ -524,6 +525,7 @@ export const GetSceneResponse = S.struct({
   outgoing_url: S.union(S.string, S.undefined),
   previews: ScenePreviews,
   published: S.boolean,
+  astropix: S.union(SceneAstroPix, S.undefined),
 });
 
 export type GetSceneResponseT = S.Schema.To<typeof GetSceneResponse>;
@@ -812,7 +814,7 @@ export const FeaturesResponse = S.struct({
 
 // The start and end timestamps should be Unix timestamps
 export async function getFeaturesInRange(fetcher: $Fetch, startTimestamp: number, endTimestamp: number): Promise<FeatureResponseT[]> {
-  const data = await fetcher(`/features`, { query: { start_date : startTimestamp, end_date: endTimestamp } });
+  const data = await fetcher(`/features`, { query: { start_date: startTimestamp, end_date: endTimestamp } });
   checkForError(data);
 
   const maybe = S.decodeUnknownEither(FeaturesResponse)(data);

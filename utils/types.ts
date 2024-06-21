@@ -107,6 +107,13 @@ export const ScenePreviews = S.struct({
 
 export type ScenePreviewsT = S.Schema.To<typeof ScenePreviews>;
 
+export const SceneAstroPix = S.struct({
+  publisher_id: S.string,
+  image_id: S.string,
+});
+
+export type SceneAstroPixT = S.Schema.To<typeof SceneAstroPix>;
+
 export interface SkymapSceneInfo {
   id: string;
   place: PlaceDetailsT;

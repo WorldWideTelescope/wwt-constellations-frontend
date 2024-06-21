@@ -68,6 +68,19 @@
             </n-tooltip>
           </NuxtLink>
 
+          <NuxtLink :to="`https://www.astropix.org/image/${encodeURIComponent(scene.astropix.publisher_id)}/${encodeURIComponent(scene.astropix.image_id)}`" target="astropix" v-if="scene.astropix">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button class="action-button hover-opacity" :bordered="false" aria-label="AstroPix button">
+                  <n-icon size="30">
+                    <img src="~/assets/images/astropix.png" width="30" height="30">
+                  </n-icon>
+                </n-button>
+              </template>
+              Image details in AstroPix
+            </n-tooltip>
+          </NuxtLink>
+
           <ShareButton title="WorldWide Telescope" :url="externalItemUrl" :description="scene.text"
             :handle="scene.handle.handle" />
 
@@ -296,6 +309,15 @@ const permissionsText = computed(() => {
 
 .action-button-label {
   margin-left: 5px;
+}
+
+.hover-opacity {
+  opacity: 0.8;
+  transition: opacity 0.5s ease;
+
+  &:hover {
+    opacity: 1.0;
+  }
 }
 
 .buttonlike {
