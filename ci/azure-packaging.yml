@@ -59,6 +59,8 @@ jobs:
 
   - bash: NODE_OPTIONS=--max_old_space_size=16384 yarn run build
     displayName: yarn build
+    env:
+      NUXT_APP_BASE_URL: /constellations/
 
   # I don't see a way to tell the ArchiveFiles task to ignore certain
   # directories. We're almost done here, so ...
