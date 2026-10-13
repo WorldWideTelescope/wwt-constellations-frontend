@@ -7,6 +7,8 @@ import { storeToRefs } from "pinia";
 
 import { useConstellationsStore } from "~/stores/constellations";
 
+import bannerUrl from "~/assets/images/wwt_banner.jpg";
+
 const constellationsStore = useConstellationsStore();
 
 const { nextSceneSource } = storeToRefs(constellationsStore);
@@ -26,14 +28,15 @@ useHead({
 const nuxtConfig = useRuntimeConfig();
 const route = useRoute();
 
+const previewImageUrl = new URL(bannerUrl, nuxtConfig.public.hostUrl).href;
 useServerSeoMeta({
   applicationName: "WorldWide Telescope",
   ogTitle: "WorldWide Telescope",
   ogDescription: "Explore and share beautiful, real images from the world’s best telescopes.",
   ogSiteName: "WorldWide Telescope",
   ogUrl: `${nuxtConfig.public.hostUrl}${route.fullPath}`,
-  ogImage: require("~/assets/images/wwt_banner.jpg"),
-  ogImageSecureUrl: require("~/assets/images/wwt_banner.jpg"),
+  ogImage: previewImageUrl,
+  ogImageSecureUrl: previewImageUrl,
   ogImageWidth: 1280,
   ogImageHeight: 350,
   ogImageType: "image/jpeg",
@@ -41,7 +44,7 @@ useServerSeoMeta({
   ogType: "website",
   twitterSite: "@wwtelescope",
   twitterCard: "summary_large_image",
-  twitterImage: require("~/assets/images/wwt_banner.jpg"),
+  twitterImage: previewImageUrl,
 });
 
 onMounted(async () => {
